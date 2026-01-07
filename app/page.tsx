@@ -116,7 +116,7 @@ export default function HomePage() {
               <img
                 src="/logo/logo.png"
                 alt="Los Antiguos"
-                className="max-h-[90%] max-w-[90%] object-contain"
+                className="max-h-[90%] max-w-[80%] object-contain"
               />
             </div>
 

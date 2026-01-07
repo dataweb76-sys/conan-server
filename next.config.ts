@@ -1,15 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Para que Vercel/Next no intente bundleear gamedig y se rompa con dependencias dinámicas
+  reactStrictMode: true,
+
+  // IMPORTANTE:
+  // - No uses typedRoutes ahora (te rompe el build con validators)
+  // - Externalizamos gamedig para que no lo intente “bundle-ar”
   serverExternalPackages: ["gamedig"],
 
-  // Si querés mantener TS estricto, podés borrar esto.
-  // Pero si estás en modo “subila ya”, esto evita frenos por types.
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // Si te vuelve a romper por ESLint en Vercel, podés habilitar esto:
+  // eslint: { ignoreDuringBuilds: true },
 };
 
 export default nextConfig;
-

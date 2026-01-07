@@ -1,14 +1,23 @@
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-async function tryQuery(host: string, port: number) {
-  // Import dinámico para que Next/Vercel no intente resolver los adapters internos en build
-  const mod: any = await import("gamedig");
+type QueryResult = {
+  name?: string;
+  map?: string;
+  players?: any[];
+  maxplayers?: number;
+};
 
-  // Compatibilidad con distintas exportaciones del paquete
-  const GameDig =
-    mod?.GameDig ?? mod?.default?.GameDig ?? mod?.default ?? mod;
+async function tryQuery(host: string, port: number): Promise<QueryResult> {
+  // OJO:
+  // Usamos eval("require") para que Next/Turbopack NO intente resolver imports internos
+  // (esto evita el error: Can't resolve '@keyv/redis' ... etc)
+  // eslint-disable-next-line @typescript-eslint/no-implied-eval
+  const req = (0, eval)("require") as NodeRequire;
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { GameDig } = req("gamedig") as any;
 
   return await GameDig.query({
     type: "conanexiles",
@@ -22,14 +31,14 @@ async function tryQuery(host: string, port: number) {
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
 
-  // Tu front usa ip=..., pero por las dudas soportamos host también
-  const host = searchParams.get("ip") ?? searchParams.get("host");
+  // Aceptamos ambos nombres porque en tu front usaste ip y antes habíamos puesto host
+  const host = searchParams.get("host") || searchParams.get("ip");
   const portStr = searchParams.get("port"); // puerto del juego
-  const qportStr = searchParams.get("qport"); // query port (SQ)
+  const qportStr = searchParams.get("qport"); // query port
 
   if (!host) {
     return NextResponse.json(
-      { ok: false, error: "missing_host" },
+      { state: "offline", ok: false, error: "missing_host_or_ip" },
       { status: 400 }
     );
   }
@@ -37,10 +46,8 @@ export async function GET(req: Request) {
   const gamePort = portStr ? Number(portStr) : NaN;
   const qport = qportStr ? Number(qportStr) : NaN;
 
-  // Probamos varios puertos, primero qport si viene
   const candidates: number[] = [];
   if (Number.isFinite(qport)) candidates.push(qport);
-
   if (Number.isFinite(gamePort)) {
     candidates.push(gamePort);
     candidates.push(gamePort + 1);
@@ -50,7 +57,7 @@ export async function GET(req: Request) {
 
   if (candidates.length === 0) {
     return NextResponse.json(
-      { ok: false, error: "missing_port_and_qport" },
+      { state: "offline", ok: false, error: "missing_port_and_qport" },
       { status: 400 }
     );
   }
@@ -61,33 +68,45 @@ export async function GET(req: Request) {
     try {
       const state = await tryQuery(host, p);
 
-      const playersRaw = Array.isArray(state?.players) ? state.players : [];
-      const players = playersRaw
+      const playersRaw = Array.isArray(state.players) ? state.players : [];
+      const playerNames = playersRaw
         .map((pl: any) => String(pl?.name ?? "").trim())
         .filter(Boolean)
-        .slice(0, 25);
+        .slice(0, 30);
 
-      return NextResponse.json({
-        ok: true,
-        usedPort: p,
-        name: state?.name ?? null,
-        map: state?.map ?? null,
-        playersCount: playersRaw.length ?? 0,
-        players,
-        maxplayers: state?.maxplayers ?? null,
-      });
+      const playersCount = playersRaw.length ?? 0;
+      const maxPlayers = typeof state.maxplayers === "number" ? state.maxplayers : 0;
+
+      // IMPORTANTE: devolvemos players y maxPlayers como lo espera el ServerModal
+      return NextResponse.json(
+        {
+          state: "ok",
+          ok: true,
+          online: true,
+          usedPort: p,
+          name: state.name ?? null,
+          map: state.map ?? null,
+          players: playersCount,
+          maxPlayers,
+          playerNames,
+        },
+        { status: 200 }
+      );
     } catch (e: any) {
       lastErr = e;
     }
   }
 
+  // No devolvemos 500, devolvemos 200 offline (para que tu UI no se rompa)
   return NextResponse.json(
     {
+      state: "offline",
       ok: false,
+      online: false,
       error: "no_response_on_ports",
       tried: [...new Set(candidates)],
       message: lastErr?.message || "No responde",
     },
-    { status: 200 } // devolvemos 200 pero ok:false (así el front no explota con .json)
+    { status: 200 }
   );
 }
