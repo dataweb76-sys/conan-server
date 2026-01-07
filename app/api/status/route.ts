@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 // ✅ sin types y sin archivos extra
 // eslint-disable-next-line @typescript-eslint/no-var-requires
