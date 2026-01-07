@@ -3,22 +3,11 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type QueryResult = {
-  name?: string;
-  map?: string;
-  players?: any[];
-  maxplayers?: number;
-};
+// gamedig NO tiene types oficiales + rompe build si lo importás normal.
+// Con require evitás el error de TypeScript ("declaration file") y ayuda al bundling.
+const { GameDig } = require("gamedig") as any;
 
-async function tryQuery(host: string, port: number): Promise<QueryResult> {
-  // OJO:
-  // Usamos eval("require") para que Next/Turbopack NO intente resolver imports internos
-  // (esto evita el error: Can't resolve '@keyv/redis' ... etc)
-  // eslint-disable-next-line @typescript-eslint/no-implied-eval
-  const req = (0, eval)("require") as NodeRequire;
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { GameDig } = req("gamedig") as any;
-
+async function tryQuery(host: string, port: number) {
   return await GameDig.query({
     type: "conanexiles",
     host,
@@ -31,16 +20,16 @@ async function tryQuery(host: string, port: number): Promise<QueryResult> {
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
 
-  // Aceptamos ambos nombres porque en tu front usaste ip y antes habíamos puesto host
-  const host = searchParams.get("host") || searchParams.get("ip");
-  const portStr = searchParams.get("port"); // puerto del juego
-  const qportStr = searchParams.get("qport"); // query port
+  // Aceptamos ip o host (vos estabas llamando con ip)
+  const host = searchParams.get("ip") || searchParams.get("host");
+
+  // port = puerto del juego (7777, 7779, etc.)
+  const portStr = searchParams.get("port");
+  // qport = query port (270xx)
+  const qportStr = searchParams.get("qport");
 
   if (!host) {
-    return NextResponse.json(
-      { state: "offline", ok: false, error: "missing_host_or_ip" },
-      { status: 400 }
-    );
+    return NextResponse.json({ state: "offline", error: "missing_host" }, { status: 400 });
   }
 
   const gamePort = portStr ? Number(portStr) : NaN;
@@ -56,10 +45,7 @@ export async function GET(req: Request) {
   }
 
   if (candidates.length === 0) {
-    return NextResponse.json(
-      { state: "offline", ok: false, error: "missing_port_and_qport" },
-      { status: 400 }
-    );
+    return NextResponse.json({ state: "offline", error: "missing_port_and_qport" }, { status: 400 });
   }
 
   let lastErr: any = null;
@@ -69,40 +55,30 @@ export async function GET(req: Request) {
       const state = await tryQuery(host, p);
 
       const playersRaw = Array.isArray(state.players) ? state.players : [];
-      const playerNames = playersRaw
+      const players = playersRaw
         .map((pl: any) => String(pl?.name ?? "").trim())
         .filter(Boolean)
-        .slice(0, 30);
+        .slice(0, 50);
 
-      const playersCount = playersRaw.length ?? 0;
-      const maxPlayers = typeof state.maxplayers === "number" ? state.maxplayers : 0;
-
-      // IMPORTANTE: devolvemos players y maxPlayers como lo espera el ServerModal
-      return NextResponse.json(
-        {
-          state: "ok",
-          ok: true,
-          online: true,
-          usedPort: p,
-          name: state.name ?? null,
-          map: state.map ?? null,
-          players: playersCount,
-          maxPlayers,
-          playerNames,
-        },
-        { status: 200 }
-      );
+      // 🔥 IMPORTANTE: devolvemos los nombres EXACTOS que tu ServerModal usa:
+      // state:"ok", players, maxPlayers, name, map
+      return NextResponse.json({
+        state: "ok",
+        usedPort: p,
+        name: state.name ?? null,
+        map: state.map ?? null,
+        players: playersRaw.length ?? 0,
+        maxPlayers: state.maxplayers ?? state.maxPlayers ?? null,
+        playerNames: players,
+      });
     } catch (e: any) {
       lastErr = e;
     }
   }
 
-  // No devolvemos 500, devolvemos 200 offline (para que tu UI no se rompa)
   return NextResponse.json(
     {
       state: "offline",
-      ok: false,
-      online: false,
       error: "no_response_on_ports",
       tried: [...new Set(candidates)],
       message: lastErr?.message || "No responde",
