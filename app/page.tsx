@@ -1,65 +1,205 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useMemo, useState } from "react";
+import Carousel from "@/components/Carousel";
+import ServerCard from "@/components/ServerCard";
+import DiscordWidget from "@/components/DiscordWidget";
+import ServerModal, { ServerInfo } from "@/components/ServerModal";
+
+export default function HomePage() {
+  const DISCORD_URL = "https://discord.gg/4SmuhXPfMr";
+  const FACEBOOK_URL = "https://www.facebook.com/DatawebGames";
+
+  const bg = "/carousel/5.png";
+
+  const servers: ServerInfo[] = useMemo(
+    () => [
+      {
+        slug: "dragones-y-dinosaurios",
+        title: "DRAGONES Y DINOSAURIOS PVEVP",
+        subtitle: "OPEN 24/7 - 2025",
+        description:
+          "Servidor PvPvE con temática Dragones y Dinosaurios.\nEventos, progresión y comunidad activa.\nIdeal para explorar y pelear con contenido épico.",
+        rules:
+          "• Respeto en chat.\n• No toxicidad.\n• Raid/PvP según reglas del Discord.\n• Reportes por Discord.",
+        ip: "190.174.182.236",
+        port: 7779,
+        qport: 27017,
+        image: "/servers/server1.png",
+        modsCount: 30,
+        // voto que nos pasaste (lo usamos como base)
+        voteUrl: "https://topgameservers.net/conanexiles/server/nrcYSh89KdNehu8g4MS2",
+        // galería (podés cambiar por imágenes específicas del server)
+        gallery: ["/carousel/1.png", "/carousel/2.png", "/carousel/3.png"],
+        // si tenés colección de steam, pegala acá
+        modsUrl: undefined,
+      },
+      {
+        slug: "los-antiguos-siptah",
+        title: "LOS ANTIGUOS SIPTAH + EXILIO",
+        subtitle: "OPEN 02/2026",
+        description:
+          "Servidor con Siptah + Exilio.\nContenido variado, eventos y progresión.\nPerfecto si te gusta explorar y farmear.",
+        rules:
+          "• Respeto y fair play.\n• Reglas de PvP/raid en Discord.\n• No exploits.\n• Soporte por Discord.",
+        ip: "190.174.182.236",
+        port: 7781,
+        qport: 27015,
+        image: "/servers/server2.png",
+        modsCount: 24,
+        voteUrl: "https://topgameservers.net/conanexiles/server/nrcYSh89KdNehu8g4MS2",
+        gallery: ["/carousel/4.png", "/carousel/5.png"],
+        modsUrl: undefined,
+      },
+      {
+        slug: "mods-y-mazmorras",
+        title: "LOS ANTIGUOS PvPvE (MODS + MAZMORRAS)",
+        subtitle: "Best Mods y Mazmorras",
+        description:
+          "Servidor modded con mazmorras y contenido extra.\nEnfocado en PvPvE, desafíos y progresión.\nRecomendado para jugadores que buscan más dificultad.",
+        rules:
+          "• No griefing.\n• Raid/PvP según Discord.\n• Respeto.\n• No cheats/exploits.",
+        ip: "190.174.182.236",
+        port: 7786,
+        qport: 27026,
+        image: "/servers/server3.png",
+        modsCount: 40,
+        voteUrl: "https://topgameservers.net/conanexiles/server/nrcYSh89KdNehu8g4MS2",
+        gallery: ["/carousel/2.png", "/carousel/3.png", "/carousel/5.png"],
+        modsUrl: undefined,
+      },
+      {
+        slug: "exilio-sin-mods",
+        title: "LOS ANTIGUOS EXILIO SIN MODS",
+        subtitle: "PVE / PVP",
+        description:
+          "Servidor vanilla (sin mods).\nExperiencia clásica, estable y sin descargas.\nIdeal para empezar o para jugar tranquilo.",
+        rules:
+          "• Respeto.\n• No exploits.\n• PvP según Discord.\n• Soporte por Discord.",
+        ip: "190.174.182.236",
+        port: 7777,
+        qport: 27018,
+        image: "/servers/server4.png",
+        modsCount: 0,
+        voteUrl: "https://topgameservers.net/conanexiles/server/nrcYSh89KdNehu8g4MS2",
+        gallery: ["/carousel/1.png", "/carousel/4.png"],
+        modsUrl: undefined,
+      },
+    ],
+    []
+  );
+
+  const [selected, setSelected] = useState<ServerInfo | null>(null);
+  const [open, setOpen] = useState(false);
+
+  function openModal(s: ServerInfo) {
+    setSelected(s);
+    setOpen(true);
+  }
+
+  function closeModal() {
+    setOpen(false);
+    setSelected(null);
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main
+      className="min-h-[calc(100vh-120px)] bg-cover bg-center bg-fixed"
+      style={{ backgroundImage: `url(${bg})` }}
+    >
+      <div className="shell pb-10">
+        <div className="panel">
+          {/* LOGO + CAROUSEL */}
+          <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
+            <div className="h-[220px] rounded-xl border border-black/10 bg-white grid place-items-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo/logo.png"
+                alt="Los Antiguos"
+                className="max-h-[90%] max-w-[90%] object-contain"
+              />
+            </div>
+
+            <div className="h-[220px] rounded-xl border border-black/10 overflow-hidden">
+              <Carousel />
+            </div>
+          </div>
+
+          <div className="my-5 h-px bg-black/10" />
+
+          {/* SERVERS */}
+          <div className="grid gap-4 lg:grid-cols-4">
+            {servers.map((s) => (
+              <ServerCard
+                key={s.slug}
+                title={s.title}
+                subtitle={s.subtitle}
+                ip={s.ip}
+                port={s.port}
+                qport={s.qport}
+                image={s.image ?? "/servers/server-fallback.png"}
+                slug={s.slug}
+                onOpen={() => openModal(s)}
+              />
+            ))}
+          </div>
+
+          <div className="my-5 h-px bg-black/10" />
+
+          {/* Discord + Redes */}
+          <div className="grid gap-4 lg:grid-cols-4">
+            <div className="lg:col-span-3 rounded-xl border border-black/10 bg-white p-4">
+              <div className="font-semibold mb-3">Discord</div>
+              <DiscordWidget />
+            </div>
+
+            <div className="rounded-xl border border-black/10 bg-white p-4">
+              <div className="font-semibold">Redes</div>
+
+              <a
+                className="mt-3 block text-center text-sm px-3 py-2 rounded-lg border hover:bg-black/5"
+                href={FACEBOOK_URL}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Facebook
+              </a>
+
+              <a
+                className="mt-2 block text-center text-sm px-3 py-2 rounded-lg border hover:bg-black/5"
+                href={DISCORD_URL}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Discord
+              </a>
+
+              <div className="mt-3 text-xs text-black/50">
+                Tip: elegí un server y usá “Compartir” dentro del popup.
+              </div>
+            </div>
+          </div>
+
+          <div className="my-5 h-px bg-black/10" />
+
+          {/* VIDEO */}
+          <div className="rounded-xl border border-black/10 bg-white p-4">
+            <div className="font-semibold mb-2">Video del server</div>
+            <video className="w-full rounded-lg" controls preload="metadata">
+              <source src="/media/server.mp4" type="video/mp4" />
+            </video>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </div>
+
+      {/* MODAL */}
+      <ServerModal
+        open={open}
+        onClose={closeModal}
+        server={selected}
+        discordUrl={DISCORD_URL}
+        facebookUrl={FACEBOOK_URL}
+      />
+    </main>
   );
 }
