@@ -1,24 +1,16 @@
 import { NextResponse } from "next/server";
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
 
-// ✅ sin types y sin archivos extra
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const GameDig: any = require("gamedig");
+export const runtime = "nodejs";
 
 async function tryQuery(host: string, port: number) {
-  // GameDig puede venir como { query } o { GameDig: { query } } según build
-  const q =
-    typeof GameDig?.query === "function"
-      ? GameDig.query
-      : typeof GameDig?.GameDig?.query === "function"
-      ? GameDig.GameDig.query
-      : null;
+  // Import dinámico para que Next/Vercel no intente resolver los adapters internos en build
+  const mod: any = await import("gamedig");
 
-  if (!q) throw new Error("gamedig_query_missing");
+  // Compatibilidad con distintas exportaciones del paquete
+  const GameDig =
+    mod?.GameDig ?? mod?.default?.GameDig ?? mod?.default ?? mod;
 
-  return await q({
+  return await GameDig.query({
     type: "conanexiles",
     host,
     port,
@@ -30,20 +22,25 @@ async function tryQuery(host: string, port: number) {
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
 
-  // ✅ Acepta host o ip (porque tu front manda ip)
-  const host = searchParams.get("host") ?? searchParams.get("ip");
+  // Tu front usa ip=..., pero por las dudas soportamos host también
+  const host = searchParams.get("ip") ?? searchParams.get("host");
   const portStr = searchParams.get("port"); // puerto del juego
-  const qportStr = searchParams.get("qport"); // query port
+  const qportStr = searchParams.get("qport"); // query port (SQ)
 
   if (!host) {
-    return NextResponse.json({ ok: false, error: "missing_host" }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: "missing_host" },
+      { status: 400 }
+    );
   }
 
   const gamePort = portStr ? Number(portStr) : NaN;
   const qport = qportStr ? Number(qportStr) : NaN;
 
+  // Probamos varios puertos, primero qport si viene
   const candidates: number[] = [];
   if (Number.isFinite(qport)) candidates.push(qport);
+
   if (Number.isFinite(gamePort)) {
     candidates.push(gamePort);
     candidates.push(gamePort + 1);
@@ -52,7 +49,10 @@ export async function GET(req: Request) {
   }
 
   if (candidates.length === 0) {
-    return NextResponse.json({ ok: false, error: "missing_port_and_qport" }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: "missing_port_and_qport" },
+      { status: 400 }
+    );
   }
 
   let lastErr: any = null;
@@ -61,24 +61,20 @@ export async function GET(req: Request) {
     try {
       const state = await tryQuery(host, p);
 
-      const playersRaw = Array.isArray(state.players) ? state.players : [];
+      const playersRaw = Array.isArray(state?.players) ? state.players : [];
       const players = playersRaw
         .map((pl: any) => String(pl?.name ?? "").trim())
         .filter(Boolean)
-        .slice(0, 50);
+        .slice(0, 25);
 
       return NextResponse.json({
         ok: true,
         usedPort: p,
-        name: state.name ?? null,
-        map: state.map ?? null,
-
-        // ✅ NOMBRES CONSISTENTES con el modal:
-        players: playersRaw.length ?? 0,
-        maxPlayers: state.maxplayers ?? null,
-
-        // extra (lista de nombres)
-        playersList: players,
+        name: state?.name ?? null,
+        map: state?.map ?? null,
+        playersCount: playersRaw.length ?? 0,
+        players,
+        maxplayers: state?.maxplayers ?? null,
       });
     } catch (e: any) {
       lastErr = e;
@@ -92,6 +88,6 @@ export async function GET(req: Request) {
       tried: [...new Set(candidates)],
       message: lastErr?.message || "No responde",
     },
-    { status: 200 }
+    { status: 200 } // devolvemos 200 pero ok:false (así el front no explota con .json)
   );
 }
