@@ -1,74 +1,86 @@
 import { NextResponse } from "next/server";
 import dgram from "dgram";
 
-function queryA2S(host: string, port: number): Promise<any> {
-  return new Promise((resolve, reject) => {
-    const socket = dgram.createSocket("udp4");
-    const message = Buffer.from([
-      0xff, 0xff, 0xff, 0xff,
-      0x54,
-      ...Buffer.from("Source Engine Query\0"),
-    ]);
+const A2S_INFO = Buffer.from([
+  0xff, 0xff, 0xff, 0xff,
+  0x54,
+  ...Buffer.from("Source Engine Query\0")
+]);
 
-    const timeout = setTimeout(() => {
+const A2S_PLAYER = Buffer.from([
+  0xff, 0xff, 0xff, 0xff,
+  0x55,
+  0xff, 0xff, 0xff, 0xff
+]);
+
+function udpQuery(host: string, port: number, payload: Buffer, timeout = 2000) {
+  return new Promise<Buffer>((resolve, reject) => {
+    const socket = dgram.createSocket("udp4");
+
+    const timer = setTimeout(() => {
       socket.close();
       reject(new Error("timeout"));
-    }, 2000);
+    }, timeout);
 
     socket.on("message", (msg) => {
-      clearTimeout(timeout);
+      clearTimeout(timer);
       socket.close();
-
-      let offset = 6; // skip header
-      const readString = () => {
-        const end = msg.indexOf(0x00, offset);
-        const str = msg.toString("utf8", offset, end);
-        offset = end + 1;
-        return str;
-      };
-
-      const name = readString();
-      const map = readString();
-      readString(); // folder
-      readString(); // game
-      offset += 2; // app id
-
-      const players = msg.readUInt8(offset++);
-      const maxPlayers = msg.readUInt8(offset++);
-
-      resolve({
-        state: "ok",
-        name,
-        map,
-        players,
-        maxPlayers,
-        playerNames: [],
-      });
+      resolve(msg);
     });
 
-    socket.send(message, port, host);
+    socket.send(payload, port, host);
   });
 }
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const ip = searchParams.get("ip");
-  const port = Number(searchParams.get("port"));
+  const port = Number(searchParams.get("qport") || searchParams.get("port"));
 
   if (!ip || !port) {
-    return NextResponse.json(
-      { state: "offline", error: "missing_ip_or_port" },
-      { status: 400 }
-    );
+    return NextResponse.json({ ok: false, error: "missing_ip_or_port" }, { status: 400 });
   }
 
   try {
-    const data = await queryA2S(ip, port);
-    return NextResponse.json(data);
-  } catch {
-    return NextResponse.json(
-      { state: "offline", error: "no_response" },
-      { status: 200 }
-    );
+    // INFO
+    const info = await udpQuery(ip, port, A2S_INFO);
+
+    const players = info.readUInt8(6);
+    const maxPlayers = info.readUInt8(7);
+
+    // PLAYERS (opcional, muchos servers NO lo permiten)
+    let playerNames: string[] = [];
+
+    try {
+      const challenge = await udpQuery(ip, port, A2S_PLAYER);
+      const realQuery = Buffer.from(A2S_PLAYER);
+      challenge.copy(realQuery, 5, 5, 9);
+
+      const playersRes = await udpQuery(ip, port, realQuery);
+
+      let offset = 6;
+      const count = playersRes.readUInt8(offset++);
+      for (let i = 0; i < count; i++) {
+        offset++; // index
+        let name = "";
+        while (playersRes[offset] !== 0x00) {
+          name += String.fromCharCode(playersRes[offset++]);
+        }
+        offset++; // null byte
+        offset += 8; // score + duration
+        if (name) playerNames.push(name);
+      }
+    } catch {
+      // server no expone jugadores → normal
+    }
+
+    return NextResponse.json({
+      ok: true,
+      players,
+      maxPlayers,
+      playerNames,
+    });
+  } catch (e) {
+    return NextResponse.json({ ok: false, error: "offline" }, { status: 200 });
   }
 }
