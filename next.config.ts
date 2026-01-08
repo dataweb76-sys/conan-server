@@ -1,5 +1,9 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  // Mantiene el soporte para Gamedig
+  serverExternalPackages: ["gamedig", "keyv"],
+  
   typescript: {
     // Esto obliga a Vercel a terminar el build aunque haya errores de tipo
     ignoreBuildErrors: true,
