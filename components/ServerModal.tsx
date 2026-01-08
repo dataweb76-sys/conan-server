@@ -23,29 +23,22 @@ export default function ServerModal({ open, onClose, server }: any) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
       <div className="bg-[#1a1c23] border border-gray-700 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
         
-        {/* Header con Imagen (URL Oficial y Fallback Seguro) */}
-        <div className="relative h-40 bg-[#111318]">
-          <img 
-            src="https://www.conanexiles.com/wp-content/uploads/sites/4/2018/05/header-new.jpg" 
-            className="w-full h-full object-cover opacity-60"
-            alt="Conan Exiles Banner"
-            onError={(e: any) => {
-              e.target.style.display = 'none'; // Si falla, simplemente ocultamos la imagen
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1a1c23] via-[#1a1c23]/20 to-transparent" />
-          
-          <div className="absolute bottom-4 left-6">
-             <span className="bg-emerald-500 text-black text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">
-               Servidor Activo
-             </span>
+        {/* Header con Diseño Sólido (Sin imágenes externas para evitar errores de red) */}
+        <div className="relative h-32 bg-gradient-to-br from-[#2a2d37] to-[#1a1c23] flex items-center px-8 border-b border-gray-800">
+          <div className="space-y-1">
+            <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest border border-emerald-500/30">
+              Servidor Activo
+            </span>
+            <h2 className="text-3xl font-black text-white tracking-tighter uppercase italic">
+              Dragon y Dinosaurio
+            </h2>
           </div>
 
           <button 
             onClick={onClose} 
-            className="absolute top-4 right-4 bg-black/60 hover:bg-red-600 text-white p-2 rounded-lg transition-colors z-10"
+            className="absolute top-4 right-4 bg-black/40 hover:bg-red-600 text-white w-8 h-8 flex items-center justify-center rounded-full transition-colors z-10"
           >
-            ✕ Cerrar
+            ✕
           </button>
         </div>
 
@@ -53,39 +46,36 @@ export default function ServerModal({ open, onClose, server }: any) {
           {/* Fila Principal */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <h2 className="text-2xl font-bold text-white tracking-tight">
-                {server?.name || "Dragon y Dinosaurio PVEVP"}
-              </h2>
-              <div className="bg-black/40 p-4 rounded-xl border border-white/5 space-y-2">
-                <p className="text-sm flex justify-between">
+              <div className="bg-black/40 p-5 rounded-xl border border-white/5 space-y-3">
+                <p className="text-sm flex justify-between items-center">
                   <span className="text-gray-400">Estado:</span>
                   <span className={server?.online ? "text-green-400 font-bold" : "text-red-400 font-bold"}>
                     {server?.online ? "● ONLINE" : "○ OFFLINE"}
                   </span>
                 </p>
-                <p className="text-sm flex justify-between">
+                <p className="text-sm flex justify-between items-center">
                   <span className="text-gray-400">Mapa:</span>
-                  <span className="text-white">{server?.map || "Exiled Lands"}</span>
+                  <span className="text-white font-medium">{server?.map || "Exiled Lands"}</span>
                 </p>
-                <p className="text-sm flex justify-between">
+                <p className="text-sm flex justify-between items-center">
                   <span className="text-gray-400">Jugadores:</span>
-                  <span className="text-white font-mono font-bold">
+                  <span className="text-white font-mono font-bold text-base">
                     {server?.playersCount ?? 0} / {server?.maxPlayers ?? 40}
                   </span>
                 </p>
               </div>
             </div>
 
-            {/* Banner de Votación */}
+            {/* Banner de Votación (Enlace corregido) */}
             <div className="flex flex-col justify-center">
               <a 
-                href="https://topgameservers.net/conan-exiles/vote/dragon-y-dinosaurio-pvevp-v11" 
+                href="https://topgameservers.net/conanexiles/server/nrcYSh89KdNehu8g4MS2" 
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group relative bg-orange-600 hover:bg-orange-500 p-5 rounded-xl text-center transition-all transform hover:-translate-y-1 shadow-lg shadow-orange-900/40"
+                className="group relative bg-orange-600 hover:bg-orange-500 p-6 rounded-xl text-center transition-all transform hover:-translate-y-1 shadow-lg shadow-orange-900/40"
               >
-                <span className="text-[10px] uppercase tracking-[0.2em] text-orange-200 block mb-1">Apoya a la comunidad</span>
-                <p className="text-xl font-black text-white italic tracking-tight">¡VOTA POR EL REINO!</p>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-orange-200 block mb-1 font-bold">Apoya nuestra comunidad</span>
+                <p className="text-2xl font-black text-white italic tracking-tight">VOTAR AHORA</p>
               </a>
             </div>
           </div>
