@@ -2,193 +2,163 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-export type ServerInfo = {
-  slug: string;
-  title: string;
-  subtitle?: string;
-  description?: string;
-  rules?: string;
-  ip: string;
-  port: number;
-  qport?: number;
-  image?: string;
-  modsCount?: number;
-  voteUrl?: string;
-  gallery?: string[];
-  modsUrl?: string;
+// Base de datos de Mods por Servidor
+const MODS_DATABASE: Record<string, string[]> = {
+  "dragones-y-dinosaurios": [
+    "1976970830","1159180273","2050780234","3100719163","2854276803","1977450178","1629644846","2584291197","2914309509","2597952237","1906158454","3039363313","2939641714","3086070534","3362177073","3248573436","2890891645","2949501637","933782986","3478249812","2271476646","1837807092","2791028919","890509770","1435629448","2305756696","3576739923","3452606731","2340032500","1113901982","1734383367","2525703408","2633363028","1125427722","880454836","1444947329","2581110607","1369743238","3120364390","2885152026","877108545","2957239090","1386174080","2376449518","3598582240","2870019036"
+  ],
+  "mods-y-mazmorras": [
+    "880454836","1734383367","2993582399","3598582240","2050780234","933782986","1125427722","1386174080","1369802940","877108545","2279131041","1159180273","890509770","1435629448","2305756696","2850040473","2616195219","3368664134","2241631223","2976383464","2885152026","2949501637","1367404881","2633363028","1837807092","2603072116","2271476646","2870019036","3594438096","3608946367","3576739923","3452606731","2340032500","2508667158","1502970736","1976970830","2854276803"
+  ],
+  "los-antiguos-siptah": [
+    "880454836","3086070534","1734383367","1977450178","2300463941","2854276803","2994141510","1835356127","1326031593","1125427722","2376449518","2050780234","3310298622","877108545","2870019036","2982469779","3248573436","3324113365","3210360389","2597952237","1976970830","2633363028","3039363313","3598582240","2305969565"
+  ],
+  "exilio-sin-mods": []
 };
 
-type StatusOk = {
-  ok: true;
-  usedPort?: number;
-  name?: string | null;
-  map?: string | null;
-  playersCount?: number;
-  maxPlayers?: number | null;
-  players?: string[];
-};
+export default function ServerModal({ open, onClose, server, discordUrl, facebookUrl }: any) {
+  const [status, setStatus] = useState<any>({ state: "loading" });
+  const [showModsPopup, setShowModsPopup] = useState(false);
 
-type ServerStatus =
-  | { state: "loading" }
-  | { state: "offline"; error?: string }
-  | { state: "ok"; data: StatusOk };
+  const currentMods = useMemo(() => {
+    return MODS_DATABASE[server?.slug] || [];
+  }, [server]);
 
-export default function ServerModal({
-  open,
-  onClose,
-  server,
-  discordUrl,
-  facebookUrl,
-}: {
-  open: boolean;
-  onClose: () => void;
-  server: ServerInfo | null;
-  discordUrl: string;
-  facebookUrl: string;
-}) {
-  const [status, setStatus] = useState<ServerStatus>({ state: "loading" });
-
-  const connectString = useMemo(() => {
-    if (!server) return "";
-    return `${server.ip}:${server.port}`;
+  const theme = useMemo(() => {
+    const colors: any = {
+      orange: { text: "text-orange-500", border: "border-orange-500/30", bg: "bg-orange-500/10", btn: "bg-orange-600 hover:bg-orange-500" },
+      emerald: { text: "text-emerald-500", border: "border-emerald-500/30", bg: "bg-emerald-500/10", btn: "bg-emerald-600 hover:bg-emerald-500" },
+      blue: { text: "text-blue-500", border: "border-blue-500/30", bg: "bg-blue-500/10", btn: "bg-blue-600 hover:bg-blue-500" },
+      red: { text: "text-red-500", border: "border-red-500/30", bg: "bg-red-500/10", btn: "bg-red-600 hover:bg-red-500" },
+    };
+    return colors[server?.color || "orange"];
   }, [server]);
 
   useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
-
-  useEffect(() => {
-    let alive = true;
+    if (!open || !server) return;
     async function load() {
-      if (!open || !server) return;
       setStatus({ state: "loading" });
       try {
-        const url = `/api/status?ip=${encodeURIComponent(server.ip)}&port=${server.port}${server.qport ? `&qport=${server.qport}` : ""}`;
-        const res = await fetch(url, { cache: "no-store" });
+        const res = await fetch(`/api/status?ip=${server.ip}&port=${server.port}&qport=${server.qport}`);
         const data = await res.json();
-        if (!alive) return;
-        if (!res.ok || data?.ok !== true) {
-          setStatus({ state: "offline", error: data?.error });
-          return;
-        }
-        setStatus({ state: "ok", data });
-      } catch (e: any) {
-        if (!alive) return;
-        setStatus({ state: "offline", error: e?.message });
-      }
+        data.ok ? setStatus({ state: "ok", data }) : setStatus({ state: "offline" });
+      } catch { setStatus({ state: "offline" }); }
     }
     load();
-    return () => { alive = false; };
   }, [open, server]);
 
   if (!open || !server) return null;
 
-  const players = status.state === "ok" ? (status.data.players ?? []) : [];
-  const playersCount = status.state === "ok" ? (status.data.playersCount ?? 0) : 0;
-
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={onClose} />
       
-      <div className="relative z-[101] w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0b0f17] text-white shadow-2xl custom-scrollbar">
-        {/* Header con Imagen */}
+      <div className="relative z-[101] w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#0b0f17] text-white shadow-2xl custom-scrollbar">
+        
+        {/* Header */}
         <div className="relative h-48 w-full overflow-hidden">
-          {server.image ? (
-            <img src={server.image} alt="" className="h-full w-full object-cover opacity-60" />
-          ) : (
-            <div className="h-full w-full bg-gradient-to-r from-blue-900/20 to-purple-900/20" />
-          )}
+          <img src={server.image} alt="" className="h-full w-full object-cover opacity-40" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0b0f17] to-transparent" />
-          <div className="absolute bottom-6 left-6">
-            <h2 className="text-3xl font-black uppercase tracking-tight">{server.title}</h2>
-            <p className="text-white/60">{server.subtitle}</p>
+          <div className="absolute bottom-6 left-8">
+            <h2 className="text-4xl font-black uppercase italic tracking-tighter">{server.title}</h2>
+            <p className={`${theme.text} font-bold text-xs uppercase tracking-[0.3em]`}>{server.subtitle}</p>
           </div>
-          <button onClick={onClose} className="absolute top-4 right-4 rounded-full bg-black/50 p-2 hover:bg-white/10 transition-colors">✕</button>
+          <button onClick={onClose} className="absolute top-6 right-6 text-white/50 text-2xl">✕</button>
         </div>
 
-        <div className="grid gap-6 p-6 md:grid-cols-3">
-          {/* Columna Izquierda: Info Principal */}
+        <div className="grid gap-6 p-8 md:grid-cols-3">
           <div className="md:col-span-2 space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-                <span className="text-[10px] uppercase text-white/40 font-bold">Estado</span>
-                <div className="mt-1 flex items-center gap-2">
-                  <div className={`h-2 w-2 rounded-full ${status.state === 'ok' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-red-500'}`} />
-                  <span className="font-bold">{status.state === 'ok' ? 'ONLINE' : status.state === 'loading' ? 'CARGANDO...' : 'OFFLINE'}</span>
-                </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className={`rounded-2xl border ${theme.border} ${theme.bg} p-4 text-center`}>
+                <span className="text-[10px] font-bold text-white/40 uppercase block mb-1 tracking-widest">Status</span>
+                <span className={`font-black uppercase text-sm ${status.state === 'ok' ? 'text-emerald-400' : 'text-red-500'}`}>
+                  {status.state === 'ok' ? 'Online' : status.state === 'loading' ? 'Cargando' : 'Offline'}
+                </span>
               </div>
-              <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-                <span className="text-[10px] uppercase text-white/40 font-bold">Jugadores</span>
-                <div className="mt-1 font-bold text-xl">
-                  {playersCount} <span className="text-white/30 text-sm">/ {status.state === 'ok' ? status.data.maxPlayers : '--'}</span>
-                </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
+                <span className="text-[10px] font-bold text-white/40 uppercase block mb-1 tracking-widest">Players</span>
+                <span className="font-black text-xl">{status.state === 'ok' ? status.data.playersCount : '0'} / 40</span>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
+                <span className="text-[10px] font-bold text-white/40 uppercase block mb-1 tracking-widest">Mods</span>
+                <span className={`font-black text-xl ${theme.text}`}>{currentMods.length}</span>
               </div>
             </div>
 
-            <div className="rounded-xl bg-white/5 border border-white/10 p-5">
-              <h3 className="text-sm font-bold uppercase text-white/40 mb-3">Dirección de Conexión</h3>
-              <div className="flex items-center justify-between bg-black/40 p-3 rounded-lg border border-white/5">
-                <code className="text-emerald-400 font-mono">{connectString}</code>
-                <button 
-                  onClick={() => { navigator.clipboard.writeText(connectString); alert("IP Copiada"); }}
-                  className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded transition-colors"
-                >
-                  Copiar
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <a href={server.voteUrl} target="_blank" className={`flex flex-col justify-center rounded-2xl p-5 shadow-lg transition-transform active:scale-95 ${theme.btn}`}>
+                <span className="text-[10px] font-black uppercase text-white/70 mb-1">TopGameServers</span>
+                <span className="text-xs font-bold text-white leading-tight uppercase">Votar Servidor</span>
+              </a>
+
+              <a href={`steam://connect/${server.ip}:${server.port}`} className="flex items-center justify-between rounded-2xl bg-emerald-500/10 border border-emerald-500/30 p-5 hover:bg-emerald-500/20 active:scale-95 transition-all">
+                <div>
+                  <span className="text-[10px] font-black text-emerald-500/60 uppercase block mb-1">Entrar Directo</span>
+                  <span className="text-lg font-black italic uppercase text-emerald-400">¡Conectarse!</span>
+                </div>
+                <span className="text-2xl">▶</span>
+              </a>
+            </div>
+
+            <div className="rounded-2xl bg-white/5 border border-white/10 p-6 space-y-4">
+              <h3 className="text-xs font-black uppercase text-white/40 tracking-widest text-left">Información del Servidor</h3>
+              <p className="text-white/70 text-sm leading-relaxed text-left whitespace-pre-line">{server.description}</p>
+              
+              {currentMods.length > 0 && (
+                <button onClick={() => setShowModsPopup(true)} className={`${theme.text} text-xs font-black uppercase tracking-widest hover:underline flex items-center gap-2`}>
+                  Ver lista de IDs de mods ➔
                 </button>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-bold uppercase text-white/40 mb-2">Descripción</h3>
-                <p className="text-white/80 leading-relaxed whitespace-pre-line bg-white/5 p-4 rounded-xl border border-white/10">
-                  {server.description || "Sin descripción disponible."}
-                </p>
-              </div>
+              )}
             </div>
           </div>
 
-          {/* Columna Derecha: Jugadores y RRSS */}
-          <div className="space-y-6">
-            <div className="rounded-xl bg-white/5 border border-white/10 p-5">
-              <h3 className="text-sm font-bold uppercase text-white/40 mb-4 flex items-center justify-between">
-                En Línea
-                <span className="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded text-[10px]">{players.length} conectados</span>
-              </h3>
-              
-              <div className="max-h-64 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-                {players.length > 0 ? (
-                  players.map((name, i) => (
-                    <div key={i} className="flex items-center gap-3 bg-white/5 p-2.5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
-                      <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                      <span className="text-sm font-medium text-white/90">{name}</span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-white/20 text-sm border border-dashed border-white/10 rounded-lg">
-                    {status.state === 'loading' ? 'Buscando supervivientes...' : 'No hay jugadores ahora'}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Redes Sociales */}
-            <div className="grid grid-cols-2 gap-2">
-              <a href={discordUrl} target="_blank" className="flex items-center justify-center gap-2 bg-[#5865F2] hover:opacity-90 py-3 rounded-xl font-bold text-sm transition-opacity">
-                Discord
-              </a>
-              <a href={facebookUrl} target="_blank" className="flex items-center justify-center gap-2 bg-[#1877F2] hover:opacity-90 py-3 rounded-xl font-bold text-sm transition-opacity">
-                Facebook
-              </a>
+          <div className="rounded-2xl bg-black/40 border border-white/10 p-6">
+            <h3 className="text-[10px] font-black uppercase text-white/40 mb-4 tracking-widest flex items-center justify-between italic">
+              Supervivientes <span className="text-emerald-500">{status.state === 'ok' ? status.data.players?.length : 0}</span>
+            </h3>
+            <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+              {status.state === 'ok' && status.data.players?.map((name: string, i: number) => (
+                <div key={i} className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
+                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <span className="text-[11px] font-bold text-white/80 uppercase">{name}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
+
+      {/* POPUP DE MODS ACTUALIZADO */}
+      {showModsPopup && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/95 animate-in fade-in duration-200">
+          <div className="w-full max-w-2xl bg-[#0b0f17] border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+            <h3 className={`text-2xl font-black ${theme.text} mb-6 flex justify-between items-center uppercase italic tracking-tighter`}>
+              Mods del Reino ({currentMods.length})
+              <button onClick={() => setShowModsPopup(false)} className="text-white/20 hover:text-white transition-colors">✕</button>
+            </h3>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[50vh] overflow-y-auto pr-3 custom-scrollbar">
+              {currentMods.map((id, i) => (
+                <div key={i} className="p-3 bg-white/5 rounded-xl border border-white/5 text-[10px] text-white/70 font-mono flex items-center justify-between group hover:border-white/20">
+                  <span className="text-white/20 mr-1">{i+1}</span>
+                  <a href={`https://steamcommunity.com/sharedfiles/filedetails/?id=${id}`} target="_blank" className="hover:text-orange-400 transition-colors">
+                    ID: {id}
+                  </a>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <button onClick={() => setShowModsPopup(false)} className="flex-1 py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
+                Volver
+              </button>
+              <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=2870019036" target="_blank" className={`flex-1 py-4 ${theme.btn} rounded-2xl text-[10px] font-black text-center text-white uppercase tracking-widest transition-all`}>
+                Ver Colección Steam
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
