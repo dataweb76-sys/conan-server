@@ -11,31 +11,21 @@ export async function GET(request: Request) {
       type: "conanexiles",
       host: ip,
       port: port,
-      attemptTimeout: 10000, // Aumentado a 10s para mayor estabilidad
+      attemptTimeout: 10000,
     });
 
     return NextResponse.json({
       online: true,
-      name: state.name || "Dragon y Dinosaurio PVEVP",
-      map: state.map || "Exiled Lands",
-      version: state.raw?.version || "N/A",
+      name: state.name,
+      map: state.map,
       playersCount: state.players ? state.players.length : 0,
-      maxPlayers: state.maxplayers || 40,
-      players: (state.players || [])
-        .map((pl: any) => ({
-          name: pl.name || "Jugador",
-          time: Math.floor(pl?.raw?.time || pl?.time || 0)
-        }))
-        .filter((p: any) => p.name && p.name !== "Superviviente" && p.name !== "")
-        .slice(0, 50),
+      maxPlayers: state.maxplayers,
     });
   } catch (error) {
     return NextResponse.json({
       online: false,
-      name: "Dragon y Dinosaurio (Offline)",
       playersCount: 0,
       maxPlayers: 40,
-      players: []
     });
   }
 }

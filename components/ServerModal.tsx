@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const MODS_REALES = [
   "Pippi - User & Server Management",
@@ -17,56 +17,83 @@ const MODS_REALES = [
 
 export default function ServerModal({ open, onClose, server }: any) {
   const [showMods, setShowMods] = useState(false);
+  const [realtimeData, setRealtimeData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  // EFECTO: Cuando se abre el modal, consultamos la API de Gamedig
+  useEffect(() => {
+    if (open && server) {
+      setLoading(true);
+      // Usamos el qport (Query Port) que es 27017 o similar
+      const queryPort = server.qport || 27017;
+      
+      fetch(`/api/status?ip=${server.ip}&port=${queryPort}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setRealtimeData(data);
+          setLoading(false);
+        })
+        .catch(() => {
+          setLoading(false);
+        });
+    } else {
+      setRealtimeData(null);
+    }
+  }, [open, server]);
+
   if (!open) return null;
+
+  // Usamos los datos de la API si existen, sino los del objeto estático
+  const displayData = realtimeData || {
+    name: server?.title,
+    online: false,
+    playersCount: 0,
+    maxPlayers: 40,
+    map: "Cargando..."
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
       <div className="bg-[#1a1c23] border border-gray-700 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
         
-        {/* Header con Diseño Sólido (Sin imágenes externas para evitar errores de red) */}
+        {/* Header Sólido */}
         <div className="relative h-32 bg-gradient-to-br from-[#2a2d37] to-[#1a1c23] flex items-center px-8 border-b border-gray-800">
           <div className="space-y-1">
             <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest border border-emerald-500/30">
-              Servidor Activo
+              {loading ? "Actualizando..." : displayData.online ? "Servidor Activo" : "Consultando..."}
             </span>
             <h2 className="text-3xl font-black text-white tracking-tighter uppercase italic">
-              Dragon y Dinosaurio
+              {server?.title || "Dragon y Dinosaurio"}
             </h2>
           </div>
 
-          <button 
-            onClick={onClose} 
-            className="absolute top-4 right-4 bg-black/40 hover:bg-red-600 text-white w-8 h-8 flex items-center justify-center rounded-full transition-colors z-10"
-          >
-            ✕
-          </button>
+          <button onClick={onClose} className="absolute top-4 right-4 bg-black/40 hover:bg-red-600 text-white w-8 h-8 flex items-center justify-center rounded-full transition-colors z-10">✕</button>
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Fila Principal */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="bg-black/40 p-5 rounded-xl border border-white/5 space-y-3">
                 <p className="text-sm flex justify-between items-center">
                   <span className="text-gray-400">Estado:</span>
-                  <span className={server?.online ? "text-green-400 font-bold" : "text-red-400 font-bold"}>
-                    {server?.online ? "● ONLINE" : "○ OFFLINE"}
+                  <span className={displayData.online ? "text-green-400 font-bold" : "text-red-400 font-bold"}>
+                    {loading ? "..." : displayData.online ? "● ONLINE" : "○ OFFLINE"}
                   </span>
                 </p>
                 <p className="text-sm flex justify-between items-center">
                   <span className="text-gray-400">Mapa:</span>
-                  <span className="text-white font-medium">{server?.map || "Exiled Lands"}</span>
+                  <span className="text-white font-medium">{displayData.map || "Exiled Lands"}</span>
                 </p>
                 <p className="text-sm flex justify-between items-center">
                   <span className="text-gray-400">Jugadores:</span>
                   <span className="text-white font-mono font-bold text-base">
-                    {server?.playersCount ?? 0} / {server?.maxPlayers ?? 40}
+                    {displayData.playersCount ?? 0} / {displayData.maxPlayers ?? 40}
                   </span>
                 </p>
               </div>
             </div>
 
-            {/* Banner de Votación (Enlace corregido) */}
+            {/* Votación con el link que pediste */}
             <div className="flex flex-col justify-center">
               <a 
                 href="https://topgameservers.net/conanexiles/server/nrcYSh89KdNehu8g4MS2" 
@@ -80,18 +107,13 @@ export default function ServerModal({ open, onClose, server }: any) {
             </div>
           </div>
 
-          {/* Botón de Mods */}
-          <button 
-            onClick={() => setShowMods(true)}
-            className="w-full py-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-emerald-400 font-bold transition-all flex items-center justify-center gap-3 group"
-          >
+          <button onClick={() => setShowMods(true)} className="w-full py-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-emerald-400 font-bold transition-all flex items-center justify-center gap-3 group">
             <span>Explorar los 11 mods instalados</span>
             <span className="group-hover:translate-x-1 transition-transform">➔</span>
           </button>
         </div>
       </div>
 
-      {/* Popup de Lista de Mods */}
       {showMods && (
         <div className="absolute inset-0 z-[60] flex items-center justify-center p-6 bg-black/95 animate-in fade-in duration-200">
           <div className="w-full max-w-md bg-[#1a1c23] border border-emerald-500/30 rounded-2xl p-6 shadow-2xl relative">
@@ -107,12 +129,7 @@ export default function ServerModal({ open, onClose, server }: any) {
                 </div>
               ))}
             </div>
-            <button 
-              onClick={() => setShowMods(false)}
-              className="mt-6 w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl text-white font-medium transition-colors"
-            >
-              Regresar al menú
-            </button>
+            <button onClick={() => setShowMods(false)} className="mt-6 w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl text-white font-medium transition-colors">Regresar al menú</button>
           </div>
         </div>
       )}
