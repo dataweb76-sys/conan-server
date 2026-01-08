@@ -1,86 +1,77 @@
 import { NextResponse } from "next/server";
-import dgram from "dgram";
 
-const A2S_INFO = Buffer.from([
-  0xff, 0xff, 0xff, 0xff,
-  0x54,
-  ...Buffer.from("Source Engine Query\0")
-]);
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-const A2S_PLAYER = Buffer.from([
-  0xff, 0xff, 0xff, 0xff,
-  0x55,
-  0xff, 0xff, 0xff, 0xff
-]);
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const gamedig: any = require("gamedig");
 
-function udpQuery(host: string, port: number, payload: Buffer, timeout = 2000) {
-  return new Promise<Buffer>((resolve, reject) => {
-    const socket = dgram.createSocket("udp4");
+function getQueryFn() {
+  if (typeof gamedig?.query === "function") return gamedig.query;
+  if (typeof gamedig?.GameDig?.query === "function") return gamedig.GameDig.query;
+  return null;
+}
 
-    const timer = setTimeout(() => {
-      socket.close();
-      reject(new Error("timeout"));
-    }, timeout);
+async function tryQuery(host: string, port: number) {
+  const queryFn = getQueryFn();
+  if (!queryFn) throw new Error("gamedig_query_missing");
 
-    socket.on("message", (msg) => {
-      clearTimeout(timer);
-      socket.close();
-      resolve(msg);
-    });
-
-    socket.send(payload, port, host);
+  return await queryFn({
+    type: "conanexiles",
+    host,
+    port,
+    maxAttempts: 1,
+    socketTimeout: 3500,
   });
 }
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const ip = searchParams.get("ip");
-  const port = Number(searchParams.get("qport") || searchParams.get("port"));
+  const host = searchParams.get("ip") || searchParams.get("host");
+  const portStr = searchParams.get("port");
+  const qportStr = searchParams.get("qport");
 
-  if (!ip || !port) {
-    return NextResponse.json({ ok: false, error: "missing_ip_or_port" }, { status: 400 });
+  if (!host) return NextResponse.json({ ok: false, error: "missing_host" }, { status: 400 });
+
+  const gamePort = portStr ? Number(portStr) : NaN;
+  const qport = qportStr ? Number(qportStr) : NaN;
+
+  const candidates: number[] = [];
+  if (Number.isFinite(qport)) candidates.push(qport);
+  if (Number.isFinite(gamePort)) {
+    candidates.push(gamePort, gamePort + 1, 27015, 27016, 27017);
   }
 
-  try {
-    // INFO
-    const info = await udpQuery(ip, port, A2S_INFO);
+  const ports = [...new Set(candidates)].filter((p) => Number.isFinite(p));
+  let lastErr: any = null;
 
-    const players = info.readUInt8(6);
-    const maxPlayers = info.readUInt8(7);
-
-    // PLAYERS (opcional, muchos servers NO lo permiten)
-    let playerNames: string[] = [];
-
+  for (const p of ports) {
     try {
-      const challenge = await udpQuery(ip, port, A2S_PLAYER);
-      const realQuery = Buffer.from(A2S_PLAYER);
-      challenge.copy(realQuery, 5, 5, 9);
+      const state = await tryQuery(host, p);
 
-      const playersRes = await udpQuery(ip, port, realQuery);
+      const rawPlayers = Array.isArray(state?.players) ? state.players : [];
+      const playerList = rawPlayers
+        .map((pl: any) => ({
+          name: String(pl?.name || pl?.raw?.name || "Superviviente").trim(),
+          time: Math.floor(pl?.raw?.time || pl?.time || 0)
+        }))
+        .filter(p => p.name !== "Superviviente" && p.name !== "")
+        .slice(0, 50);
 
-      let offset = 6;
-      const count = playersRes.readUInt8(offset++);
-      for (let i = 0; i < count; i++) {
-        offset++; // index
-        let name = "";
-        while (playersRes[offset] !== 0x00) {
-          name += String.fromCharCode(playersRes[offset++]);
-        }
-        offset++; // null byte
-        offset += 8; // score + duration
-        if (name) playerNames.push(name);
-      }
-    } catch {
-      // server no expone jugadores → normal
+      return NextResponse.json({
+        ok: true,
+        usedPort: p,
+        name: state?.name ?? null,
+        map: state?.map ?? "Exiled Lands",
+        playersCount: rawPlayers.length,
+        maxPlayers: state?.maxplayers ?? null,
+        players: playerList,
+        version: state?.raw?.version || "Actualizada",
+      });
+    } catch (e: any) {
+      lastErr = e;
     }
-
-    return NextResponse.json({
-      ok: true,
-      players,
-      maxPlayers,
-      playerNames,
-    });
-  } catch (e) {
-    return NextResponse.json({ ok: false, error: "offline" }, { status: 200 });
   }
+
+  return NextResponse.json({ ok: false, error: "no_response", message: lastErr?.message });
 }

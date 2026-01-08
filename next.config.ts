@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Config mínimo para Vercel.
-  // (No uses typedRoutes acá porque te rompió el build antes.)
+  // Para que Next no intente empaquetar gamedig (y sus requires dinámicos)
+  serverExternalPackages: ["gamedig", "keyv"],
 };
 
 export default nextConfig;
