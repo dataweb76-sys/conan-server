@@ -20,67 +20,37 @@ async function tryQuery(host: string, port: number) {
     type: "conanexiles",
     host,
     port,
-    maxAttempts: 1,
-    socketTimeout: 3000, // Un poco más de tiempo para servidores lentos
+    maxAttempts: 2,
+    socketTimeout: 5000,
   });
 }
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-
   const host = searchParams.get("ip") || searchParams.get("host");
-  const portStr = searchParams.get("port");
   const qportStr = searchParams.get("qport");
 
-  if (!host) {
-    return NextResponse.json({ ok: false, error: "missing_host" }, { status: 400 });
+  if (!host || !qportStr) {
+    return NextResponse.json({ ok: false, error: "missing_params" }, { status: 400 });
   }
 
-  const gamePort = portStr ? Number(portStr) : NaN;
-  const qport = qportStr ? Number(qportStr) : NaN;
+  const qport = Number(qportStr);
 
-  const candidates: number[] = [];
-  if (Number.isFinite(qport)) candidates.push(qport);
-  if (Number.isFinite(gamePort)) {
-    candidates.push(gamePort, gamePort + 1, gamePort + 2, gamePort + 10, 27015, 27016, 27017);
+  try {
+    const state = await tryQuery(host, qport);
+    const rawPlayers = Array.isArray(state?.players) ? state.players : [];
+    const playerNames = rawPlayers
+      .map((pl: any) => (pl?.name || pl?.raw?.name || "").trim())
+      .filter((n: string) => n.length > 0);
+
+    return NextResponse.json({
+      ok: true,
+      name: state?.name,
+      playersCount: playerNames.length,
+      maxPlayers: state?.maxplayers || 40,
+      players: playerNames,
+    });
+  } catch (e: any) {
+    return NextResponse.json({ ok: false, error: e.message });
   }
-
-  const ports = [...new Set(candidates)].filter((p) => Number.isFinite(p));
-
-  let lastErr: any = null;
-
-  for (const p of ports) {
-    try {
-      const state = await tryQuery(host, p);
-
-      // Extracción robusta de nombres de jugadores
-      const rawPlayers = Array.isArray(state?.players) ? state.players : [];
-      const playerNames = rawPlayers
-        .map((pl: any) => {
-          // Gamedig a veces pone el nombre en 'name', otras en 'raw.name'
-          const name = pl?.name || pl?.raw?.name || pl?.id;
-          return name ? String(name).trim() : "";
-        })
-        .filter((n: string) => n.length > 0)
-        .slice(0, 100);
-
-      return NextResponse.json({
-        ok: true,
-        usedPort: p,
-        name: state?.name ?? null,
-        map: state?.map ?? null,
-        playersCount: state?.players?.length ?? rawPlayers.length,
-        maxPlayers: state?.maxplayers ?? null,
-        players: playerNames,
-      });
-    } catch (e: any) {
-      lastErr = e;
-    }
-  }
-
-  return NextResponse.json({
-    ok: false,
-    error: "no_response",
-    message: lastErr?.message || "Servidor no responde",
-  });
 }

@@ -1,82 +1,18 @@
-"use client";
-
-import React from "react";
-
-type Props = {
-  title: string;
-  subtitle?: string;
-  ip: string;
-  port: number;
-  qport?: number; // ✅ ahora existe
-  image: string;
-  slug: string;
-  onOpen: () => void;
-};
-
-export default function ServerCard({
-  title,
-  subtitle,
-  ip,
-  port,
-  qport,
-  image,
-  onOpen,
-}: Props) {
-  const addr = `${ip}:${port}`;
-
-  function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      onOpen();
-    }
-  }
-
+export default function ServerCard({ title, subtitle, image, ip, port, qPort }: any) {
   return (
-    <div
-      className="rounded-xl border border-black/10 bg-white overflow-hidden cursor-pointer hover:shadow-sm transition-shadow"
-      role="button"
-      tabIndex={0}
-      onClick={onOpen}
-      onKeyDown={onKeyDown}
-      aria-label={`Abrir información de ${title}`}
-    >
-      {/* Imagen */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={image} alt={title} className="w-full h-44 object-cover" />
-
-      <div className="p-3">
-        <div className="font-semibold leading-tight">{title}</div>
-        {subtitle ? <div className="text-xs text-black/60 mt-1">{subtitle}</div> : null}
-
-        <div className="text-xs mt-3 font-mono">{addr}</div>
-
-        {/* (Opcional) mostrar query port si lo querés ver */}
-        {typeof qport === "number" ? (
-          <div className="text-[11px] mt-1 text-black/60 font-mono">Query: {qport}</div>
-        ) : null}
-
-        <div className="mt-3 flex gap-2">
-          {/* Botón Ver (abre modal) */}
-          <button
-            className="text-sm px-3 py-2 rounded-lg border border-black/10 hover:bg-black/5"
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpen();
-            }}
-          >
-            Ver
-          </button>
-
-          {/* Copiar IP */}
-          <button
-            className="text-sm px-3 py-2 rounded-lg bg-black text-white hover:opacity-90"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigator.clipboard.writeText(addr);
-            }}
-          >
-            Copiar IP
-          </button>
+    <div className="relative h-full w-full flex flex-col justify-end p-10 overflow-hidden group">
+      <img src={image} className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-10 transition-opacity duration-700" alt="" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0d121b] via-[#0d121b]/60 to-transparent z-20" />
+      
+      <div className="relative z-30 pointer-events-none text-left">
+        <h3 className="text-2xl font-black italic leading-tight text-white uppercase drop-shadow-[0_2px_15px_rgba(0,0,0,1)]">
+          {title}
+        </h3>
+        <p className="text-[10px] font-bold tracking-[0.2em] text-orange-500 uppercase mt-2">
+          {subtitle}
+        </p>
+        <div className="mt-4 text-[9px] font-mono text-white/30 tracking-widest">
+           {ip}:{port} {qPort ? `| Q:${qPort}` : ''}
         </div>
       </div>
     </div>
