@@ -11,7 +11,8 @@ import {
   Wind, Facebook, Dumbbell, Palette, Scissors, 
   Box, Settings, Wand2, Layers, Binary, BookOpen,
   Target, Ghost, Hammer, Footprints, X, Swords, ChevronDown,
-  Milestone, TrendingUp, Shirt, Wand, Activity
+  Milestone, TrendingUp, Shirt, Wand, Activity, 
+  MapPinned, Replace, ShoppingCart, Diamond
 } from "lucide-react";
 
 // --- DATOS EXTENDIDOS DE FACCIONES (World Anvil) ---
@@ -72,7 +73,7 @@ const GuidesMenu = () => {
 
   return (
     <div className="w-full space-y-8">
-      {/* SELECTOR DE MODS */}
+      {/* SELECTOR DE MODS / GUÍAS */}
       <div className="flex flex-wrap justify-center gap-3">
         {[
           { id: "aoc", label: "Age of Calamitous", color: "bg-orange-600", icon: <Shield size={14}/> },
@@ -80,7 +81,12 @@ const GuidesMenu = () => {
           { id: "eaa", label: "Enhanced Armory", color: "bg-blue-600", icon: <Sword size={14}/> },
           { id: "warriors", label: "Warriors & Imm.", color: "bg-red-600", icon: <HeartPulse size={14}/> },
           { id: "grim", label: "Grim Prod.", color: "bg-pink-600", icon: <Palette size={14}/> },
-          { id: "rutinas", label: "Routines", color: "bg-emerald-600", icon: <Footprints size={14}/> }
+          { id: "rutinas", label: "Routines", color: "bg-emerald-600", icon: <Footprints size={14}/> },
+          // NUEVAS GUÍAS
+          { id: "teleports", label: "Teleports", color: "bg-cyan-600", icon: <MapPinned size={14}/> },
+          { id: "sistema", label: "Cambio Sistema", color: "bg-amber-600", icon: <Replace size={14}/> },
+          { id: "mercado", label: "Mercado", color: "bg-lime-600", icon: <ShoppingCart size={14}/> },
+          { id: "vip", label: "Exiliado VIP", color: "bg-yellow-500", icon: <Diamond size={14}/> }
         ].map((mod) => (
           <button 
             key={mod.id}
@@ -250,6 +256,115 @@ const GuidesMenu = () => {
               </div>
             </div>
           )}
+
+          {/* CONTENIDO: TELEPORTS */}
+          {activeMod === "teleports" && (
+            <div className="space-y-10 animate-in fade-in duration-500">
+              <div className="flex flex-col md:flex-row gap-8 bg-cyan-600/10 border border-cyan-500/20 p-10 rounded-[3rem]">
+                <div className="p-6 bg-cyan-600 rounded-full h-fit shadow-lg shadow-cyan-600/20"><Navigation size={40}/></div>
+                <div className="space-y-4">
+                  <h4 className="text-3xl font-black uppercase italic text-cyan-400">Guía de Viaje Rápido</h4>
+                  <p className="text-xs text-white/70 font-bold uppercase leading-relaxed">
+                    Encuentra al **NPC Ariel** en el Hall de Facciones y puntos clave del mapa. Ella domina la red de portales del servidor.
+                  </p>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="bg-black/40 p-5 rounded-2xl border border-cyan-500/20">
+                      <p className="text-cyan-400 text-[9px] font-black uppercase mb-1">Nivel 1-20</p>
+                      <p className="text-[10px] font-bold text-white/60">Zonas de inicio seguras para evitar bosses letales.</p>
+                    </div>
+                    <div className="bg-black/40 p-5 rounded-2xl border border-cyan-500/20">
+                      <p className="text-cyan-400 text-[9px] font-black uppercase mb-1">Nivel 20+</p>
+                      <p className="text-[10px] font-bold text-white/60">Se habilitan ubicaciones estratégicas en todo el mapa.</p>
+                    </div>
+                    <div className="bg-black/40 p-5 rounded-2xl border border-cyan-500/20">
+                      <p className="text-cyan-400 text-[9px] font-black uppercase mb-1">Especiales</p>
+                      <p className="text-[10px] font-bold text-white/60">Acceso a AoC, EEWA y el Nuevo Mundo personalizado.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* CONTENIDO: SISTEMA ATRIBUTOS */}
+          {activeMod === "sistema" && (
+            <div className="grid lg:grid-cols-2 gap-8 animate-in fade-in duration-500">
+              <div className="bg-amber-600/10 border border-amber-500/20 p-10 rounded-[3rem] space-y-6">
+                <h4 className="text-3xl font-black uppercase italic text-amber-500 flex items-center gap-3"><Replace size={32}/> Nuevo Sistema de Poder</h4>
+                <p className="text-xs text-white/70 font-bold uppercase leading-relaxed">
+                  El sistema de atributos clásico ha evolucionado. Ahora utilizamos el **Sistema de Calamitous**, donde cada punto invertido define habilidades únicas.
+                </p>
+                <div className="p-6 bg-black/40 rounded-3xl border border-amber-500/20 flex items-center gap-6">
+                  <div className="p-4 bg-amber-600 rounded-2xl font-black italic">SHIFT + HOME</div>
+                  <p className="text-[10px] font-black uppercase">O pulsa la tecla <span className="text-amber-500">[9]</span> para ver tus progresos y aprender nuevas habilidades.</p>
+                </div>
+              </div>
+              <div className="flex flex-col justify-center space-y-4 bg-white/5 p-10 rounded-[3rem] border border-white/10">
+                <h5 className="text-amber-500 font-black italic uppercase text-sm">Consejo Pro:</h5>
+                <p className="text-[10px] text-white/40 font-bold uppercase leading-loose">
+                  No malgastes tus puntos. Estudia bien cada rama en el menú para especializar tu personaje según tu facción y rol de combate.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* CONTENIDO: MERCADO */}
+          {activeMod === "mercado" && (
+            <div className="space-y-12 animate-in fade-in duration-500">
+              <div className="text-center space-y-4">
+                <h4 className="text-4xl font-black uppercase italic text-lime-500">Gran Mercado Central</h4>
+                <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">El comercio mueve al mundo de los antiguos</p>
+              </div>
+              <div className="grid md:grid-cols-4 gap-4">
+                {[
+                  { t: "Armería", d: "Armas y Armaduras Élite", i: <Sword/> },
+                  { t: "Establos", d: "Dinosaurios y Monturas", i: <Flame/> },
+                  { t: "Bestiario", d: "Pets Especiales y Dragones", i: <Ghost/> },
+                  { t: "Librería", d: "Grimorios y Conocimiento", i: <BookOpen/> }
+                ].map((item, i) => (
+                  <div key={i} className="bg-white/5 p-6 rounded-[2.5rem] border border-white/10 text-center space-y-3">
+                    <div className="text-lime-500 flex justify-center">{item.i}</div>
+                    <p className="text-[11px] font-black uppercase italic">{item.t}</p>
+                    <p className="text-[8px] text-white/40 uppercase font-bold">{item.d}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-lime-600/10 border border-lime-500/20 p-8 rounded-[3rem] text-center italic font-black uppercase text-xs">
+                Usa el NPC Ariel para viajar al Mercado. Compra con monedas obtenidas por tiempo de juego y matando bestias.
+              </div>
+            </div>
+          )}
+
+          {/* CONTENIDO: VIP */}
+          {activeMod === "vip" && (
+            <div className="max-w-4xl mx-auto animate-in fade-in duration-500">
+              <div className="relative bg-yellow-500/10 border border-yellow-500/40 p-12 rounded-[4rem] text-center space-y-8 overflow-hidden">
+                <Diamond size={200} className="absolute -top-20 -right-20 text-yellow-500/5 rotate-12" />
+                <div className="inline-block p-6 bg-yellow-500 rounded-full shadow-2xl shadow-yellow-500/40"><Crown size={48} className="text-black"/></div>
+                <div className="space-y-4 relative z-10">
+                  <h4 className="text-4xl font-black uppercase italic text-yellow-500">Rango: Exiliado VIP</h4>
+                  <p className="text-sm text-white/80 font-bold uppercase leading-relaxed">
+                    ¿Buscas privilegios reales? El estatus de VIP está disponible para todos los guerreros dedicados.
+                  </p>
+                </div>
+                <div className="grid md:grid-cols-2 gap-6 relative z-10">
+                  <div className="bg-black/60 p-8 rounded-[2.5rem] border border-yellow-500/20 space-y-4">
+                    <p className="text-yellow-500 font-black italic uppercase">¿Cómo conseguirlo?</p>
+                    <p className="text-[10px] text-white/60 font-bold uppercase leading-relaxed">
+                      Viaja al Mercado y busca al legendario **Conanito**. Él te otorgará el rango a cambio de **50 Monedas de Oro**.
+                    </p>
+                  </div>
+                  <div className="bg-black/60 p-8 rounded-[2.5rem] border border-yellow-500/20 space-y-4">
+                    <p className="text-yellow-500 font-black italic uppercase">Beneficios</p>
+                    <p className="text-[10px] text-white/60 font-bold uppercase leading-relaxed">
+                      Acceso a teleports de nivel alto, zonas exclusivas y equipo único que solo los VIP pueden portar.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
 
