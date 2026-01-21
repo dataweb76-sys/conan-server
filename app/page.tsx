@@ -242,7 +242,7 @@ export default function HomePage() {
         <nav className="flex justify-between items-center bg-white/5 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/10 shadow-2xl">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-orange-600 rounded-2xl shadow-lg"><img src="/logo/logo.png" className="w-8 h-8" alt="logo" /></div>
-            <div><h1 className="text-xl font-black uppercase italic leading-none">Los Antiguos</h1></div>
+            <div><h1 className="text-xl font-black uppercase italic leading-none">Dragones y Dinos</h1></div>
           </div>
           <div className="hidden md:flex items-center gap-3 px-6 py-2 bg-white/5 rounded-full border border-white/5">
              <span className="text-xl">{geo.flag}</span>
@@ -262,7 +262,7 @@ export default function HomePage() {
           </div>
 
           <div className="flex flex-col md:flex-row gap-4 w-full max-w-2xl">
-            <button onClick={() => { setSelected(serverData); setOpen(true); }} className="flex-[2] bg-white text-black py-7 rounded-[2.5rem] font-black uppercase italic tracking-widest hover:bg-orange-600 hover:text-white transition-all shadow-2xl">Directorio Técnico</button>
+            <button onClick={() => { setSelected(serverData); setOpen(true); }} className="flex-[2] bg-white text-black py-7 rounded-[2.5rem] font-black uppercase italic tracking-widest hover:bg-orange-600 hover:text-white transition-all shadow-2xl">INFO DEL SERVIDOR</button>
             <a href={`steam://run/440900//+connect%20${serverData.ip}:${serverData.port}`} className="flex-1 bg-white/5 border border-white/10 py-7 rounded-[2.5rem] font-black uppercase text-xs tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-white/10 transition-all shadow-xl">
               <Zap size={20} className="text-orange-500" /> Jugar
             </a>
@@ -272,7 +272,7 @@ export default function HomePage() {
             <a href="https://drive.google.com/file/d/1lrRNi06iCTJejVG6DTBvskxIBW7rYQfj/view?usp=drive_link" target="_blank" className="group flex items-center justify-between p-6 bg-orange-600/10 border border-orange-500/20 rounded-[2rem] hover:bg-orange-600/20 transition-all">
               <div className="flex items-center gap-4 text-left">
                 <div className="p-4 bg-orange-600 rounded-2xl group-hover:animate-bounce shadow-lg"><PlayCircle size={24} /></div>
-                <div><h4 className="text-xs font-black uppercase tracking-widest">Cinemática Oficial</h4><p className="text-[9px] text-white/40 font-bold uppercase">Descargar Intro</p></div>
+                <div><h4 className="text-xs font-black uppercase tracking-widest">Cinemática Oficial</h4><p className="text-[9px] text-white/40 font-bold uppercase">Descargar Intro D&D</p></div>
               </div>
               <Download size={20} className="text-orange-500 opacity-40 group-hover:opacity-100" />
             </a>
