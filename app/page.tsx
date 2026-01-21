@@ -241,7 +241,7 @@ export default function HomePage() {
         {/* NAV */}
         <nav className="flex justify-between items-center bg-white/5 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/10 shadow-2xl">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-orange-600 rounded-2xl shadow-lg"><img src="/logo/logo.png" className="w-8 h-8" alt="logo" /></div>
+            <div className="p-3 bg-orange-600 rounded-2xl shadow-lg"><img src="/logo/logo.png" className="w-16 h-16" alt="logo" /></div>
             <div><h1 className="text-xl font-black uppercase italic leading-none">Dragones y Dinos</h1></div>
           </div>
           <div className="hidden md:flex items-center gap-3 px-6 py-2 bg-white/5 rounded-full border border-white/5">
@@ -272,7 +272,7 @@ export default function HomePage() {
             <a href="https://drive.google.com/file/d/1lrRNi06iCTJejVG6DTBvskxIBW7rYQfj/view?usp=drive_link" target="_blank" className="group flex items-center justify-between p-6 bg-orange-600/10 border border-orange-500/20 rounded-[2rem] hover:bg-orange-600/20 transition-all">
               <div className="flex items-center gap-4 text-left">
                 <div className="p-4 bg-orange-600 rounded-2xl group-hover:animate-bounce shadow-lg"><PlayCircle size={24} /></div>
-                <div><h4 className="text-xs font-black uppercase tracking-widest">Cinemática Oficial</h4><p className="text-[9px] text-white/40 font-bold uppercase">Descargar Intro D&D</p></div>
+                <div><h4 className="text-xs font-black uppercase tracking-widest">Cinemática Oficial</h4><p className="text-[9px] text-white/40 font-bold uppercase">Descargar Intro de nuestro servidor (cambia el video intro)</p></div>
               </div>
               <Download size={20} className="text-orange-500 opacity-40 group-hover:opacity-100" />
             </a>
