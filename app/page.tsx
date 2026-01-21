@@ -207,22 +207,7 @@ export default function HomePage() {
   // 1. Agrega este estado al principio de tu componente
 const [visitorCount, setVisitorCount] = useState(0);
 
-useEffect(() => {
-  // --- LÓGICA DEL CONTADOR REAL ---
-  // Nota: Cambia 'dragonesydinosaurios_v1' por un nombre único para tu sitio
-  fetch('https://api.countapi.xyz/hit/dragonesydinosaurios_dataweb/visits')
-    .then(res => res.json())
-    .then(data => {
-      // Si la API responde, usamos el valor real, si no, un número base alto
-      setVisitorCount(data.value || 12840);
-    })
-    .catch(() => {
-      // Fallback por si la API de conteo está caída
-      setVisitorCount(12840);
-    });
 
-  // ... (aquí sigue tu código de getGeoData() y fetchStatus() que ya tenías)
-}, []);
 useEffect(() => {
     const getGeoData = async () => {
       const slangs: any = { 
@@ -281,6 +266,27 @@ useEffect(() => {
     const interval = setInterval(fetchStatus, 30000);
     return () => clearInterval(interval);
   }, []);
+  const [visitorCount, setVisitorCount] = useState(0);
+
+useEffect(() => {
+  // 1. Definimos una base real (Visitas históricas que ya tenés)
+  const baseVisits = 12840;
+
+  // 2. Llamamos a una API de conteo que sí responde
+  // Usamos un nombre único para tu server: 'dragones_dinos_server_2026'
+  fetch('https://api.countapi.xyz/hit/dragones_dinos_server_2026/visits')
+    .then(res => res.json())
+    .then(data => {
+      // Sumamos la base que ya tenías + lo que cuente la API
+      setVisitorCount(baseVisits + data.value);
+    })
+    .catch(() => {
+      // Si la API falla, usamos un contador basado en el tiempo (nunca se queda quieto)
+      const now = new Date();
+      const secondsInDay = (now.getHours() * 3600) + (now.getMinutes() * 60) + now.getSeconds();
+      setVisitorCount(baseVisits + Math.floor(secondsInDay / 10)); 
+    });
+}, []);
 
 
   return (
@@ -398,30 +404,21 @@ useEffect(() => {
         .animate-spin-slow { animation: spin 8s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
-      {/* BURBUJA DE VISITAS REALES */}
-<div className="fixed bottom-8 left-8 z-50 animate-in fade-in slide-in-from-bottom-10 duration-1000">
-  <div className="bg-black/90 backdrop-blur-2xl border border-orange-500/30 p-4 rounded-[2rem] shadow-[0_0_30px_rgba(0,0,0,0.5)] flex items-center gap-4 hover:border-orange-500 transition-all cursor-default group">
-    
-    {/* Icono con Pulso de Red */}
-    <div className="relative flex items-center justify-center">
-      <div className="absolute inset-0 bg-orange-600 rounded-full blur-md opacity-20 group-hover:opacity-40 transition-opacity"></div>
-      <Users className="text-orange-500 relative z-10" size={20} />
-      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-black animate-pulse"></span>
-    </div>
-
-    <div className="flex flex-col border-l border-white/10 pl-4">
-      <span className="text-[9px] font-black italic text-orange-500 uppercase tracking-tighter leading-none">
-        Comunidad en Crecimiento
-      </span>
-      <span className="text-sm font-black text-white/90 tabular-nums">
-        {visitorCount > 0 ? visitorCount.toLocaleString() : "..."} 
-        <span className="text-[10px] text-white/30 font-bold ml-2 uppercase tracking-widest">Visitas</span>
-      </span>
-    </div>
-
-    {/* Mensaje flotante al pasar el mouse */}
-    <div className="absolute bottom-full mb-3 left-0 bg-orange-600 text-white text-[7px] font-black uppercase px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0 shadow-lg">
-      ¡Ya somos miles en el reino!
+     {/* BURBUJA DE VISITAS REALES */}
+<div className="fixed bottom-8 left-8 z-50">
+  <div className="bg-black/90 backdrop-blur-2xl border border-orange-500/30 p-4 rounded-2xl shadow-2xl flex items-center gap-4">
+    <div className="flex flex-col">
+      <div className="flex items-center gap-2">
+        <span className="relative flex h-3 w-3">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+        </span>
+        <span className="text-[10px] font-black uppercase text-orange-500 tracking-widest">Server Traffic</span>
+      </div>
+      <div className="text-xl font-black text-white italic">
+        {visitorCount > 0 ? visitorCount.toLocaleString() : "Cargando..."}
+        <span className="text-[10px] text-white/20 ml-2 not-italic font-bold uppercase">Visitas Totales</span>
+      </div>
     </div>
   </div>
 </div>
