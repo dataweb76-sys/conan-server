@@ -253,40 +253,22 @@ useEffect(() => {
       }
     };
 
-    const fetchStatus = async () => {
-      try {
-        const res = await fetch(`/api/status?ip=${serverData.ip}&qport=${serverData.queryPort}`);
-        const data = await res.json();
-        if (data.ok) setStatus({ online: data.playersCount, max: data.maxPlayers, players: data.players || [], state: "online" });
-      } catch { setStatus((prev: any) => ({ ...prev, state: "offline" })); }
-    };
-
-    getGeoData();
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 30000);
-    return () => clearInterval(interval);
-  }, []);
-  const [visitorCount, setVisitorCount] = useState(0);
-
-useEffect(() => {
-  // 1. Definimos una base real (Visitas históricas que ya tenés)
-  const baseVisits = 12840;
-
-  // 2. Llamamos a una API de conteo que sí responde
-  // Usamos un nombre único para tu server: 'dragones_dinos_server_2026'
-  fetch('https://api.countapi.xyz/hit/dragones_dinos_server_2026/visits')
-    .then(res => res.json())
-    .then(data => {
-      // Sumamos la base que ya tenías + lo que cuente la API
-      setVisitorCount(baseVisits + data.value);
-    })
-    .catch(() => {
-      // Si la API falla, usamos un contador basado en el tiempo (nunca se queda quieto)
-      const now = new Date();
-      const secondsInDay = (now.getHours() * 3600) + (now.getMinutes() * 60) + now.getSeconds();
-      setVisitorCount(baseVisits + Math.floor(secondsInDay / 10)); 
-    });
-}, []);
+  {/* CONTADOR EXTERNO REAL */}
+<div className="bg-black/60 backdrop-blur-md p-4 rounded-2xl border border-orange-500/20 flex flex-col items-center">
+  <span className="text-[10px] font-black uppercase text-orange-500 mb-2 tracking-widest">
+    Visitas Reales
+  </span>
+  
+  {/* Este es el script del contador externo */}
+  <div id="sfc6u8p7n6r98b4u8n7y874l48r6y3q8pbc"></div>
+  <script type="text/javascript" src="https://counter1.optistats.ovh/private/counter.js?c=6u8p7n6r98b4u8n7y874l48r6y3q8pbc&down=async" async></script>
+  
+  <noscript>
+    <a href="https://www.contadorvisitasgratis.com" title="contador de visitas">
+      <img src="https://counter1.optistats.ovh/private/contadorvisitasgratis.php?c=6u8p7n6r98b4u8n7y874l48r6y3q8pbc" border="0" title="contador de visitas" alt="contador de visitas" />
+    </a>
+  </noscript>
+</div>
 
 
   return (
