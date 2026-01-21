@@ -205,21 +205,42 @@ export default function HomePage() {
     image: "/servers/server1.png",
   };
 
-  useEffect(() => {
-    fetch('https://ipapi.co/json/')
-      .then(res => res.ok ? res.json() : Promise.reject())
-      .then(data => {
-        const code = data.country_code?.toUpperCase();
-        const flag = code ? code.replace(/./g, (c: string) => String.fromCodePoint(c.charCodeAt(0) + 127397)) : "🌐";
-        const slangs: any = { 
-          "AR": "¿Qué hacés pa? Disfrutá del server, campeón del mundo 🇦🇷", 
-          "CL": "¿Qué hacés weón? ¡Pásalo la raja! 🇨🇱", 
-          "MX": "¡Qué onda carnal! Échele ganas compa 🇲🇽",
-          "UY": "¿Qué hacés botija? Arriba ese server 🇺🇾"
-        };
-        setGeo({ name: data.country_name, flag, slang: slangs[code] || `¡Bienvenido desde ${data.country_name}!` });
-      })
-      .catch(() => setGeo({ name: "Exiliado", flag: "⚔️", slang: "¡Bienvenido al servidor, guerrero!" }));
+useEffect(() => {
+    // Función para obtener la geolocalización
+    const getGeo = async () => {
+      try {
+        // Intentamos con una API más estable y sin tantos bloqueos
+        const res = await fetch('https://ipwho.is/');
+        const data = await res.json();
+        
+        if (data && data.success) {
+          const code = data.country_code?.toUpperCase();
+          // Generador de banderas por código de país
+          const flag = code ? code.replace(/./g, (c: string) => String.fromCodePoint(c.charCodeAt(0) + 127397)) : "🌐";
+          
+          const slangs: any = { 
+            "AR": "¿Qué hacés pa? Disfrutá del server, campeón del mundo 🇦🇷", 
+            "CL": "¿Qué hacés weón? ¡Pásalo la raja! 🇨🇱", 
+            "MX": "¡Qué onda carnal! Échele ganas compa 🇲🇽",
+            "UY": "¿Qué hacés botija? Arriba ese server 🇺🇾",
+            "ES": "¡Hostia! Bienvenido a la batalla, guerrero 🇪🇸"
+          };
+          
+          setGeo({ 
+            name: data.country, 
+            flag, 
+            slang: slangs[code] || `¡Bienvenido desde ${data.country}!` 
+          });
+        } else {
+          throw new Error("API Fallida");
+        }
+      } catch (error) {
+        // Si falla, al menos ponemos una bandera de mundo y un saludo épico
+        setGeo({ name: "Exiliado", flag: "⚔️", slang: "¡Bienvenido al servidor, guerrero!" });
+      }
+    };
+
+    getGeo();
 
     const fetchStatus = async () => {
       try {
@@ -228,6 +249,7 @@ export default function HomePage() {
         if (data.ok) setStatus({ online: data.playersCount, max: data.maxPlayers, players: data.players || [], state: "online" });
       } catch { setStatus((prev:any) => ({ ...prev, state: "offline" })); }
     };
+    
     fetchStatus();
     const interval = setInterval(fetchStatus, 30000);
     return () => clearInterval(interval);
