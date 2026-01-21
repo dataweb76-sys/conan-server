@@ -204,56 +204,65 @@ export default function HomePage() {
     queryPort: 27017,
     image: "/servers/server1.png",
   };
-
 useEffect(() => {
-    // Función para obtener la geolocalización
-    const getGeo = async () => {
+    const getGeoData = async () => {
+      const slangs: any = { 
+        "AR": "¿Qué hacés pa? Disfrutá del server, campeón del mundo 🇦🇷", 
+        "CL": "¿Qué hacés weón? ¡Pásalo la raja! 🇨🇱", 
+        "MX": "¡Qué onda carnal! Échele ganas compa 🇲🇽",
+        "UY": "¿Qué hacés botija? Arriba ese server 🇺🇾",
+        "ES": "¡Hostia! Bienvenido a la batalla, guerrero 🇪🇸"
+      };
+
       try {
-        // Intentamos con una API más estable y sin tantos bloqueos
-        const res = await fetch('https://ipwho.is/');
-        const data = await res.json();
-        
+        // 1. Intento por API (Más preciso)
+        const response = await fetch('https://ipwho.is/');
+        const data = await response.json();
+
         if (data && data.success) {
           const code = data.country_code?.toUpperCase();
-          // Generador de banderas por código de país
-          const flag = code ? code.replace(/./g, (c: string) => String.fromCodePoint(c.charCodeAt(0) + 127397)) : "🌐";
-          
-          const slangs: any = { 
-            "AR": "¿Qué hacés pa? Disfrutá del server, campeón del mundo 🇦🇷", 
-            "CL": "¿Qué hacés weón? ¡Pásalo la raja! 🇨🇱", 
-            "MX": "¡Qué onda carnal! Échele ganas compa 🇲🇽",
-            "UY": "¿Qué hacés botija? Arriba ese server 🇺🇾",
-            "ES": "¡Hostia! Bienvenido a la batalla, guerrero 🇪🇸"
-          };
-          
-          setGeo({ 
-            name: data.country, 
-            flag, 
-            slang: slangs[code] || `¡Bienvenido desde ${data.country}!` 
+          const flag = code.replace(/./g, (char: string) => 
+            String.fromCodePoint(char.charCodeAt(0) + 127397)
+          );
+          setGeo({
+            name: data.country,
+            flag: flag,
+            slang: slangs[code] || `¡Bienvenido desde ${data.country}!`
           });
-        } else {
-          throw new Error("API Fallida");
+          return; 
         }
-      } catch (error) {
-        // Si falla, al menos ponemos una bandera de mundo y un saludo épico
-        setGeo({ name: "Exiliado", flag: "⚔️", slang: "¡Bienvenido al servidor, guerrero!" });
+        throw new Error("API Falló");
+      } catch (err) {
+        // 2. Fallback por Zona Horaria (Si falla la API o hay AdBlock)
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (tz.includes("Argentina") || tz.includes("Buenos_Aires")) {
+          setGeo({ name: "Argentina", flag: "🇦🇷", slang: slangs["AR"] });
+        } else if (tz.includes("Santiago")) {
+          setGeo({ name: "Chile", flag: "🇨🇱", slang: slangs["CL"] });
+        } else if (tz.includes("Mexico")) {
+          setGeo({ name: "México", flag: "🇲🇽", slang: slangs["MX"] });
+        } else if (tz.includes("Madrid")) {
+          setGeo({ name: "España", flag: "🇪🇸", slang: slangs["ES"] });
+        } else {
+          setGeo({ name: "Exiliado", flag: "⚔️", slang: "¡Bienvenido al servidor, guerrero!" });
+        }
       }
     };
-
-    getGeo();
 
     const fetchStatus = async () => {
       try {
         const res = await fetch(`/api/status?ip=${serverData.ip}&qport=${serverData.queryPort}`);
         const data = await res.json();
         if (data.ok) setStatus({ online: data.playersCount, max: data.maxPlayers, players: data.players || [], state: "online" });
-      } catch { setStatus((prev:any) => ({ ...prev, state: "offline" })); }
+      } catch { setStatus((prev: any) => ({ ...prev, state: "offline" })); }
     };
-    
+
+    getGeoData();
     fetchStatus();
     const interval = setInterval(fetchStatus, 30000);
     return () => clearInterval(interval);
   }, []);
+
 
   return (
     <main className="min-h-screen bg-[#030303] text-white selection:bg-orange-600">
