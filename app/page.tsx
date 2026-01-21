@@ -230,30 +230,36 @@ export default function HomePage() {
           });
           return; 
         }
-        throw new Error("API Falló");
-      } catch (err) {
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        if (tz.includes("Argentina") || tz.includes("Buenos_Aires")) {
-          setGeo({ name: "Argentina", flag: "🇦🇷", slang: slangs["AR"] });
-        } else if (tz.includes("Santiago")) {
-          setGeo({ name: "Chile", flag: "🇨🇱", slang: slangs["CL"] });
-        } else if (tz.includes("Mexico")) {
-          setGeo({ name: "México", flag: "🇲🇽", slang: slangs["MX"] });
-        } else if (tz.includes("Madrid")) {
-          setGeo({ name: "España", flag: "🇪🇸", slang: slangs["ES"] });
-        } else {
-          setGeo({ name: "Exiliado", flag: "⚔️", slang: "¡Bienvenido al servidor, guerrero!" });
+      } catch (err) {}
+    };
+
+    const fetchStatus = async () => {
+      try {
+        const res = await fetch(`/api/status?ip=${serverData.ip}&qport=${serverData.queryPort}`);
+        const data = await res.json();
+        if (data.ok) {
+          setStatus({
+            online: data.playersCount,
+            max: data.maxPlayers,
+            players: data.players || [],
+            state: "online"
+          });
         }
+      } catch (e) {
+        setStatus((prev: any) => ({ ...prev, state: "offline" }));
       }
     };
+
     getGeoData();
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
     <main className="min-h-screen bg-[#030303] text-white selection:bg-orange-600">
-      {/* SCRIPT DEL CONTADOR EXTERNO REAL */}
       <script type="text/javascript" src="https://counter1.optistats.ovh/private/counter.js?c=6u8p7n6r98b4u8n7y874l48r6y3q8pbc&down=async" async></script>
-
+      
       <div className="fixed inset-0 z-0 opacity-10"><img src={serverData.image} className="w-full h-full object-cover blur-3xl" alt="bg"/></div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-12 space-y-24">
@@ -291,7 +297,7 @@ export default function HomePage() {
             <a href="https://drive.google.com/file/d/1lrRNi06iCTJejVG6DTBvskxIBW7rYQfj/view?usp=drive_link" target="_blank" className="group flex items-center justify-between p-6 bg-orange-600/10 border border-orange-500/20 rounded-[2rem] hover:bg-orange-600/20 transition-all">
               <div className="flex items-center gap-4 text-left">
                 <div className="p-4 bg-orange-600 rounded-2xl group-hover:animate-bounce shadow-lg"><PlayCircle size={24} /></div>
-                <div><h4 className="text-xs font-black uppercase tracking-widest">Cinemática Oficial</h4><p className="text-[9px] text-white/40 font-bold uppercase">Descargar Intro de nuestro servidor</p></div>
+                <div><h4 className="text-xs font-black uppercase tracking-widest">Cinemática Oficial</h4><p className="text-[9px] text-white/40 font-bold uppercase">Descargar Intro de nuestro servidor (cambia el video intro)</p></div>
               </div>
               <Download size={20} className="text-orange-500 opacity-40 group-hover:opacity-100" />
             </a>
@@ -339,36 +345,36 @@ export default function HomePage() {
 
         {/* FOOTER */}
         <footer className="bg-white/5 border border-white/10 p-12 rounded-[4rem] text-center space-y-8 mb-20 shadow-2xl backdrop-blur-md">
-           <div className="flex justify-center gap-8">
-              <Facebook size={40} className="text-blue-500 hover:scale-110 transition-transform" />
-              <Youtube size={40} className="text-red-500 hover:scale-110 transition-transform" />
-           </div>
-           <h4 className="text-3xl font-black uppercase italic tracking-tighter">Comunidad <span className="text-orange-600">Dataweb Games</span></h4>
-           <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-              <a href="https://www.facebook.com/DatawebGames" target="_blank" className="w-full md:w-auto px-12 py-5 bg-blue-600 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2"><Facebook size={16}/> Facebook</a>
-              <a href="https://www.youtube.com/@ElViejoGamer1" target="_blank" className="w-full md:w-auto px-12 py-5 bg-red-600 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-red-700 transition-all flex items-center justify-center gap-2"><Youtube size={16}/> El Viejo Gamer</a>
-           </div>
-           <p className="text-[8px] font-black uppercase tracking-[0.5em] text-white/20 italic pt-4">© 2026 Powered by Dataweb Games</p>
+            <div className="flex justify-center gap-8">
+               <Facebook size={40} className="text-blue-500 hover:scale-110 transition-transform" />
+               <Youtube size={40} className="text-red-500 hover:scale-110 transition-transform" />
+            </div>
+            <h4 className="text-3xl font-black uppercase italic tracking-tighter">Comunidad <span className="text-orange-600">Dataweb Games</span></h4>
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+               <a href="https://www.facebook.com/DatawebGames" target="_blank" className="w-full md:w-auto px-12 py-5 bg-blue-600 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
+                  <Facebook size={16}/> Facebook
+               </a>
+               <a href="https://www.youtube.com/@ElViejoGamer1" target="_blank" className="w-full md:w-auto px-12 py-5 bg-red-600 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-red-700 transition-all flex items-center justify-center gap-2">
+                  <Youtube size={16}/> El Viejo Gamer
+               </a>
+            </div>
+            <p className="text-[8px] font-black uppercase tracking-[0.5em] text-white/20 italic pt-4">© 2026 Powered by Dataweb Games</p>
         </footer>
       </div>
 
       <ServerModal open={open} onClose={() => setOpen(false)} server={serverData} />
 
-      {/* BURBUJA DE VISITAS REALES (CORREGIDO) */}
+      {/* BURBUJA DE VISITAS (TRÁFICO WEB REAL) */}
       <div className="fixed bottom-8 left-8 z-50">
-        <div className="bg-black/90 backdrop-blur-2xl border border-orange-500/30 p-4 rounded-2xl shadow-2xl flex flex-col">
+        <div className="bg-black/90 backdrop-blur-2xl border border-orange-500/30 p-4 rounded-2xl shadow-2xl">
           <div className="flex items-center gap-2 mb-2">
             <span className="relative flex h-3 w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
             </span>
-            <span className="text-[10px] font-black uppercase text-orange-500 tracking-widest">Tráfico Real</span>
+            <span className="text-[10px] font-black uppercase text-orange-500 tracking-widest">Tráfico Real Web</span>
           </div>
-          <div className="flex items-center gap-3">
-            {/* ID donde se inyecta el conteo del script externo */}
-            <div id="sfc6u8p7n6r98b4u8n7y874l48r6y3q8pbc" className="text-xl font-black text-white italic"></div>
-            <span className="text-[10px] text-white/20 font-bold uppercase tracking-tighter">Visitas Totales</span>
-          </div>
+          <div id="sfc6u8p7n6r98b4u8n7y874l48r6y3q8pbc" className="text-white font-bold italic"></div>
         </div>
       </div>
 
@@ -377,8 +383,6 @@ export default function HomePage() {
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,165,0,0.3); border-radius: 10px; }
         .animate-spin-slow { animation: spin 8s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        /* Estilo para que el número del contador externo no sea feo */
-        #sfc6u8p7n6r98b4u8n7y874l48r6y3q8pbc { font-family: inherit !important; color: white !important; }
       `}</style>
     </main>
   );
