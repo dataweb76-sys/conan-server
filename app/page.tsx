@@ -204,11 +204,8 @@ export default function HomePage() {
     queryPort: 27017,
     image: "/servers/server1.png",
   };
-  // 1. Agrega este estado al principio de tu componente
-const [visitorCount, setVisitorCount] = useState(0);
 
-
-useEffect(() => {
+  useEffect(() => {
     const getGeoData = async () => {
       const slangs: any = { 
         "AR": "¿Qué hacés pa? Disfrutá del server, campeón del mundo 🇦🇷", 
@@ -219,10 +216,8 @@ useEffect(() => {
       };
 
       try {
-        // 1. Intento por API (Más preciso)
         const response = await fetch('https://ipwho.is/');
         const data = await response.json();
-
         if (data && data.success) {
           const code = data.country_code?.toUpperCase();
           const flag = code.replace(/./g, (char: string) => 
@@ -237,7 +232,6 @@ useEffect(() => {
         }
         throw new Error("API Falló");
       } catch (err) {
-        // 2. Fallback por Zona Horaria (Si falla la API o hay AdBlock)
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
         if (tz.includes("Argentina") || tz.includes("Buenos_Aires")) {
           setGeo({ name: "Argentina", flag: "🇦🇷", slang: slangs["AR"] });
@@ -252,27 +246,14 @@ useEffect(() => {
         }
       }
     };
-
-  {/* CONTADOR EXTERNO REAL */}
-<div className="bg-black/60 backdrop-blur-md p-4 rounded-2xl border border-orange-500/20 flex flex-col items-center">
-  <span className="text-[10px] font-black uppercase text-orange-500 mb-2 tracking-widest">
-    Visitas Reales
-  </span>
-  
-  {/* Este es el script del contador externo */}
-  <div id="sfc6u8p7n6r98b4u8n7y874l48r6y3q8pbc"></div>
-  <script type="text/javascript" src="https://counter1.optistats.ovh/private/counter.js?c=6u8p7n6r98b4u8n7y874l48r6y3q8pbc&down=async" async></script>
-  
-  <noscript>
-    <a href="https://www.contadorvisitasgratis.com" title="contador de visitas">
-      <img src="https://counter1.optistats.ovh/private/contadorvisitasgratis.php?c=6u8p7n6r98b4u8n7y874l48r6y3q8pbc" border="0" title="contador de visitas" alt="contador de visitas" />
-    </a>
-  </noscript>
-</div>
-
+    getGeoData();
+  }, []);
 
   return (
     <main className="min-h-screen bg-[#030303] text-white selection:bg-orange-600">
+      {/* SCRIPT DEL CONTADOR EXTERNO REAL */}
+      <script type="text/javascript" src="https://counter1.optistats.ovh/private/counter.js?c=6u8p7n6r98b4u8n7y874l48r6y3q8pbc&down=async" async></script>
+
       <div className="fixed inset-0 z-0 opacity-10"><img src={serverData.image} className="w-full h-full object-cover blur-3xl" alt="bg"/></div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-12 space-y-24">
@@ -310,7 +291,7 @@ useEffect(() => {
             <a href="https://drive.google.com/file/d/1lrRNi06iCTJejVG6DTBvskxIBW7rYQfj/view?usp=drive_link" target="_blank" className="group flex items-center justify-between p-6 bg-orange-600/10 border border-orange-500/20 rounded-[2rem] hover:bg-orange-600/20 transition-all">
               <div className="flex items-center gap-4 text-left">
                 <div className="p-4 bg-orange-600 rounded-2xl group-hover:animate-bounce shadow-lg"><PlayCircle size={24} /></div>
-                <div><h4 className="text-xs font-black uppercase tracking-widest">Cinemática Oficial</h4><p className="text-[9px] text-white/40 font-bold uppercase">Descargar Intro de nuestro servidor (cambia el video intro)</p></div>
+                <div><h4 className="text-xs font-black uppercase tracking-widest">Cinemática Oficial</h4><p className="text-[9px] text-white/40 font-bold uppercase">Descargar Intro de nuestro servidor</p></div>
               </div>
               <Download size={20} className="text-orange-500 opacity-40 group-hover:opacity-100" />
             </a>
@@ -324,7 +305,7 @@ useEffect(() => {
           </div>
         </header>
 
-        {/* --- 1. ONLINE AHORA Y EXILIADOS (TOP) --- */}
+        {/* ONLINE AHORA */}
         <section className="w-full grid md:grid-cols-4 gap-6">
           <div className="bg-white/5 p-10 rounded-[3rem] border border-white/10 flex flex-col items-center justify-center shadow-2xl">
             <span className="text-[10px] font-black text-orange-500 uppercase block mb-2 tracking-tighter">Online Ahora</span>
@@ -340,7 +321,7 @@ useEffect(() => {
           </div>
         </section>
 
-        {/* --- 2. GUÍA DE MODS (CENTER) --- */}
+        {/* GUÍA DE MODS */}
         <section className="space-y-16 py-12 bg-white/[0.02] rounded-[4rem] border border-white/5 p-8">
           <div className="text-center space-y-4">
             <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter">Guía de <span className="text-orange-600">Mods</span></h3>
@@ -348,7 +329,7 @@ useEffect(() => {
           <GuidesMenu />
         </section>
 
-        {/* --- 3. LOGS Y DISCORD (BOTTOM) --- */}
+        {/* LOGS Y DISCORD */}
         <section className="grid lg:grid-cols-2 gap-10">
             <WebhookLogs />
             <div className="bg-white/5 backdrop-blur-3xl rounded-[3rem] border border-white/10 h-[500px] overflow-hidden shadow-2xl">
@@ -356,54 +337,49 @@ useEffect(() => {
             </div>
         </section>
 
-        {/* --- FOOTER ACTUALIZADO CON YOUTUBE --- */}
+        {/* FOOTER */}
         <footer className="bg-white/5 border border-white/10 p-12 rounded-[4rem] text-center space-y-8 mb-20 shadow-2xl backdrop-blur-md">
            <div className="flex justify-center gap-8">
               <Facebook size={40} className="text-blue-500 hover:scale-110 transition-transform" />
               <Youtube size={40} className="text-red-500 hover:scale-110 transition-transform" />
            </div>
-           
            <h4 className="text-3xl font-black uppercase italic tracking-tighter">Comunidad <span className="text-orange-600">Dataweb Games</span></h4>
-           
            <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-              <a href="https://www.facebook.com/DatawebGames" target="_blank" className="w-full md:w-auto px-12 py-5 bg-blue-600 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
-                 <Facebook size={16}/> Facebook
-              </a>
-              <a href="https://www.youtube.com/@ElViejoGamer1" target="_blank" className="w-full md:w-auto px-12 py-5 bg-red-600 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-red-700 transition-all flex items-center justify-center gap-2">
-                 <Youtube size={16}/> El Viejo Gamer
-              </a>
+              <a href="https://www.facebook.com/DatawebGames" target="_blank" className="w-full md:w-auto px-12 py-5 bg-blue-600 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2"><Facebook size={16}/> Facebook</a>
+              <a href="https://www.youtube.com/@ElViejoGamer1" target="_blank" className="w-full md:w-auto px-12 py-5 bg-red-600 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-red-700 transition-all flex items-center justify-center gap-2"><Youtube size={16}/> El Viejo Gamer</a>
            </div>
-           
            <p className="text-[8px] font-black uppercase tracking-[0.5em] text-white/20 italic pt-4">© 2026 Powered by Dataweb Games</p>
         </footer>
       </div>
 
       <ServerModal open={open} onClose={() => setOpen(false)} server={serverData} />
 
+      {/* BURBUJA DE VISITAS REALES (CORREGIDO) */}
+      <div className="fixed bottom-8 left-8 z-50">
+        <div className="bg-black/90 backdrop-blur-2xl border border-orange-500/30 p-4 rounded-2xl shadow-2xl flex flex-col">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+            <span className="text-[10px] font-black uppercase text-orange-500 tracking-widest">Tráfico Real</span>
+          </div>
+          <div className="flex items-center gap-3">
+            {/* ID donde se inyecta el conteo del script externo */}
+            <div id="sfc6u8p7n6r98b4u8n7y874l48r6y3q8pbc" className="text-xl font-black text-white italic"></div>
+            <span className="text-[10px] text-white/20 font-bold uppercase tracking-tighter">Visitas Totales</span>
+          </div>
+        </div>
+      </div>
+
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,165,0,0.3); border-radius: 10px; }
         .animate-spin-slow { animation: spin 8s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        /* Estilo para que el número del contador externo no sea feo */
+        #sfc6u8p7n6r98b4u8n7y874l48r6y3q8pbc { font-family: inherit !important; color: white !important; }
       `}</style>
-     {/* BURBUJA DE VISITAS REALES */}
-<div className="fixed bottom-8 left-8 z-50">
-  <div className="bg-black/90 backdrop-blur-2xl border border-orange-500/30 p-4 rounded-2xl shadow-2xl flex items-center gap-4">
-    <div className="flex flex-col">
-      <div className="flex items-center gap-2">
-        <span className="relative flex h-3 w-3">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-        </span>
-        <span className="text-[10px] font-black uppercase text-orange-500 tracking-widest">Server Traffic</span>
-      </div>
-      <div className="text-xl font-black text-white italic">
-        {visitorCount > 0 ? visitorCount.toLocaleString() : "Cargando..."}
-        <span className="text-[10px] text-white/20 ml-2 not-italic font-bold uppercase">Visitas Totales</span>
-      </div>
-    </div>
-  </div>
-</div>
     </main>
   );
 }
