@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Los Antiguos | Conan Exiles",
+  title: "Dragones y Dinos | Conan Exiles",
   description: "Comunidad Hispana de Conan Exiles - Servidores y Soporte",
 };
 

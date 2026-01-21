@@ -1,191 +1,352 @@
 "use client";
-
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import DiscordWidget from "@/components/DiscordWidget";
 import ServerModal from "@/components/ServerModal";
-import LiveViewers from "@/components/LiveViewers";
 import { 
-  Code2, Flame, Facebook, MessageCircle, Volume2, 
-  VolumeX, Zap, Target, Sword, Trophy, Share2, X, Shield, Map, Compass 
+  MessageCircle, Users, Zap, Shield, Sword, 
+  Map, Skull, Gem, Crown, Navigation, HeartPulse, 
+  Palette, Replace, ShoppingCart, Diamond, X, Facebook, 
+  Activity, Download, VideoOff, PlayCircle, Ghost, 
+  BookOpen, Footprints, Shirt, Orbit, Wand, Globe,
+  Flame, Sparkles, Target, Box, Youtube
 } from "lucide-react";
 
-// Tu componente de Carousel integrado
-function Carousel() {
-  const images = ["/carousel/1.png", "/carousel/2.png", "/carousel/3.png", "/carousel/4.png", "/carousel/5.png"];
-  const [index, setIndex] = useState(0);
-
+// --- COMPONENTE LIVE ACTIONS ---
+const WebhookLogs = () => {
+  const [logs, setLogs] = useState([{ id: 1, time: "START", text: "Iniciando monitoreo de Los Antiguos...", type: "sys" }]);
+  
   useEffect(() => {
-    const timer = setInterval(() => {
-      setIndex((i) => (i + 1) % images.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [images.length]);
+    const eventos = [
+      "Escaneando zona D4 (Faction Hall)...",
+      "Sincronizando mods de supervivencia...",
+      "Level 300 Thralls habilitado",
+      "Evento de Clan Brotherhood: Activo",
+      "Boss de Reliquia detectado en D6",
+      "Actualizando visuales de Fashionist",
+      "Dungeon: Caverns of Set disponible"
+    ];
+    const interval = setInterval(() => {
+      const now = new Date();
+      const time = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+      const newLog = { 
+        id: Date.now(), 
+        time, 
+        text: eventos[Math.floor(Math.random() * eventos.length)], 
+        type: "live" 
+      };
+      setLogs(prev => [newLog, ...prev].slice(0, 8));
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div className="relative w-full h-full overflow-hidden rounded-[3rem] border border-white/10 shadow-2xl">
-      {images.map((src, i) => (
-        <img
-          key={src}
-          src={src}
-          alt={`Slide ${i}`}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
-            i === index ? "opacity-100" : "opacity-0"
-          }`}
-        />
-      ))}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+    <div className="bg-black/80 border border-white/10 rounded-[2.5rem] p-8 h-[500px] font-mono flex flex-col shadow-2xl">
+      <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
+        <div className="flex items-center gap-3">
+          <Activity size={18} className="text-orange-500 animate-pulse" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">Live Server Actions</span>
+        </div>
+      </div>
+      <div className="space-y-4 overflow-hidden flex-1">
+        {logs.map((log) => (
+          <div key={log.id} className="text-[10px] flex gap-3 animate-in slide-in-from-top duration-500">
+            <span className="text-white/20 shrink-0">[{log.time}]</span>
+            <span className={log.type === "sys" ? "text-orange-500" : "text-white/70"}>
+              {"> "}{log.text}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
-}
+};
 
+// --- COMPONENTE DE GUÍAS COMPLETO ---
+const GuidesMenu = () => {
+  const [activeMod, setActiveMod] = useState("aoc");
+
+  const modButtons = [
+    { id: "aoc", label: "Age of Calamitous", color: "bg-orange-600", icon: <Shield size={14}/> },
+    { id: "eewa", label: "EEWA Wiki", color: "bg-purple-600", icon: <Gem size={14}/> },
+    { id: "eaa", label: "Enhanced Armory", color: "bg-blue-600", icon: <Sword size={14}/> },
+    { id: "teleports", label: "Teleports", color: "bg-cyan-600", icon: <Navigation size={14}/> },
+    { id: "mercado", label: "Mercado", color: "bg-lime-600", icon: <ShoppingCart size={14}/> },
+    { id: "vip", label: "Exiliado VIP", color: "bg-yellow-500", icon: <Diamond size={14}/> }
+  ];
+
+  return (
+    <div className="w-full space-y-8">
+      <div className="flex flex-wrap justify-center gap-3">
+        {modButtons.map((mod) => (
+          <button 
+            key={mod.id} 
+            onClick={() => setActiveMod(mod.id)} 
+            className={`px-4 py-3 rounded-xl font-black uppercase italic tracking-widest transition-all border text-[9px] flex items-center gap-2 ${activeMod === mod.id ? `${mod.color} border-white/20 text-white scale-105 shadow-lg` : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10"}`}
+          >
+            {mod.icon} {mod.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="bg-white/5 border border-white/10 rounded-[3rem] backdrop-blur-3xl shadow-2xl p-10 md:p-16">
+        
+        {activeMod === "aoc" && (
+          <div className="space-y-8 animate-in fade-in duration-500 text-left">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-orange-600/10 p-6 rounded-3xl border border-orange-500/20">
+               <div>
+                  <h4 className="text-2xl font-black italic text-orange-500 uppercase">Age of Calamitous</h4>
+                  <p className="text-[10px] text-white/60 font-bold uppercase">Facciones, Magias y Misiones de Lore.</p>
+               </div>
+               <a href="https://www.worldanvil.com/w/the-age-of-calamitous/map/ee441aeb-e106-4d00-9b00-1faab0fdfb21" target="_blank" className="px-6 py-3 bg-orange-600 rounded-xl text-[10px] font-black uppercase italic flex items-center gap-2 hover:scale-105 transition-transform"><Map size={14}/> Abrir Mapa AoC</a>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {["Stormhold", "Felgarth", "Elvanor", "Vanghoul", "Embrace", "Covenant"].map(f => (
+                <div key={f} className="p-5 bg-black/40 border border-white/5 rounded-2xl text-center font-black uppercase italic text-[11px] text-orange-400">{f}</div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeMod === "eewa" && (
+          <div className="space-y-8 animate-in fade-in duration-500 text-left">
+             <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-purple-600/10 p-8 rounded-3xl border border-purple-500/20">
+                <h4 className="text-2xl font-black italic text-purple-400 uppercase mb-4">Bosses de Reliquia</h4>
+                <div className="space-y-2">
+                  {[{n: "Gallaman", c: "D6"}, {n: "Rey Túmulo", c: "C10"}, {n: "Bruja Reina", c: "M6"}].map(b => (
+                    <div key={b.n} className="flex justify-between p-3 bg-black/40 rounded-xl border border-white/5 text-[10px] font-black uppercase">
+                      <span>{b.n}</span> <span className="text-purple-500 italic">{b.c}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="flex flex-col justify-center items-center bg-white/5 p-8 rounded-3xl border border-white/10 text-center">
+                 <Orbit size={48} className="text-purple-400 mb-4 animate-spin-slow" />
+                 <h5 className="font-black uppercase italic text-purple-400">Sistema de Ascensión</h5>
+                 <p className="text-[9px] text-white/40 font-bold mt-2 uppercase">Desbloquea Constelaciones al nivel 60.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMod === "eaa" && (
+          <div className="grid md:grid-cols-2 gap-8 animate-in fade-in duration-500 text-left">
+             <div className="space-y-4">
+                <h4 className="text-2xl font-black italic text-blue-400 uppercase">Enhanced Armory</h4>
+                <p className="text-[10px] text-white/50 leading-relaxed font-bold uppercase">Mejora tus armas con gemas evolutivas. Cada golpe aumenta el poder de tu equipo.</p>
+                <div className="flex gap-4">
+                  <div className="p-4 bg-blue-600/20 border border-blue-500/30 rounded-2xl text-center flex-1">
+                    <Sparkles className="text-blue-400 mx-auto mb-2" size={20}/><span className="text-[9px] font-black uppercase">Infusión</span>
+                  </div>
+                  <div className="p-4 bg-blue-600/20 border border-blue-500/30 rounded-2xl text-center flex-1">
+                    <Target className="text-blue-400 mx-auto mb-2" size={20}/><span className="text-[9px] font-black uppercase">Evolución</span>
+                  </div>
+                </div>
+             </div>
+             <div className="bg-black/40 p-6 rounded-3xl border border-white/10 flex items-center justify-center font-black italic text-blue-500 uppercase text-center">
+                Presiona "SHIFT + V" <br/> Menú de Armería
+             </div>
+          </div>
+        )}
+
+        {activeMod === "teleports" && (
+          <div className="flex flex-col md:flex-row gap-8 bg-cyan-600/10 border border-cyan-500/20 p-10 rounded-[3rem] animate-in fade-in duration-500 items-center text-left">
+             <Navigation size={60} className="text-cyan-400 shrink-0 animate-pulse"/>
+             <div>
+               <h4 className="text-2xl font-black uppercase italic text-cyan-400">Viaje Rápido</h4>
+               <p className="text-[11px] text-white/60 font-bold uppercase mt-2">Busca a Ariel la Viajera en el Faction Hall (D4). Portales por niveles desbloqueables.</p>
+             </div>
+          </div>
+        )}
+
+        {activeMod === "mercado" && (
+          <div className="space-y-8 animate-in fade-in duration-500 text-left">
+            <h4 className="text-2xl font-black italic text-lime-400 uppercase">Mercado Central</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[{t: "Esclavos", i: <Users/>}, {t: "Armas", i: <Sword/>}, {t: "Mascotas", i: <Ghost/>}, {t: "Magia", i: <BookOpen/>}].map(item => (
+                <div key={item.t} className="bg-white/5 p-6 rounded-3xl border border-white/10 text-center space-y-3">
+                  <div className="text-lime-500 flex justify-center">{item.i}</div>
+                  <p className="text-[9px] font-black uppercase italic">{item.t}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeMod === "vip" && (
+          <div className="bg-yellow-500/10 border border-yellow-500/40 p-12 rounded-[3rem] text-center space-y-6 animate-in fade-in duration-500">
+             <Crown size={48} className="mx-auto text-yellow-500 animate-bounce"/>
+             <h4 className="text-3xl font-black uppercase italic text-yellow-500">Exiliado VIP</h4>
+             <p className="text-[11px] text-white/60 font-bold uppercase max-w-lg mx-auto leading-relaxed">Habla con Conanito en el Mercado. Canjea 50 Monedas de Oro por estatus VIP y beneficios diarios.</p>
+          </div>
+        )}
+
+        <div className="mt-8 pt-8 border-t border-white/5 text-center">
+            <p className="text-[8px] font-black uppercase tracking-[0.4em] text-white/20 italic">Dataweb Games v4.8</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- PÁGINA PRINCIPAL ---
 export default function HomePage() {
   const [selected, setSelected] = useState<any>(null);
   const [open, setOpen] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
-  const [showPopup, setShowPopup] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [status, setStatus] = useState<any>({ online: 0, max: 40, players: [], state: "loading" });
+  const [geo, setGeo] = useState({ name: "Caminante", flag: "🌐", slang: "¡Bienvenido al servidor!" });
+
+  const serverData = { 
+    slug: "dragones", 
+    title: "DRAGONES Y DINOSAURIOS", 
+    ip: "190.174.182.214", 
+    port: 7779, 
+    queryPort: 27017,
+    image: "/servers/server1.png",
+  };
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowPopup(true), 500);
-    return () => clearTimeout(timer);
+    fetch('https://ipapi.co/json/')
+      .then(res => res.ok ? res.json() : Promise.reject())
+      .then(data => {
+        const code = data.country_code?.toUpperCase();
+        const flag = code ? code.replace(/./g, (c: string) => String.fromCodePoint(c.charCodeAt(0) + 127397)) : "🌐";
+        const slangs: any = { 
+          "AR": "¿Qué hacés pa? Disfrutá del server, campeón del mundo 🇦🇷", 
+          "CL": "¿Qué hacés weón? ¡Pásalo la raja! 🇨🇱", 
+          "MX": "¡Qué onda carnal! Échele ganas compa 🇲🇽",
+          "UY": "¿Qué hacés botija? Arriba ese server 🇺🇾"
+        };
+        setGeo({ name: data.country_name, flag, slang: slangs[code] || `¡Bienvenido desde ${data.country_name}!` });
+      })
+      .catch(() => setGeo({ name: "Exiliado", flag: "⚔️", slang: "¡Bienvenido al servidor, guerrero!" }));
+
+    const fetchStatus = async () => {
+      try {
+        const res = await fetch(`/api/status?ip=${serverData.ip}&qport=${serverData.queryPort}`);
+        const data = await res.json();
+        if (data.ok) setStatus({ online: data.playersCount, max: data.maxPlayers, players: data.players || [], state: "online" });
+      } catch { setStatus((prev:any) => ({ ...prev, state: "offline" })); }
+    };
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  const VOTE_URL = "https://topgameservers.net/conanexiles/server/nrcYSh89KdNehu8g4MS2";
-
-  const servers = useMemo(() => [
-    { slug: "dragones", title: "DRAGONES Y DINOSAURIOS PVEVP", ip: "190.174.182.236", port: 7779, queryPort: 27017, image: "/servers/server1.png", settings: ["Cosecha: x10.0", "XP: x10.0", "Raideo: 17:00 a 23:00", "Dinos & Dragones"] },
-    { slug: "mods", title: "Los Antiguos PvPvE Best Mods", ip: "190.174.182.236", port: 7786, queryPort: 27026, image: "/servers/server3.png", settings: ["Cosecha: x4.0", "XP: x5.0", "Nivel: 300", "Mods: +40"] },
-    { slug: "vanilla", title: "EL EXILIO SIN MODS PVP FULL", ip: "190.174.182.236", port: 7777, queryPort: 27018, image: "/servers/server4.png", settings: ["Cosecha: x10.0", "XP: x10.0", "Vanilla", "PvP Full"] },
-    { slug: "siptah", title: "SIPTAH MAS MODS EEWA", ip: "190.174.182.236", port: 7781, queryPort: 27015, image: "/servers/server2.png", settings: ["Cosecha: x5.0", "XP: x10.0", "Mapa: Siptah", "EEWA"] }
-  ], []);
-
   return (
-    <main className="relative min-h-screen bg-[#050505] text-white overflow-x-hidden">
-      
-      {/* POPUP DE BIENVENIDA */}
-      {showPopup && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl">
-          <div className="relative w-full max-w-3xl bg-[#0b0f17] rounded-[3.5rem] border border-orange-600/50 overflow-hidden shadow-[0_0_150px_rgba(234,88,12,0.6)]">
-            <button onClick={() => setShowPopup(false)} className="absolute top-8 right-8 text-white/30 hover:text-white z-[100001]"><X size={40} /></button>
-            <div className="p-12 flex flex-col items-center text-center">
-              <div className="mb-6 inline-flex items-center gap-2 bg-orange-600/20 px-6 py-2 rounded-full border border-orange-600/30">
-                <Flame size={16} className="text-orange-500" />
-                <span className="text-xs font-black uppercase tracking-[0.4em] text-orange-500">Temporada 2026</span>
-              </div>
-              <h2 className="text-7xl font-black italic uppercase tracking-tighter text-white leading-[0.85]">BIENVENIDO A <br /> <span className="text-orange-600">LOS ANTIGUOS</span></h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full mt-10">
-                {[{ icon: <Sword />, t: "PVP & PVE" }, { icon: <Flame />, t: "DRAGONES" }, { icon: <Zap />, t: "SIN LAG" }, { icon: <Shield />, t: "DINOSAURIOS" }, { icon: <Map />, t: "CUSTOM" }, { icon: <Compass />, t: "EVENTOS" }].map((item, i) => (
-                  <div key={i} className="bg-white/5 p-6 rounded-[2rem] border border-white/5 flex flex-col items-center">
-                    <div className="text-orange-500 mb-3">{item.icon}</div>
-                    <span className="text-[10px] font-black uppercase text-white tracking-[0.2em]">{item.t}</span>
-                  </div>
-                ))}
-              </div>
-              <button onClick={() => setShowPopup(false)} className="mt-12 w-full bg-orange-600 hover:bg-orange-500 text-white font-black uppercase italic text-3xl py-8 rounded-[2.5rem] shadow-[0_25px_50px_rgba(234,88,12,0.4)] transition-all">¡EMPEZAR!</button>
-            </div>
+    <main className="min-h-screen bg-[#030303] text-white selection:bg-orange-600">
+      <div className="fixed inset-0 z-0 opacity-10"><img src={serverData.image} className="w-full h-full object-cover blur-3xl" alt="bg"/></div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-12 space-y-24">
+        {/* NAV */}
+        <nav className="flex justify-between items-center bg-white/5 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/10 shadow-2xl">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-orange-600 rounded-2xl shadow-lg"><img src="/logo/logo.png" className="w-8 h-8" alt="logo" /></div>
+            <div><h1 className="text-xl font-black uppercase italic leading-none">Los Antiguos</h1></div>
           </div>
-        </div>
-      )}
+          <div className="hidden md:flex items-center gap-3 px-6 py-2 bg-white/5 rounded-full border border-white/5">
+             <span className="text-xl">{geo.flag}</span>
+             <span className="text-[9px] font-black uppercase italic text-white/60 tracking-widest">{geo.name}</span>
+          </div>
+          <a href="https://discord.gg/4SmuhXPfMr" className="p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-orange-600/20 transition-all"><MessageCircle size={20}/></a>
+        </nav>
 
-      {/* BACKGROUND */}
-      <div className="fixed inset-0 -z-50 overflow-hidden opacity-20 blur-3xl">
-        <video autoPlay muted loop playsInline className="w-full h-full object-cover">
-          <source src="/video/server.mp4" type="video/mp4" />
-        </video>
-      </div>
-
-      <div className="relative z-10 max-w-[1400px] mx-auto px-4 py-10">
-        
         {/* HERO */}
-        <div className="grid lg:grid-cols-[400px_1fr] gap-6 mb-10">
-          <div className="bg-white/5 backdrop-blur-3xl rounded-[3.5rem] p-10 border border-white/10 flex flex-col items-center text-center shadow-2xl">
-            <LiveViewers />
-            <img src="/logo/logo.png" className="w-44 h-44 object-contain my-6" alt="Logo" />
-            <h1 className="text-5xl font-black italic uppercase tracking-tighter leading-none">Los Antiguos</h1>
-            <div className="flex gap-4 mt-8">
-              <a href="https://discord.gg/4SmuhXPfMr" target="_blank" className="p-4 bg-[#5865F2] rounded-2xl hover:scale-110 transition-all"><MessageCircle size={24} fill="white" /></a>
-              <a href="https://facebook.com/DatawebGames" target="_blank" className="p-4 bg-[#1877F2] rounded-2xl hover:scale-110 transition-all"><Facebook size={24} fill="white" /></a>
+        <header className="flex flex-col items-center text-center space-y-12">
+          <div className="space-y-6 max-w-4xl">
+            <div className="inline-flex items-center gap-4 px-8 py-3 bg-orange-500/10 border border-orange-500/20 rounded-full mb-4 animate-bounce">
+              <span className="text-2xl">{geo.flag}</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-orange-500 italic">{geo.slang}</span>
+            </div>
+            <h2 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-[0.8]">DRAGONES <br/> <span className="text-orange-600">Y DINOSAURIOS</span></h2>
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-4 w-full max-w-2xl">
+            <button onClick={() => { setSelected(serverData); setOpen(true); }} className="flex-[2] bg-white text-black py-7 rounded-[2.5rem] font-black uppercase italic tracking-widest hover:bg-orange-600 hover:text-white transition-all shadow-2xl">Directorio Técnico</button>
+            <a href={`steam://run/440900//+connect%20${serverData.ip}:${serverData.port}`} className="flex-1 bg-white/5 border border-white/10 py-7 rounded-[2.5rem] font-black uppercase text-xs tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-white/10 transition-all shadow-xl">
+              <Zap size={20} className="text-orange-500" /> Jugar
+            </a>
+          </div>
+
+          <div className="w-full max-w-4xl grid md:grid-cols-2 gap-4 pt-4">
+            <a href="https://drive.google.com/file/d/1lrRNi06iCTJejVG6DTBvskxIBW7rYQfj/view?usp=drive_link" target="_blank" className="group flex items-center justify-between p-6 bg-orange-600/10 border border-orange-500/20 rounded-[2rem] hover:bg-orange-600/20 transition-all">
+              <div className="flex items-center gap-4 text-left">
+                <div className="p-4 bg-orange-600 rounded-2xl group-hover:animate-bounce shadow-lg"><PlayCircle size={24} /></div>
+                <div><h4 className="text-xs font-black uppercase tracking-widest">Cinemática Oficial</h4><p className="text-[9px] text-white/40 font-bold uppercase">Descargar Intro</p></div>
+              </div>
+              <Download size={20} className="text-orange-500 opacity-40 group-hover:opacity-100" />
+            </a>
+            <a href="https://drive.google.com/file/d/1HcayYUFxtgnleMhn24uyvRhuKS-JAoHY/view?usp=drive_link" target="_blank" className="group flex items-center justify-between p-6 bg-red-600/10 border border-red-500/20 rounded-[2rem] hover:bg-red-600/20 transition-all">
+              <div className="flex items-center gap-4 text-left">
+                <div className="p-4 bg-red-600 rounded-2xl group-hover:animate-pulse shadow-lg"><VideoOff size={24} /></div>
+                <div><h4 className="text-xs font-black uppercase tracking-widest">Remover Intro</h4><p className="text-[9px] text-white/40 font-bold uppercase">Parche saltar video</p></div>
+              </div>
+              <Download size={20} className="text-red-500 opacity-40 group-hover:opacity-100" />
+            </a>
+          </div>
+        </header>
+
+        {/* --- 1. ONLINE AHORA Y EXILIADOS (TOP) --- */}
+        <section className="w-full grid md:grid-cols-4 gap-6">
+          <div className="bg-white/5 p-10 rounded-[3rem] border border-white/10 flex flex-col items-center justify-center shadow-2xl">
+            <span className="text-[10px] font-black text-orange-500 uppercase block mb-2 tracking-tighter">Online Ahora</span>
+            <span className="text-6xl font-black italic">{status.online}<span className="text-white/20 text-3xl">/{status.max || 40}</span></span>
+          </div>
+          <div className="md:col-span-3 bg-white/5 p-10 rounded-[3rem] border border-white/10 text-left overflow-hidden shadow-2xl px-8">
+            <span className="text-[10px] font-black text-orange-500 uppercase block mb-6 tracking-widest">Exiliados en el Reino</span>
+            <div className="flex flex-wrap gap-3 max-h-[100px] overflow-y-auto custom-scrollbar px-2">
+                {status.players.length > 0 ? status.players.map((p: any, i: number) => (
+                  <span key={i} className="px-4 py-2 bg-white/10 rounded-xl text-[10px] font-black uppercase border border-white/10 hover:bg-orange-600 transition-all">{p.name || 'Anónimo'}</span>
+                )) : <span className="text-xs font-black uppercase opacity-20 italic">El desierto está en silencio...</span>}
             </div>
           </div>
+        </section>
 
-          <div className="relative rounded-[3.5rem] overflow-hidden border-4 border-white/5 bg-black">
-            <video ref={videoRef} autoPlay muted loop playsInline className="w-full h-full object-cover opacity-80">
-              <source src="/video/server.mp4" type="video/mp4" />
-            </video>
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
-            <div className="absolute bottom-10 left-10 flex items-center gap-6">
-              <div className="p-4 bg-orange-600 rounded-full animate-pulse shadow-[0_0_20px_orange]"><Sword size={28} /></div>
-              <div className="flex flex-col text-left">
-                <span className="text-xs font-black uppercase tracking-[0.5em] text-orange-500">Temporada 2026</span>
-                <h2 className="font-black italic text-4xl uppercase tracking-tighter">DOMINA EL EXILIO</h2>
-              </div>
+        {/* --- 2. GUÍA DE MODS (CENTER) --- */}
+        <section className="space-y-16 py-12 bg-white/[0.02] rounded-[4rem] border border-white/5 p-8">
+          <div className="text-center space-y-4">
+            <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter">Guía de <span className="text-orange-600">Mods</span></h3>
+          </div>
+          <GuidesMenu />
+        </section>
+
+        {/* --- 3. LOGS Y DISCORD (BOTTOM) --- */}
+        <section className="grid lg:grid-cols-2 gap-10">
+            <WebhookLogs />
+            <div className="bg-white/5 backdrop-blur-3xl rounded-[3rem] border border-white/10 h-[500px] overflow-hidden shadow-2xl">
+              <DiscordWidget />
             </div>
-          </div>
-        </div>
+        </section>
 
-        {/* SERVER GRID */}
-        <div className="grid gap-10 mb-20 sm:grid-cols-2 lg:grid-cols-4">
-          {servers.map((s) => (
-            <div key={s.slug} className="group flex flex-col">
-              <div className="relative h-[480px] rounded-[3.5rem] border border-white/10 bg-[#0a0a0a] overflow-hidden transition-all hover:border-orange-500 hover:-translate-y-2 cursor-pointer shadow-2xl" onClick={() => { setSelected(s); setOpen(true); }}>
-                <img src={s.image} className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-10 transition-opacity duration-500" />
-                <div className="absolute inset-0 z-30 flex flex-col justify-center p-8 opacity-0 group-hover:opacity-100 transition-all text-left">
-                   <h4 className="text-orange-500 text-[10px] font-black uppercase mb-4 border-b border-orange-500/20 pb-2">Configuración</h4>
-                   <ul className="space-y-2">
-                    {s.settings?.map((setting, idx) => (
-                      <li key={idx} className="flex items-center gap-2 text-[10px] font-bold uppercase text-white/70">
-                        <div className="w-1 h-1 bg-orange-600 rotate-45" /> {setting}
-                      </li>
-                    ))}
-                   </ul>
-                </div>
-                <div className="absolute bottom-10 left-0 w-full px-8 z-20 group-hover:opacity-0 transition-opacity">
-                  <h3 className="text-2xl font-black italic uppercase leading-tight text-white">{s.title}</h3>
-                </div>
-              </div>
-              <div className="mt-6 space-y-3 px-2">
-                <a href={VOTE_URL} target="_blank" className="w-full bg-white text-black py-4 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-orange-600 hover:text-white transition-all flex items-center justify-center gap-2 shadow-lg">
-                  <Flame size={16} /> VOTAR SERVIDOR
-                </a>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* MIDDLE SECTION: DISCORD + CAROUSEL BANNER */}
-        <div className="grid lg:grid-cols-[400px_1fr] gap-8 mb-20">
-          <div className="bg-white/5 backdrop-blur-3xl rounded-[4rem] border border-white/10 overflow-hidden shadow-2xl h-[500px]">
-            <DiscordWidget />
-          </div>
-          {/* AQUÍ EL CAROUSEL REEMPLAZANDO AL CUADRO NARANJA */}
-          <div className="h-[500px]">
-            <Carousel />
-          </div>
-        </div>
-
-        {/* DATAWEB GAMES AL FINAL (BANNER HORIZONTAL) */}
-        <div className="bg-orange-600 rounded-[3rem] p-8 flex flex-col md:flex-row items-center justify-between shadow-2xl group transition-all hover:bg-orange-500">
-           <div className="flex items-center gap-6">
-              <Code2 size={48} className="text-black group-hover:rotate-12 transition-transform" />
-              <div className="text-left">
-                <h2 className="text-4xl font-black text-black tracking-tighter leading-none">DATAWEB GAMES</h2>
-                <span className="text-[10px] font-black uppercase text-black/60 tracking-[0.3em]">Hosting & Development 2026</span>
-              </div>
+        {/* --- FOOTER ACTUALIZADO CON YOUTUBE --- */}
+        <footer className="bg-white/5 border border-white/10 p-12 rounded-[4rem] text-center space-y-8 mb-20 shadow-2xl backdrop-blur-md">
+           <div className="flex justify-center gap-8">
+              <Facebook size={40} className="text-blue-500 hover:scale-110 transition-transform" />
+              <Youtube size={40} className="text-red-500 hover:scale-110 transition-transform" />
            </div>
-           <div className="flex gap-8 mt-6 md:mt-0 text-black/50">
-              <div className="flex flex-col items-center"><Zap size={20}/><span className="text-[8px] font-bold">LATENCIA BAJA</span></div>
-              <div className="flex flex-col items-center"><Trophy size={20}/><span className="text-[8px] font-bold">CALIDAD PREMIUM</span></div>
-              <div className="flex flex-col items-center"><Share2 size={20}/><span className="text-[8px] font-bold">COMUNIDAD</span></div>
+           
+           <h4 className="text-3xl font-black uppercase italic tracking-tighter">Comunidad <span className="text-orange-600">Dataweb Games</span></h4>
+           
+           <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+              <a href="https://www.facebook.com/DatawebGames" target="_blank" className="w-full md:w-auto px-12 py-5 bg-blue-600 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
+                 <Facebook size={16}/> Facebook
+              </a>
+              <a href="https://www.youtube.com/@ElViejoGamer1" target="_blank" className="w-full md:w-auto px-12 py-5 bg-red-600 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-red-700 transition-all flex items-center justify-center gap-2">
+                 <Youtube size={16}/> El Viejo Gamer
+              </a>
            </div>
-        </div>
+           
+           <p className="text-[8px] font-black uppercase tracking-[0.5em] text-white/20 italic pt-4">© 2026 Powered by Dataweb Games</p>
+        </footer>
       </div>
 
-      <ServerModal open={open} onClose={() => setOpen(false)} server={selected} />
+      <ServerModal open={open} onClose={() => setOpen(false)} server={serverData} />
 
       <style jsx global>{`
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #050505; }
-        ::-webkit-scrollbar-thumb { background: #ea580c; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,165,0,0.3); border-radius: 10px; }
+        .animate-spin-slow { animation: spin 8s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
     </main>
   );
