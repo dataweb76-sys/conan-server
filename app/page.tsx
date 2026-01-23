@@ -8,7 +8,7 @@ import {
   Palette, Replace, ShoppingCart, Diamond, X, Facebook, 
   Activity, Download, VideoOff, PlayCircle, Ghost, 
   BookOpen, Footprints, Shirt, Orbit, Wand, Globe,
-  Flame, Sparkles, Target, Box, Youtube
+  Flame, Sparkles, Target, Box, Youtube, MousePointer2
 } from "lucide-react";
 
 // --- COMPONENTE LIVE ACTIONS ---
@@ -93,11 +93,11 @@ const GuidesMenu = () => {
         {activeMod === "aoc" && (
           <div className="space-y-8 animate-in fade-in duration-500 text-left">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-orange-600/10 p-6 rounded-3xl border border-orange-500/20">
-               <div>
+                <div>
                   <h4 className="text-2xl font-black italic text-orange-500 uppercase">Age of Calamitous</h4>
                   <p className="text-[10px] text-white/60 font-bold uppercase">Facciones, Magias y Misiones de Lore.</p>
-               </div>
-               <a href="https://www.worldanvil.com/w/the-age-of-calamitous/map/ee441aeb-e106-4d00-9b00-1faab0fdfb21" target="_blank" className="px-6 py-3 bg-orange-600 rounded-xl text-[10px] font-black uppercase italic flex items-center gap-2 hover:scale-105 transition-transform"><Map size={14}/> Abrir Mapa AoC</a>
+                </div>
+                <a href="https://www.worldanvil.com/w/the-age-of-calamitous/map/ee441aeb-e106-4d00-9b00-1faab0fdfb21" target="_blank" className="px-6 py-3 bg-orange-600 rounded-xl text-[10px] font-black uppercase italic flex items-center gap-2 hover:scale-105 transition-transform"><Map size={14}/> Abrir Mapa AoC</a>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {["Stormhold", "Felgarth", "Elvanor", "Vanghoul", "Embrace", "Covenant"].map(f => (
@@ -309,20 +309,41 @@ export default function HomePage() {
               <Download size={20} className="text-red-500 opacity-40 group-hover:opacity-100" />
             </a>
             
-            {/* CONAY MOD LAUNCHER - AGREGADO AQUÍ */}
-            <a href="https://forums.funcom.com/t/conay-conan-exiles-mod-launcher/205626" target="_blank" className="md:col-span-2 group flex items-center justify-between p-6 bg-cyan-600/10 border border-cyan-500/20 rounded-[2rem] hover:bg-cyan-600/20 transition-all">
-              <div className="flex items-center gap-4 text-left">
-                <div className="p-4 bg-cyan-600 rounded-2xl group-hover:scale-110 transition-transform shadow-lg"><Box size={24} className="text-white" /></div>
-                <div>
-                  <h4 className="text-xs font-black uppercase tracking-widest text-cyan-400">Conay Mod Launcher</h4>
-                  <p className="text-[9px] text-white/40 font-bold uppercase">Gestiona tus mods y entra al servidor más rápido (Recomendado)</p>
+            {/* --- BLOQUE CONAY PARA CONEXIÓN DIRECTA --- */}
+            <div className="md:col-span-2 group relative overflow-hidden bg-gradient-to-r from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 p-8 rounded-[2.5rem] hover:border-cyan-400 transition-all shadow-2xl">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+                <div className="flex items-center gap-6 text-left">
+                  <div className="p-5 bg-cyan-600 rounded-3xl shadow-[0_0_20px_rgba(6,182,212,0.5)] group-hover:scale-110 transition-transform">
+                    <Box size={32} className="text-white" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-black uppercase italic tracking-tighter text-cyan-400">Acceso Directo Conay</h4>
+                    <p className="text-[10px] text-white/60 font-bold uppercase max-w-md leading-relaxed">
+                      Entra directamente a <span className="text-cyan-400 font-black tracking-widest">{serverData.ip}</span> sin configurar nada manualmente.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                  <a 
+                    href="https://forums.funcom.com/t/conay-conan-exiles-mod-launcher/205626" 
+                    target="_blank" 
+                    className="px-8 py-4 bg-white text-black rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-cyan-500 hover:text-white transition-all flex items-center justify-center gap-2"
+                  >
+                    <Download size={16}/> Bajar Launcher
+                  </a>
+                  
+                  <a 
+                    href="https://discord.gg/4SmuhXPfMr" 
+                    target="_blank" 
+                    className="px-8 py-4 bg-cyan-600/20 border border-cyan-500/50 text-cyan-400 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-cyan-600/40 transition-all flex items-center justify-center gap-2"
+                  >
+                    <MousePointer2 size={16}/> Entrar a Mi Server
+                  </a>
                 </div>
               </div>
-              <div className="flex items-center gap-2 bg-cyan-500/20 px-6 py-3 rounded-xl border border-cyan-500/30">
-                <span className="text-[10px] font-black uppercase italic">Ir a descarga</span>
-                <Download size={18} className="text-cyan-400" />
-              </div>
-            </a>
+              <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-cyan-500/10 blur-3xl rounded-full"></div>
+            </div>
           </div>
         </header>
 
