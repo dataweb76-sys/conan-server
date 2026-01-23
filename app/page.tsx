@@ -308,6 +308,21 @@ export default function HomePage() {
               </div>
               <Download size={20} className="text-red-500 opacity-40 group-hover:opacity-100" />
             </a>
+            
+            {/* CONAY MOD LAUNCHER - AGREGADO AQUÍ */}
+            <a href="https://forums.funcom.com/t/conay-conan-exiles-mod-launcher/205626" target="_blank" className="md:col-span-2 group flex items-center justify-between p-6 bg-cyan-600/10 border border-cyan-500/20 rounded-[2rem] hover:bg-cyan-600/20 transition-all">
+              <div className="flex items-center gap-4 text-left">
+                <div className="p-4 bg-cyan-600 rounded-2xl group-hover:scale-110 transition-transform shadow-lg"><Box size={24} className="text-white" /></div>
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-widest text-cyan-400">Conay Mod Launcher</h4>
+                  <p className="text-[9px] text-white/40 font-bold uppercase">Gestiona tus mods y entra al servidor más rápido (Recomendado)</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 bg-cyan-500/20 px-6 py-3 rounded-xl border border-cyan-500/30">
+                <span className="text-[10px] font-black uppercase italic">Ir a descarga</span>
+                <Download size={18} className="text-cyan-400" />
+              </div>
+            </a>
           </div>
         </header>
 
