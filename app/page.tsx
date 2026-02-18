@@ -13,11 +13,11 @@ import {
 // --- COMPONENTE: RANKING DE LEYENDAS ---
 const RankingSection = () => {
   const rankings = [
-    { name: "Kaelthas", level: 300, kills: 1240, faction: "Stormhold", rank: 1, avatar: "👑" },
-    { name: "Arthas_Arg", level: 295, kills: 1100, faction: "Vanghoul", rank: 2, avatar: "💀" },
-    { name: "DinoHunter", level: 280, kills: 950, faction: "Elvanor", rank: 3, avatar: "🏹" },
-    { name: "Slayer666", level: 250, kills: 820, faction: "Covenant", rank: 4, avatar: "🔥" },
-    { name: "RexMaster", level: 210, kills: 740, faction: "Felgarth", rank: 5, avatar: "🦖" },
+    { name: " Mör", level: 300, kills: 1240, faction: "Stormhold", rank: 1, avatar: "👑" },
+    { name: "Sheyla", level: 295, kills: 1100, faction: "Vanghoul", rank: 2, avatar: "💀" },
+    { name: "Chloe", level: 280, kills: 950, faction: "Elvanor", rank: 3, avatar: "🏹" },
+    { name: "STORM ", level: 250, kills: 820, faction: "Covenant", rank: 4, avatar: "🔥" },
+    { name: "Obara", level: 210, kills: 740, faction: "Felgarth", rank: 5, avatar: "🦖" },
   ];
 
   return (
