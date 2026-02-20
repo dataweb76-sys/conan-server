@@ -13,7 +13,7 @@ import {
 // --- COMPONENTE: RANKING DE LEYENDAS ---
 const RankingSection = () => {
   const rankings = [
-    { name: " Mör", level: 300, kills: 12, faction: "Stormhold", rank: 1, avatar: "👑" },
+    { name: "Mör", level: 300, kills: 12, faction: "Stormhold", rank: 1, avatar: "👑" },
     { name: "Sheyla", level: 295, kills: 11, faction: "Vanghoul", rank: 2, avatar: "💀" },
     { name: "Chloe", level: 280, kills: 9, faction: "Elvanor", rank: 3, avatar: "🏹" },
     { name: "STORM ", level: 250, kills: 8, faction: "Covenant", rank: 4, avatar: "🔥" },
