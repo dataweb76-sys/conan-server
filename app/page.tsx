@@ -348,7 +348,7 @@ export default function HomePage() {
   const serverData = { 
     slug: "dragones", 
     title: "DRAGONES Y DINOSAURIOS", 
-    ip: "190.174.182.114", 
+    ip: "190.174.180.74", 
     port: 7779, 
     queryPort: 27017,
     image: "/servers/server1.png",
