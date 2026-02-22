@@ -12,6 +12,154 @@ import {
   Gamepad2 // Importado para el nuevo botón
 } from "lucide-react";
 
+"use client";
+import { useState, useEffect } from "react";
+import DiscordWidget from "@/components/DiscordWidget";
+import ServerModal from "@/components/ServerModal";
+import { 
+  MessageCircle, Users, Zap, Shield, Sword, 
+  Map, Skull, Gem, Crown, Navigation, HeartPulse, 
+  Palette, Replace, ShoppingCart, Diamond, X, Facebook, 
+  Activity, Download, VideoOff, PlayCircle, Ghost, 
+  BookOpen, Footprints, Shirt, Orbit, Wand, Globe,
+  Flame, Sparkles, Target, Box, Youtube, MousePointer2,
+  Gamepad2
+} from "lucide-react";
+
+//////////////////////////////////////////////////////////////////
+// REGISTRO GLOBAL LEGIÓN DE REYES (LÍMITE 20 POR FACCIÓN)
+//////////////////////////////////////////////////////////////////
+
+const LegionRegistroGlobal = () => {
+  const [steam, setSteam] = useState("");
+  const [faction, setFaction] = useState("Buenos");
+  const [players, setPlayers] = useState<any[]>([]);
+
+  const fetchPlayers = async () => {
+    const res = await fetch("/api/legion");
+    const data = await res.json();
+    setPlayers(data);
+  };
+
+  useEffect(() => {
+    fetchPlayers();
+  }, []);
+
+  const buenosCount = players.filter(p => p.faction === "Buenos").length;
+  const malosCount = players.filter(p => p.faction === "Malos").length;
+
+  const isFull =
+    (faction === "Buenos" && buenosCount >= 20) ||
+    (faction === "Malos" && malosCount >= 20);
+
+  const register = async () => {
+    if (!steam.trim() || isFull) return;
+
+    const res = await fetch("/api/legion", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ steam, faction })
+    });
+
+    if (res.ok) {
+      setSteam("");
+      fetchPlayers();
+    } else {
+      alert("Ya estás registrado o la facción está llena.");
+    }
+  };
+
+  return (
+    <section className="bg-gradient-to-r from-red-900/40 to-black border border-red-600/40 p-14 rounded-[4rem] shadow-2xl space-y-10">
+      
+      <div className="text-center space-y-4">
+        <h3 className="text-6xl font-black italic uppercase">
+          Inauguración <span className="text-red-600">Legión de Reyes</span>
+        </h3>
+        <p className="text-[11px] font-black uppercase text-white/50 tracking-widest">
+          Máximo 20 jugadores por facción
+        </p>
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-4 max-w-3xl mx-auto">
+        <input
+          type="text"
+          value={steam}
+          onChange={(e) => setSteam(e.target.value)}
+          placeholder="Nombre de Steam"
+          className="flex-1 px-6 py-5 bg-black/70 border border-white/10 rounded-2xl text-white font-bold uppercase text-[11px]"
+        />
+
+        <select
+          value={faction}
+          onChange={(e) => setFaction(e.target.value)}
+          className="px-6 py-5 bg-black/70 border border-white/10 rounded-2xl font-bold uppercase text-[11px]"
+        >
+          <option>Buenos</option>
+          <option>Malos</option>
+        </select>
+
+        <button
+          onClick={register}
+          disabled={isFull}
+          className={`px-10 py-5 rounded-2xl font-black uppercase text-[11px] transition-all ${
+            isFull
+              ? "bg-gray-700 cursor-not-allowed opacity-50"
+              : "bg-red-600 hover:scale-105"
+          }`}
+        >
+          {isFull ? "Facción Completa" : "Registrarme"}
+        </button>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-8">
+        
+        <div className="bg-blue-900/20 border border-blue-500/20 rounded-3xl p-8">
+          <h4 className="text-xl font-black uppercase text-blue-400 mb-6">
+            Buenos ⚔ ({buenosCount}/20)
+          </h4>
+          <div className="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar">
+            {players.filter(p => p.faction === "Buenos").map((p, i) => (
+              <div key={i} className="text-[10px] font-black uppercase bg-white/5 p-3 rounded-xl">
+                {p.steam}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-red-900/20 border border-red-500/20 rounded-3xl p-8">
+          <h4 className="text-xl font-black uppercase text-red-500 mb-6">
+            Malos ☠ ({malosCount}/20)
+          </h4>
+          <div className="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar">
+            {players.filter(p => p.faction === "Malos").map((p, i) => (
+              <div key={i} className="text-[10px] font-black uppercase bg-white/5 p-3 rounded-xl">
+                {p.steam}
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </section>
+  );
+};
+
+//////////////////////////////////////////////////////////////////
+// TU PÁGINA ORIGINAL (INTACTA)
+//////////////////////////////////////////////////////////////////
+
+// ⬇️ Acá sigue exactamente TODO tu código original
+// (WebhookLogs, GuidesMenu, HomePage completo)
+// SOLO agregamos una línea dentro del return:
+
+// Antes de:
+// {/* GUÍA DE MODS */}
+
+// Agregá:
+// <LegionRegistroGlobal />
+
+
 // --- COMPONENTE LIVE ACTIONS ---
 const WebhookLogs = () => {
   const [logs, setLogs] = useState([{ id: 1, time: "START", text: "Iniciando monitoreo de Los Antiguos...", type: "sys" }]);
