@@ -7,8 +7,47 @@ import {
   Map, Skull, Gem, Crown, Navigation, HeartPulse, 
   Orbit, Sparkles, Target, Box, Youtube, MousePointer2,
   Gamepad2, Trophy, Medal, Facebook, Download, VideoOff, 
-  PlayCircle, Ghost, BookOpen, Diamond, Activity
+  PlayCircle, Ghost, BookOpen, Diamond, Activity,
+  Flame, Sun, Clock, ShoppingCart
 } from "lucide-react";
+
+// --- COMPONENTE: COUNTDOWN TIMER ---
+const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
+  const [timeLeft, setTimeLeft] = useState({ dias: 0, horas: 0, mins: 0, segs: 0 });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const target = new Date(targetDate).getTime();
+      const now = new Date().getTime();
+      const distance = target - now;
+
+      if (distance < 0) {
+        clearInterval(timer);
+      } else {
+        setTimeLeft({
+          dias: Math.floor(distance / (1000 * 60 * 60 * 24)),
+          horas: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          mins: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+          segs: Math.floor((distance % (1000 * 60)) / 1000),
+        });
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [targetDate]);
+
+  return (
+    <div className="flex gap-4 justify-center">
+      {Object.entries(timeLeft).map(([label, value]) => (
+        <div key={label} className="flex flex-col items-center">
+          <div className="bg-white/5 border border-white/10 w-16 h-16 md:w-24 md:h-24 rounded-3xl flex items-center justify-center backdrop-blur-md">
+            <span className="text-2xl md:text-4xl font-black italic text-orange-500">{value}</span>
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-widest mt-2 opacity-40">{label}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 // --- COMPONENTE: RANKING DE LEYENDAS ---
 const RankingSection = () => {
@@ -23,7 +62,6 @@ const RankingSection = () => {
   return (
     <div className="w-full space-y-12">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
-        {/* TOP 2 */}
         <div className="order-2 md:order-1 bg-gradient-to-t from-slate-900/80 to-slate-800/20 border border-slate-500/30 p-8 rounded-[3rem] text-center space-y-4 relative group hover:border-slate-400 transition-all">
           <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-500 p-3 rounded-2xl"><Trophy size={24} className="text-white"/></div>
           <span className="text-5xl block opacity-80">{rankings[1].avatar}</span>
@@ -33,8 +71,6 @@ const RankingSection = () => {
             <div><p className="text-[8px] text-white/40 uppercase font-black">Kills</p><p className="font-black">{rankings[1].kills}</p></div>
           </div>
         </div>
-
-        {/* TOP 1 - EL REY */}
         <div className="order-1 md:order-2 bg-gradient-to-t from-orange-950/40 to-orange-600/30 border-2 border-orange-500 p-10 rounded-[4rem] text-center space-y-6 relative group hover:scale-105 transition-all shadow-[0_0_50px_rgba(234,88,12,0.3)]">
           <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-orange-500 p-4 rounded-3xl animate-bounce shadow-xl shadow-orange-500/50"><Crown size={32} className="text-black"/></div>
           <span className="text-7xl block">{rankings[0].avatar}</span>
@@ -47,8 +83,6 @@ const RankingSection = () => {
             <div><p className="text-[9px] text-orange-200 uppercase font-black">Bajas</p><p className="text-3xl font-black italic">{rankings[0].kills}</p></div>
           </div>
         </div>
-
-        {/* TOP 3 */}
         <div className="order-3 md:order-3 bg-gradient-to-t from-orange-900/30 to-orange-900/10 border border-orange-800/40 p-8 rounded-[3rem] text-center space-y-4 relative group hover:border-orange-700 transition-all">
           <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-orange-800 p-3 rounded-2xl"><Medal size={24} className="text-white"/></div>
           <span className="text-5xl block opacity-80">{rankings[2].avatar}</span>
@@ -105,7 +139,6 @@ const GuidesMenu = () => {
             </div>
           </div>
         )}
-        {/* Agregado placeholder para otros mods */}
         {activeMod !== "aoc" && (
           <div className="py-20 text-center opacity-20 font-black uppercase italic tracking-[0.5em]">Cargando Datos de {activeMod}...</div>
         )}
@@ -118,33 +151,34 @@ const GuidesMenu = () => {
 export default function HomePage() {
   const [selected, setSelected] = useState<any>(null);
   const [open, setOpen] = useState(false);
-  const [status, setStatus] = useState<any>({ online: 0, max: 40, players: [], state: "loading" });
+  const [isRegistering, setIsRegistering] = useState(false);
   
   const serverData = { 
-    slug: "dragones", 
-    title: "DRAGONES Y DINOSAURIOS", 
+    slug: "legion-reyes", 
+    title: "LEGION DE REYES", 
     ip: "190.174.182.114", 
     port: 7779, 
     queryPort: 27017,
     image: "/servers/server1.png",
   };
 
-  useEffect(() => {
-    const fetchStatus = async () => {
-      try {
-        const res = await fetch(`/api/status?ip=${serverData.ip}&qport=${serverData.queryPort}`);
-        const data = await res.json();
-        if (data.ok) {
-          setStatus({ online: data.playersCount, max: data.maxPlayers, players: data.players || [], state: "online" });
-        }
-      } catch (e) {
-        setStatus((prev: any) => ({ ...prev, state: "offline" }));
-      }
-    };
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  const handleWebhook = async (faction: 'ANGELES' | 'DEMONIOS', url: string) => {
+    setIsRegistering(true);
+    try {
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: `🔥 **¡NUEVO GUERRERO REGISTRADO!**\nBando: **${faction}**\nPre-inscripción para la apertura del 28/02.`
+        })
+      });
+      alert(`¡Registro exitoso para el bando ${faction}!`);
+    } catch (e) {
+      alert("Error al conectar con el servidor.");
+    } finally {
+      setIsRegistering(false);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-[#030303] text-white selection:bg-orange-600 overflow-x-hidden">
@@ -160,32 +194,63 @@ export default function HomePage() {
               <img src="/logo/logo.png" className="w-14 h-14 rounded-xl" alt="logo" />
             </div>
             <div>
-              <h1 className="text-2xl font-black uppercase italic leading-none tracking-tighter">Dragones <span className="text-orange-600">Y Dinos</span></h1>
+              <h1 className="text-2xl font-black uppercase italic leading-none tracking-tighter">Legión <span className="text-orange-600">de REYES</span></h1>
               <span className="text-[8px] font-black uppercase tracking-[0.4em] text-white/30">Survival PvP Server</span>
             </div>
           </div>
           <a href="https://discord.gg/4SmuhXPfMr" target="_blank" className="p-4 bg-orange-600 rounded-2xl hover:scale-110 transition-all shadow-lg shadow-orange-600/20"><MessageCircle size={24}/></a>
         </nav>
 
-        {/* HERO SECTION */}
-        <header className="flex flex-col items-center text-center space-y-16 py-10">
+        {/* HERO SECTION CON COUNTDOWN */}
+        <header className="flex flex-col items-center text-center space-y-12 py-10">
           <div className="space-y-6 relative">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[300px] bg-orange-600/10 blur-[120px] rounded-full"></div>
-            <h2 className="text-8xl md:text-[12rem] font-black italic uppercase tracking-tighter leading-[0.75] relative z-10 drop-shadow-2xl">
-              CONAN <br/> <span className="text-transparent bg-clip-text bg-gradient-to-b from-orange-500 to-red-700">EXILES</span>
+            <h2 className="text-7xl md:text-[10rem] font-black italic uppercase tracking-tighter leading-[0.75] relative z-10 drop-shadow-2xl">
+              LEGION DE <br/> <span className="text-transparent bg-clip-text bg-gradient-to-b from-orange-500 to-red-700">REYES</span>
             </h2>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-6 w-full max-w-3xl relative z-10">
+          <div className="space-y-8 z-10">
+            <div className="flex items-center justify-center gap-3 text-orange-500 font-black uppercase tracking-[0.3em] text-xs">
+              <Clock size={16}/> Apertura 28 de Febrero, 2026
+            </div>
+            <CountdownTimer targetDate="2026-02-28T00:00:00" />
+          </div>
+
+          {/* BOTONES DE REGISTRO / FACCIONES */}
+          <div className="w-full max-w-4xl grid md:grid-cols-2 gap-6 relative z-10">
+             <button 
+              onClick={() => handleWebhook('ANGELES', 'https://discord.com/api/webhooks/1475607314106159154/3sbqBR2h5Zr-xUhMARFo57A0j7J1z2ld4CJkHfSrptyzSiz8SRRjX-LvWk9jBPPbSteG')}
+              disabled={isRegistering}
+              className="group relative flex flex-col items-center justify-center p-10 bg-gradient-to-br from-blue-600/20 to-cyan-500/10 border border-blue-500/40 rounded-[3rem] hover:scale-105 transition-all shadow-2xl overflow-hidden"
+             >
+                <Sun className="text-blue-400 mb-4 group-hover:rotate-90 transition-transform duration-700" size={48} />
+                <h4 className="text-3xl font-black uppercase italic tracking-tighter">ANGELES</h4>
+                <p className="text-[10px] text-blue-300/60 font-black tracking-widest mt-2 uppercase">Registrarse como Guerrero de Luz</p>
+                <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+             </button>
+
+             <button 
+              onClick={() => handleWebhook('DEMONIOS', 'https://discord.com/api/webhooks/1475607153585946805/EZNoctYHQ0dhatjGanDpRfRSxxvoUQFmeSE-bamWEGGv-A8S1fPvpXO59hUGv7YD_ago')}
+              disabled={isRegistering}
+              className="group relative flex flex-col items-center justify-center p-10 bg-gradient-to-br from-red-600/20 to-orange-500/10 border border-red-500/40 rounded-[3rem] hover:scale-105 transition-all shadow-2xl overflow-hidden"
+             >
+                <Flame className="text-red-500 mb-4 group-hover:animate-bounce" size={48} />
+                <h4 className="text-3xl font-black uppercase italic tracking-tighter">DEMONIOS</h4>
+                <p className="text-[10px] text-red-300/60 font-black tracking-widest mt-2 uppercase">Registrarse como Guerrero del Caos</p>
+                <div className="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+             </button>
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-6 w-full max-w-3xl relative z-10 pt-10">
             <button onClick={() => { setSelected(serverData); setOpen(true); }} className="flex-[2] bg-white text-black py-8 rounded-[2.5rem] font-black uppercase italic tracking-[0.2em] text-sm hover:bg-orange-600 hover:text-white transition-all shadow-2xl">INFO DEL REINO</button>
             <a href={`steam://run/440900//+connect%20${serverData.ip}:${serverData.port}`} className="flex-1 bg-white/5 border border-white/10 py-8 rounded-[2.5rem] font-black uppercase text-xs tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-white/10 transition-all shadow-xl group">
               <Zap size={22} className="text-orange-500 group-hover:animate-pulse" /> Jugar Ahora
             </a>
           </div>
 
-          {/* GRID DE BOTONES IMPACTANTES (RECUPERADOS Y MEJORADOS) */}
+          {/* GRID DE BOTONES IMPACTANTES */}
           <div className="w-full max-w-5xl grid md:grid-cols-2 lg:grid-cols-2 gap-6 pt-10">
-            {/* Cinematica 1 */}
             <a href="https://drive.google.com/file/d/1lrRNi06iCTJejVG6DTBvskxIBW7rYQfj/view?usp=drive_link" target="_blank" className="group flex items-center justify-between p-8 bg-orange-600/10 border border-orange-500/30 rounded-[2.5rem] hover:bg-orange-600/20 transition-all shadow-xl">
               <div className="flex items-center gap-6 text-left">
                 <div className="p-5 bg-orange-600 rounded-3xl shadow-lg group-hover:animate-bounce"><PlayCircle size={28} /></div>
@@ -197,7 +262,6 @@ export default function HomePage() {
               <Download size={24} className="text-orange-500 opacity-40 group-hover:opacity-100" />
             </a>
 
-            {/* Cinematica 2 / Remover Intro */}
             <a href="https://drive.google.com/file/d/1HcayYUFxtgnleMhn24uyvRhuKS-JAoHY/view?usp=drive_link" target="_blank" className="group flex items-center justify-between p-8 bg-red-600/10 border border-red-500/30 rounded-[2.5rem] hover:bg-red-600/20 transition-all shadow-xl">
               <div className="flex items-center gap-6 text-left">
                 <div className="p-5 bg-red-600 rounded-3xl shadow-lg group-hover:animate-pulse"><VideoOff size={28} /></div>
@@ -209,7 +273,6 @@ export default function HomePage() {
               <Download size={24} className="text-red-500 opacity-40 group-hover:opacity-100" />
             </a>
 
-            {/* Hosting Promo (Ocupa todo el ancho) */}
             <div className="md:col-span-2 bg-gradient-to-r from-orange-600 to-red-600 p-[2px] rounded-[3rem] shadow-2xl group hover:scale-[1.01] transition-all">
                <a href="https://wa.me/5492954320639" target="_blank" className="bg-[#0a0a0a] rounded-[2.9rem] p-10 flex flex-col md:flex-row items-center justify-between gap-6">
                  <div className="flex items-center gap-6 text-left">
@@ -254,7 +317,7 @@ export default function HomePage() {
                <a href="https://www.youtube.com/@ElViejoGamer1" target="_blank" className="hover:scale-125 transition-transform text-white/40 hover:text-red-600"><Youtube size={40} /></a>
             </div>
             <div className="space-y-4">
-              <h4 className="text-4xl font-black uppercase italic tracking-tighter">Dataweb <span className="text-orange-600">Games</span></h4>
+              <h4 className="text-4xl font-black uppercase italic tracking-tighter">Legión <span className="text-orange-600">de REYES</span></h4>
               <p className="text-xs text-white/40 font-bold uppercase tracking-[0.5em]">Explora • Sobrevive • Domina</p>
             </div>
             <p className="text-[9px] font-black uppercase tracking-[0.8em] text-white/10 italic">© 2026 Powered by Dataweb Games</p>
