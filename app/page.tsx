@@ -8,7 +8,7 @@ import {
   Orbit, Sparkles, Target, Box, Youtube, MousePointer2,
   Gamepad2, Trophy, Medal, Facebook, Download, VideoOff, 
   PlayCircle, Ghost, BookOpen, Diamond, Activity,
-  Flame, Sun, Clock, ShoppingCart
+  Flame, Sun, Clock, ShoppingCart, User
 } from "lucide-react";
 
 // --- COMPONENTE: COUNTDOWN TIMER ---
@@ -36,13 +36,13 @@ const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
   }, [targetDate]);
 
   return (
-    <div className="flex gap-4 justify-center">
+    <div className="flex gap-4 justify-center scale-90 md:scale-100">
       {Object.entries(timeLeft).map(([label, value]) => (
         <div key={label} className="flex flex-col items-center">
-          <div className="bg-white/5 border border-white/10 w-16 h-16 md:w-24 md:h-24 rounded-3xl flex items-center justify-center backdrop-blur-md">
-            <span className="text-2xl md:text-4xl font-black italic text-orange-500">{value}</span>
+          <div className="bg-white/5 border border-white/10 w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center backdrop-blur-md">
+            <span className="text-xl md:text-3xl font-black italic text-orange-500">{value}</span>
           </div>
-          <span className="text-[10px] font-black uppercase tracking-widest mt-2 opacity-40">{label}</span>
+          <span className="text-[8px] font-black uppercase tracking-widest mt-2 opacity-40">{label}</span>
         </div>
       ))}
     </div>
@@ -113,11 +113,7 @@ const GuidesMenu = () => {
     <div className="w-full space-y-10">
       <div className="flex flex-wrap justify-center gap-4">
         {modButtons.map((mod) => (
-          <button 
-            key={mod.id} 
-            onClick={() => setActiveMod(mod.id)} 
-            className={`px-6 py-4 rounded-2xl font-black uppercase italic tracking-[0.15em] transition-all border text-[10px] flex items-center gap-3 ${activeMod === mod.id ? `${mod.color} border-white/40 text-white scale-110 shadow-lg` : "bg-white/5 border-white/5 text-white/30 hover:bg-white/10"}`}
-          >
+          <button key={mod.id} onClick={() => setActiveMod(mod.id)} className={`px-6 py-4 rounded-2xl font-black uppercase italic tracking-[0.15em] transition-all border text-[10px] flex items-center gap-3 ${activeMod === mod.id ? `${mod.color} border-white/40 text-white scale-110 shadow-lg` : "bg-white/5 border-white/5 text-white/30 hover:bg-white/10"}`}>
             {mod.icon} {mod.label}
           </button>
         ))}
@@ -151,30 +147,45 @@ const GuidesMenu = () => {
 export default function HomePage() {
   const [selected, setSelected] = useState<any>(null);
   const [open, setOpen] = useState(false);
+  const [steamName, setSteamName] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   
   const serverData = { 
-    slug: "legion-reyes", 
-    title: "LEGION DE REYES", 
+    slug: "dragones", 
+    title: "DRAGONES Y DINOSAURIOS", 
     ip: "190.174.182.114", 
     port: 7779, 
     queryPort: 27017,
     image: "/servers/server1.png",
   };
 
-  const handleWebhook = async (faction: 'ANGELES' | 'DEMONIOS', url: string) => {
+  const handleRegister = async (faction: 'ANGELES' | 'DEMONIOS', url: string) => {
+    if (!steamName.trim()) {
+      alert("Por favor, ingresa tu nombre de Steam para registrarte.");
+      return;
+    }
     setIsRegistering(true);
     try {
       await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          content: `🔥 **¡NUEVO GUERRERO REGISTRADO!**\nBando: **${faction}**\nPre-inscripción para la apertura del 28/02.`
+          embeds: [{
+            title: "👑 NUEVA PRE-INSCRIPCIÓN: LEGIÓN DE REYES",
+            color: faction === 'ANGELES' ? 3447003 : 15105570,
+            fields: [
+              { name: "Guerrero", value: `**${steamName}**`, inline: true },
+              { name: "Bando", value: faction, inline: true },
+              { name: "Apertura", value: "28/02/2026", inline: true }
+            ],
+            timestamp: new Date()
+          }]
         })
       });
-      alert(`¡Registro exitoso para el bando ${faction}!`);
+      alert(`¡${steamName}, has sido registrado en el bando ${faction}!`);
+      setSteamName("");
     } catch (e) {
-      alert("Error al conectar con el servidor.");
+      alert("Error al conectar con Discord.");
     } finally {
       setIsRegistering(false);
     }
@@ -194,54 +205,69 @@ export default function HomePage() {
               <img src="/logo/logo.png" className="w-14 h-14 rounded-xl" alt="logo" />
             </div>
             <div>
-              <h1 className="text-2xl font-black uppercase italic leading-none tracking-tighter">Legión <span className="text-orange-600">de REYES</span></h1>
-              <span className="text-[8px] font-black uppercase tracking-[0.4em] text-white/30">Survival PvP Server</span>
+              <h1 className="text-2xl font-black uppercase italic leading-none tracking-tighter">Dragones <span className="text-orange-600">Y Dinos</span></h1>
+              <span className="text-[8px] font-black uppercase tracking-[0.4em] text-white/30">Survival PvP Server • Legión de Reyes Coming Soon</span>
             </div>
           </div>
           <a href="https://discord.gg/4SmuhXPfMr" target="_blank" className="p-4 bg-orange-600 rounded-2xl hover:scale-110 transition-all shadow-lg shadow-orange-600/20"><MessageCircle size={24}/></a>
         </nav>
 
-        {/* HERO SECTION CON COUNTDOWN */}
-        <header className="flex flex-col items-center text-center space-y-12 py-10">
+        {/* HERO SECTION PRINCIPAL */}
+        <header className="flex flex-col items-center text-center space-y-12">
           <div className="space-y-6 relative">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[300px] bg-orange-600/10 blur-[120px] rounded-full"></div>
-            <h2 className="text-7xl md:text-[10rem] font-black italic uppercase tracking-tighter leading-[0.75] relative z-10 drop-shadow-2xl">
-              LEGION DE <br/> <span className="text-transparent bg-clip-text bg-gradient-to-b from-orange-500 to-red-700">REYES</span>
+            <h2 className="text-8xl md:text-[12rem] font-black italic uppercase tracking-tighter leading-[0.75] relative z-10 drop-shadow-2xl">
+              CONAN <br/> <span className="text-transparent bg-clip-text bg-gradient-to-b from-orange-500 to-red-700">EXILES</span>
             </h2>
           </div>
 
-          <div className="space-y-8 z-10">
-            <div className="flex items-center justify-center gap-3 text-orange-500 font-black uppercase tracking-[0.3em] text-xs">
-              <Clock size={16}/> Apertura 28 de Febrero, 2026
-            </div>
-            <CountdownTimer targetDate="2026-02-28T00:00:00" />
+          {/* SECCIÓN PRE-REGISTRO LEGIÓN DE REYES */}
+          <div className="w-full max-w-5xl bg-white/5 border border-white/10 rounded-[4rem] p-8 md:p-12 space-y-10 backdrop-blur-xl relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12"><Crown size={120}/></div>
+             
+             <div className="space-y-4">
+                <h3 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter">Legión de <span className="text-orange-600">REYES</span></h3>
+                <div className="flex items-center justify-center gap-3 text-orange-500 font-black uppercase tracking-[0.3em] text-[10px]">
+                  <Clock size={14}/> Gran Apertura 28 de Febrero
+                </div>
+                <CountdownTimer targetDate="2026-02-28T00:00:00" />
+             </div>
+
+             <div className="max-w-md mx-auto space-y-6 relative z-10">
+                <div className="relative">
+                  <User className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" size={20}/>
+                  <input 
+                    type="text" 
+                    placeholder="TU NOMBRE DE STEAM..." 
+                    value={steamName}
+                    onChange={(e) => setSteamName(e.target.value)}
+                    className="w-full bg-black/50 border border-white/10 py-6 pl-16 pr-6 rounded-3xl font-black uppercase italic text-sm focus:outline-none focus:border-orange-500 transition-all"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <button 
+                    onClick={() => handleRegister('ANGELES', 'https://discord.com/api/webhooks/1475607314106159154/3sbqBR2h5Zr-xUhMARFo57A0j7J1z2ld4CJkHfSrptyzSiz8SRRjX-LvWk9jBPPbSteG')}
+                    disabled={isRegistering}
+                    className="group bg-blue-600 p-6 rounded-3xl hover:scale-105 transition-all shadow-lg flex flex-col items-center gap-2"
+                  >
+                    <Sun size={24} className="group-hover:rotate-90 transition-transform"/>
+                    <span className="font-black text-[10px] uppercase tracking-widest">ANGELES</span>
+                  </button>
+
+                  <button 
+                    onClick={() => handleRegister('DEMONIOS', 'https://discord.com/api/webhooks/1475607153585946805/EZNoctYHQ0dhatjGanDpRfRSxxvoUQFmeSE-bamWEGGv-A8S1fPvpXO59hUGv7YD_ago')}
+                    disabled={isRegistering}
+                    className="group bg-red-600 p-6 rounded-3xl hover:scale-105 transition-all shadow-lg flex flex-col items-center gap-2"
+                  >
+                    <Flame size={24} className="group-hover:animate-bounce"/>
+                    <span className="font-black text-[10px] uppercase tracking-widest">DEMONIOS</span>
+                  </button>
+                </div>
+             </div>
           </div>
 
-          {/* BOTONES DE REGISTRO / FACCIONES */}
-          <div className="w-full max-w-4xl grid md:grid-cols-2 gap-6 relative z-10">
-             <button 
-              onClick={() => handleWebhook('ANGELES', 'https://discord.com/api/webhooks/1475607314106159154/3sbqBR2h5Zr-xUhMARFo57A0j7J1z2ld4CJkHfSrptyzSiz8SRRjX-LvWk9jBPPbSteG')}
-              disabled={isRegistering}
-              className="group relative flex flex-col items-center justify-center p-10 bg-gradient-to-br from-blue-600/20 to-cyan-500/10 border border-blue-500/40 rounded-[3rem] hover:scale-105 transition-all shadow-2xl overflow-hidden"
-             >
-                <Sun className="text-blue-400 mb-4 group-hover:rotate-90 transition-transform duration-700" size={48} />
-                <h4 className="text-3xl font-black uppercase italic tracking-tighter">ANGELES</h4>
-                <p className="text-[10px] text-blue-300/60 font-black tracking-widest mt-2 uppercase">Registrarse como Guerrero de Luz</p>
-                <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-             </button>
-
-             <button 
-              onClick={() => handleWebhook('DEMONIOS', 'https://discord.com/api/webhooks/1475607153585946805/EZNoctYHQ0dhatjGanDpRfRSxxvoUQFmeSE-bamWEGGv-A8S1fPvpXO59hUGv7YD_ago')}
-              disabled={isRegistering}
-              className="group relative flex flex-col items-center justify-center p-10 bg-gradient-to-br from-red-600/20 to-orange-500/10 border border-red-500/40 rounded-[3rem] hover:scale-105 transition-all shadow-2xl overflow-hidden"
-             >
-                <Flame className="text-red-500 mb-4 group-hover:animate-bounce" size={48} />
-                <h4 className="text-3xl font-black uppercase italic tracking-tighter">DEMONIOS</h4>
-                <p className="text-[10px] text-red-300/60 font-black tracking-widest mt-2 uppercase">Registrarse como Guerrero del Caos</p>
-                <div className="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-             </button>
-          </div>
-
+          {/* BOTONES ACCIÓN DRAGONES Y DINOS */}
           <div className="flex flex-col md:flex-row gap-6 w-full max-w-3xl relative z-10 pt-10">
             <button onClick={() => { setSelected(serverData); setOpen(true); }} className="flex-[2] bg-white text-black py-8 rounded-[2.5rem] font-black uppercase italic tracking-[0.2em] text-sm hover:bg-orange-600 hover:text-white transition-all shadow-2xl">INFO DEL REINO</button>
             <a href={`steam://run/440900//+connect%20${serverData.ip}:${serverData.port}`} className="flex-1 bg-white/5 border border-white/10 py-8 rounded-[2.5rem] font-black uppercase text-xs tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-white/10 transition-all shadow-xl group">
@@ -249,49 +275,28 @@ export default function HomePage() {
             </a>
           </div>
 
-          {/* GRID DE BOTONES IMPACTANTES */}
-          <div className="w-full max-w-5xl grid md:grid-cols-2 lg:grid-cols-2 gap-6 pt-10">
+          {/* UTILIDADES */}
+          <div className="w-full max-w-5xl grid md:grid-cols-2 gap-6 pt-6">
             <a href="https://drive.google.com/file/d/1lrRNi06iCTJejVG6DTBvskxIBW7rYQfj/view?usp=drive_link" target="_blank" className="group flex items-center justify-between p-8 bg-orange-600/10 border border-orange-500/30 rounded-[2.5rem] hover:bg-orange-600/20 transition-all shadow-xl">
               <div className="flex items-center gap-6 text-left">
                 <div className="p-5 bg-orange-600 rounded-3xl shadow-lg group-hover:animate-bounce"><PlayCircle size={28} /></div>
-                <div>
-                  <h4 className="text-sm font-black uppercase tracking-widest">Cinemática Oficial</h4>
-                  <p className="text-[10px] text-white/40 font-bold uppercase">Descargar Intro Personalizada</p>
-                </div>
+                <div><h4 className="text-sm font-black uppercase tracking-widest">Cinemática</h4><p className="text-[10px] text-white/40 font-bold uppercase">Intro Personalizada</p></div>
               </div>
-              <Download size={24} className="text-orange-500 opacity-40 group-hover:opacity-100" />
+              <Download size={24} className="text-orange-500 opacity-40" />
             </a>
 
             <a href="https://drive.google.com/file/d/1HcayYUFxtgnleMhn24uyvRhuKS-JAoHY/view?usp=drive_link" target="_blank" className="group flex items-center justify-between p-8 bg-red-600/10 border border-red-500/30 rounded-[2.5rem] hover:bg-red-600/20 transition-all shadow-xl">
               <div className="flex items-center gap-6 text-left">
                 <div className="p-5 bg-red-600 rounded-3xl shadow-lg group-hover:animate-pulse"><VideoOff size={28} /></div>
-                <div>
-                  <h4 className="text-sm font-black uppercase tracking-widest">Remover Intro</h4>
-                  <p className="text-[10px] text-white/40 font-bold uppercase">Parche para salto de video</p>
-                </div>
+                <div><h4 className="text-sm font-black uppercase tracking-widest">Remover Intro</h4><p className="text-[10px] text-white/40 font-bold uppercase">Parche salto video</p></div>
               </div>
-              <Download size={24} className="text-red-500 opacity-40 group-hover:opacity-100" />
+              <Download size={24} className="text-red-500 opacity-40" />
             </a>
-
-            <div className="md:col-span-2 bg-gradient-to-r from-orange-600 to-red-600 p-[2px] rounded-[3rem] shadow-2xl group hover:scale-[1.01] transition-all">
-               <a href="https://wa.me/5492954320639" target="_blank" className="bg-[#0a0a0a] rounded-[2.9rem] p-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                 <div className="flex items-center gap-6 text-left">
-                   <div className="p-5 bg-orange-600/20 rounded-3xl text-orange-500"><Gamepad2 size={40} /></div>
-                   <div>
-                     <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white">¿Querés tu propio servidor?</h4>
-                     <p className="text-xs text-white/50 font-bold uppercase tracking-widest">Consultanos por hosting de alta performance</p>
-                   </div>
-                 </div>
-                 <div className="px-10 py-5 bg-[#25D366] text-black rounded-2xl font-black uppercase text-xs tracking-widest hover:scale-105 transition-all flex items-center gap-3">
-                   <MessageCircle size={20} fill="black" /> WhatsApp
-                 </div>
-               </a>
-            </div>
           </div>
         </header>
 
         {/* RANKING SECTION */}
-        <section id="ranking" className="space-y-20 py-10">
+        <section className="space-y-20 py-10">
           <div className="text-center space-y-4">
              <div className="inline-block px-4 py-1 bg-orange-600/20 rounded-lg text-orange-500 font-black uppercase text-[10px] tracking-[0.4em] mb-4">Salón de la Fama</div>
              <h3 className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter">Hall of <span className="text-orange-600">Warriors</span></h3>
@@ -299,7 +304,7 @@ export default function HomePage() {
           <RankingSection />
         </section>
 
-        {/* MODS SECTION */}
+        {/* MODS SECTION (RESTORED) */}
         <section id="mods" className="space-y-20 py-20 relative">
           <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
           <div className="text-center space-y-4">
@@ -317,7 +322,7 @@ export default function HomePage() {
                <a href="https://www.youtube.com/@ElViejoGamer1" target="_blank" className="hover:scale-125 transition-transform text-white/40 hover:text-red-600"><Youtube size={40} /></a>
             </div>
             <div className="space-y-4">
-              <h4 className="text-4xl font-black uppercase italic tracking-tighter">Legión <span className="text-orange-600">de REYES</span></h4>
+              <h4 className="text-4xl font-black uppercase italic tracking-tighter">Dataweb <span className="text-orange-600">Games</span></h4>
               <p className="text-xs text-white/40 font-bold uppercase tracking-[0.5em]">Explora • Sobrevive • Domina</p>
             </div>
             <p className="text-[9px] font-black uppercase tracking-[0.8em] text-white/10 italic">© 2026 Powered by Dataweb Games</p>
