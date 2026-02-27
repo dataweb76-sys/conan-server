@@ -8,7 +8,7 @@ import {
   Orbit, Sparkles, Target, Box, Youtube, MousePointer2,
   Gamepad2, Trophy, Medal, Facebook, Download, VideoOff, 
   PlayCircle, Ghost, BookOpen, Diamond, Activity,
-  Flame, Sun, Clock, ShoppingCart, User
+  Flame, Sun, Clock, ShoppingCart, User, Library
 } from "lucide-react";
 
 // --- COMPONENTE: COUNTDOWN TIMER ---
@@ -275,23 +275,44 @@ export default function HomePage() {
             </a>
           </div>
 
-          {/* UTILIDADES */}
-          <div className="w-full max-w-5xl grid md:grid-cols-2 gap-6 pt-6">
-            <a href="https://drive.google.com/file/d/1lrRNi06iCTJejVG6DTBvskxIBW7rYQfj/view?usp=drive_link" target="_blank" className="group flex items-center justify-between p-8 bg-orange-600/10 border border-orange-500/30 rounded-[2.5rem] hover:bg-orange-600/20 transition-all shadow-xl">
-              <div className="flex items-center gap-6 text-left">
-                <div className="p-5 bg-orange-600 rounded-3xl shadow-lg group-hover:animate-bounce"><PlayCircle size={28} /></div>
-                <div><h4 className="text-sm font-black uppercase tracking-widest">Cinemática</h4><p className="text-[10px] text-white/40 font-bold uppercase">Intro Personalizada</p></div>
-              </div>
-              <Download size={24} className="text-orange-500 opacity-40" />
-            </a>
+          {/* UTILIDADES Y COLECCIONES */}
+          <div className="w-full max-w-5xl space-y-6 pt-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              <a href="https://drive.google.com/file/d/1lrRNi06iCTJejVG6DTBvskxIBW7rYQfj/view?usp=drive_link" target="_blank" className="group flex items-center justify-between p-8 bg-orange-600/10 border border-orange-500/30 rounded-[2.5rem] hover:bg-orange-600/20 transition-all shadow-xl">
+                <div className="flex items-center gap-6 text-left">
+                  <div className="p-5 bg-orange-600 rounded-3xl shadow-lg group-hover:animate-bounce"><PlayCircle size={28} /></div>
+                  <div><h4 className="text-sm font-black uppercase tracking-widest">Cinemática</h4><p className="text-[10px] text-white/40 font-bold uppercase">Intro Personalizada</p></div>
+                </div>
+                <Download size={24} className="text-orange-500 opacity-40" />
+              </a>
 
-            <a href="https://drive.google.com/file/d/1HcayYUFxtgnleMhn24uyvRhuKS-JAoHY/view?usp=drive_link" target="_blank" className="group flex items-center justify-between p-8 bg-red-600/10 border border-red-500/30 rounded-[2.5rem] hover:bg-red-600/20 transition-all shadow-xl">
-              <div className="flex items-center gap-6 text-left">
-                <div className="p-5 bg-red-600 rounded-3xl shadow-lg group-hover:animate-pulse"><VideoOff size={28} /></div>
-                <div><h4 className="text-sm font-black uppercase tracking-widest">Remover Intro</h4><p className="text-[10px] text-white/40 font-bold uppercase">Parche salto video</p></div>
-              </div>
-              <Download size={24} className="text-red-500 opacity-40" />
-            </a>
+              <a href="https://drive.google.com/file/d/1HcayYUFxtgnleMhn24uyvRhuKS-JAoHY/view?usp=drive_link" target="_blank" className="group flex items-center justify-between p-8 bg-red-600/10 border border-red-500/30 rounded-[2.5rem] hover:bg-red-600/20 transition-all shadow-xl">
+                <div className="flex items-center gap-6 text-left">
+                  <div className="p-5 bg-red-600 rounded-3xl shadow-lg group-hover:animate-pulse"><VideoOff size={28} /></div>
+                  <div><h4 className="text-sm font-black uppercase tracking-widest">Remover Intro</h4><p className="text-[10px] text-white/40 font-bold uppercase">Parche salto video</p></div>
+                </div>
+                <Download size={24} className="text-red-500 opacity-40" />
+              </a>
+            </div>
+
+            {/* NUEVOS ICONOS DE COLECCIONES STEAM */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <a href="http://steamcommunity.com/sharedfiles/filedetails/?id=3674137594" target="_blank" className="group flex items-center gap-6 p-6 bg-blue-900/10 border border-blue-500/20 rounded-[2.5rem] hover:bg-blue-600/20 transition-all">
+                <div className="p-4 bg-blue-600 rounded-2xl group-hover:rotate-12 transition-transform"><Library size={24} /></div>
+                <div className="text-left">
+                  <h4 className="text-[11px] font-black uppercase tracking-widest">Colección Mods</h4>
+                  <p className="text-[13px] font-black italic text-blue-400">DRAGONES Y DINOS</p>
+                </div>
+              </a>
+
+              <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3674162555" target="_blank" className="group flex items-center gap-6 p-6 bg-orange-900/10 border border-orange-500/20 rounded-[2.5rem] hover:bg-orange-600/20 transition-all">
+                <div className="p-4 bg-orange-600 rounded-2xl group-hover:-rotate-12 transition-transform"><Library size={24} /></div>
+                <div className="text-left">
+                  <h4 className="text-[11px] font-black uppercase tracking-widest">Colección Mods</h4>
+                  <p className="text-[13px] font-black italic text-orange-400">LEGIÓN DE REYES</p>
+                </div>
+              </a>
+            </div>
           </div>
         </header>
 
