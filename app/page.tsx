@@ -8,7 +8,7 @@ import {
   Orbit, Sparkles, Target, Box, Youtube, MousePointer2,
   Gamepad2, Trophy, Medal, Facebook, Download, VideoOff, 
   PlayCircle, Ghost, BookOpen, Diamond, Activity,
-  Flame, Sun, Clock, ShoppingCart, User, Library
+  Flame, Sun, Clock, ShoppingCart, User, Library, Castle, Mountain
 } from "lucide-react";
 
 // --- COMPONENTE: COUNTDOWN TIMER ---
@@ -36,13 +36,13 @@ const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
   }, [targetDate]);
 
   return (
-    <div className="flex gap-4 justify-center scale-90 md:scale-100">
+    <div className="flex gap-2 justify-center scale-75 md:scale-90">
       {Object.entries(timeLeft).map(([label, value]) => (
         <div key={label} className="flex flex-col items-center">
-          <div className="bg-white/5 border border-white/10 w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center backdrop-blur-md">
-            <span className="text-xl md:text-3xl font-black italic text-orange-500">{value}</span>
+          <div className="bg-white/5 border border-white/10 w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center backdrop-blur-md">
+            <span className="text-lg md:text-2xl font-black italic text-orange-500">{value}</span>
           </div>
-          <span className="text-[8px] font-black uppercase tracking-widest mt-2 opacity-40">{label}</span>
+          <span className="text-[7px] font-black uppercase tracking-widest mt-1 opacity-40">{label}</span>
         </div>
       ))}
     </div>
@@ -176,7 +176,7 @@ export default function HomePage() {
             fields: [
               { name: "Guerrero", value: `**${steamName}**`, inline: true },
               { name: "Bando", value: faction, inline: true },
-              { name: "Apertura", value: "28/02/2026", inline: true }
+              { name: "Apertura", value: "07/03/2026", inline: true }
             ],
             timestamp: new Date()
           }]
@@ -193,11 +193,13 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-[#030303] text-white selection:bg-orange-600 overflow-x-hidden">
-      <div className="fixed inset-0 z-0 opacity-20 pointer-events-none">
-        <img src={serverData.image} className="w-full h-full object-cover blur-[100px]" alt="bg"/>
+      {/* BACKGROUNDS DIVIDIDOS */}
+      <div className="fixed inset-0 z-0 flex pointer-events-none opacity-20">
+        <div className="w-1/2 h-full bg-[url('/servers/legion_bg.jpg')] bg-cover bg-center grayscale blur-md"></div>
+        <div className="w-1/2 h-full bg-[url('/servers/dragones_bg.jpg')] bg-cover bg-center blur-md border-l border-white/5"></div>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-12 space-y-32">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-12 space-y-20">
         {/* NAV */}
         <nav className="flex justify-between items-center bg-white/5 backdrop-blur-2xl p-6 rounded-[3rem] border border-white/10 shadow-2xl sticky top-6 z-[100]">
           <div className="flex items-center gap-5">
@@ -205,116 +207,117 @@ export default function HomePage() {
               <img src="/logo/logo.png" className="w-14 h-14 rounded-xl" alt="logo" />
             </div>
             <div>
-              <h1 className="text-2xl font-black uppercase italic leading-none tracking-tighter">Dragones <span className="text-orange-600">Y Dinos</span></h1>
-              <span className="text-[8px] font-black uppercase tracking-[0.4em] text-white/30">Survival PvP Server • Legión de Reyes Coming Soon</span>
+              <h1 className="text-2xl font-black uppercase italic leading-none tracking-tighter">DATAWEB <span className="text-orange-600">GAMES</span></h1>
+              <span className="text-[8px] font-black uppercase tracking-[0.4em] text-white/30">MULTIVERSO CONAN EXILES</span>
             </div>
           </div>
           <a href="https://discord.gg/4SmuhXPfMr" target="_blank" className="p-4 bg-orange-600 rounded-2xl hover:scale-110 transition-all shadow-lg shadow-orange-600/20"><MessageCircle size={24}/></a>
         </nav>
 
-        {/* HERO SECTION PRINCIPAL */}
-        <header className="flex flex-col items-center text-center space-y-12">
-          <div className="space-y-6 relative">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[300px] bg-orange-600/10 blur-[120px] rounded-full"></div>
-            <h2 className="text-8xl md:text-[12rem] font-black italic uppercase tracking-tighter leading-[0.75] relative z-10 drop-shadow-2xl">
-              CONAN <br/> <span className="text-transparent bg-clip-text bg-gradient-to-b from-orange-500 to-red-700">EXILES</span>
-            </h2>
-          </div>
+        {/* HERO SPLIT SECTION */}
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[70vh]">
+          
+          {/* LADO IZQUIERDO: LEGIÓN DE REYES */}
+          <div className="relative group bg-gradient-to-b from-blue-900/10 to-black border border-white/5 rounded-[4rem] p-10 flex flex-col items-center text-center space-y-8 overflow-hidden hover:border-blue-500/30 transition-all">
+            <div className="absolute top-0 left-0 w-full h-1 bg-blue-500 shadow-[0_0_20px_blue]"></div>
+            <div className="space-y-2">
+              <h2 className="text-6xl font-black italic uppercase tracking-tighter leading-none">LEGIÓN DE <br/><span className="text-blue-500">REYES</span></h2>
+              <p className="text-[10px] font-black text-white/40 tracking-[0.4em]">RP • MISIONES • PROFESIONES</p>
+            </div>
+            
+            <div className="bg-white/5 p-6 rounded-3xl border border-white/5 w-full space-y-4">
+               <div className="flex justify-around text-[10px] font-bold text-blue-400 uppercase tracking-widest">
+                  <div className="flex items-center gap-2"><Sword size={14}/> PVP 24HS</div>
+                  <div className="flex items-center gap-2"><Castle size={14}/> ASEDIO BOSSES</div>
+               </div>
+               <div className="h-px bg-white/10 w-full"></div>
+               <p className="text-[9px] uppercase font-bold text-white/30 italic">Gana territorios y forja tu propia historia</p>
+            </div>
 
-          {/* SECCIÓN PRE-REGISTRO LEGIÓN DE REYES */}
-          <div className="w-full max-w-5xl bg-white/5 border border-white/10 rounded-[4rem] p-8 md:p-12 space-y-10 backdrop-blur-xl relative overflow-hidden">
-             <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12"><Crown size={120}/></div>
-             
-             <div className="space-y-4">
-                <h3 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter">Legión de <span className="text-orange-600">REYES</span></h3>
-                <div className="flex items-center justify-center gap-3 text-orange-500 font-black uppercase tracking-[0.3em] text-[10px]">
-                  <Clock size={14}/> Gran Apertura 28 de Febrero
-                </div>
-                <CountdownTimer targetDate="2026-02-28T00:00:00" />
-             </div>
+            <div className="space-y-4 w-full">
+              <div className="flex items-center justify-center gap-3 text-blue-400 font-black uppercase tracking-[0.3em] text-[10px]">
+                <Clock size={14}/> GRAN APERTURA 07 DE MARZO
+              </div>
+              <CountdownTimer targetDate="2026-03-07T18:00:00" />
+            </div>
 
-             <div className="max-w-md mx-auto space-y-6 relative z-10">
-                <div className="relative">
-                  <User className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" size={20}/>
-                  <input 
-                    type="text" 
-                    placeholder="TU NOMBRE DE STEAM..." 
-                    value={steamName}
-                    onChange={(e) => setSteamName(e.target.value)}
-                    className="w-full bg-black/50 border border-white/10 py-6 pl-16 pr-6 rounded-3xl font-black uppercase italic text-sm focus:outline-none focus:border-orange-500 transition-all"
-                  />
-                </div>
+            <div className="w-full space-y-4">
+              <input 
+                type="text" 
+                placeholder="TU NOMBRE DE STEAM..." 
+                value={steamName}
+                onChange={(e) => setSteamName(e.target.value)}
+                className="w-full bg-black/50 border border-white/10 py-5 px-8 rounded-2xl font-black uppercase italic text-xs focus:border-blue-500 outline-none"
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <button onClick={() => handleRegister('ANGELES', '...')} className="bg-blue-600 p-5 rounded-2xl font-black text-[10px] hover:scale-105 transition-all">UNIRSE A ANGELES</button>
+                <button onClick={() => handleRegister('DEMONIOS', '...')} className="bg-red-600 p-5 rounded-2xl font-black text-[10px] hover:scale-105 transition-all">UNIRSE A DEMONIOS</button>
+              </div>
+            </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <button 
-                    onClick={() => handleRegister('ANGELES', 'https://discord.com/api/webhooks/1475607314106159154/3sbqBR2h5Zr-xUhMARFo57A0j7J1z2ld4CJkHfSrptyzSiz8SRRjX-LvWk9jBPPbSteG')}
-                    disabled={isRegistering}
-                    className="group bg-blue-600 p-6 rounded-3xl hover:scale-105 transition-all shadow-lg flex flex-col items-center gap-2"
-                  >
-                    <Sun size={24} className="group-hover:rotate-90 transition-transform"/>
-                    <span className="font-black text-[10px] uppercase tracking-widest">ANGELES</span>
-                  </button>
-
-                  <button 
-                    onClick={() => handleRegister('DEMONIOS', 'https://discord.com/api/webhooks/1475607153585946805/EZNoctYHQ0dhatjGanDpRfRSxxvoUQFmeSE-bamWEGGv-A8S1fPvpXO59hUGv7YD_ago')}
-                    disabled={isRegistering}
-                    className="group bg-red-600 p-6 rounded-3xl hover:scale-105 transition-all shadow-lg flex flex-col items-center gap-2"
-                  >
-                    <Flame size={24} className="group-hover:animate-bounce"/>
-                    <span className="font-black text-[10px] uppercase tracking-widest">DEMONIOS</span>
-                  </button>
-                </div>
-             </div>
-          </div>
-
-          {/* BOTONES ACCIÓN DRAGONES Y DINOS */}
-          <div className="flex flex-col md:flex-row gap-6 w-full max-w-3xl relative z-10 pt-10">
-            <button onClick={() => { setSelected(serverData); setOpen(true); }} className="flex-[2] bg-white text-black py-8 rounded-[2.5rem] font-black uppercase italic tracking-[0.2em] text-sm hover:bg-orange-600 hover:text-white transition-all shadow-2xl">INFO DEL REINO</button>
-            <a href={`steam://run/440900//+connect%20${serverData.ip}:${serverData.port}`} className="flex-1 bg-white/5 border border-white/10 py-8 rounded-[2.5rem] font-black uppercase text-xs tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-white/10 transition-all shadow-xl group">
-              <Zap size={22} className="text-orange-500 group-hover:animate-pulse" /> Jugar Ahora
+            <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3674162555" target="_blank" className="flex items-center gap-3 text-[10px] font-black text-white/40 hover:text-white transition-colors">
+              <Library size={16}/> VER COLECCIÓN DE MODS
             </a>
           </div>
 
-          {/* UTILIDADES Y COLECCIONES */}
-          <div className="w-full max-w-5xl space-y-6 pt-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <a href="https://drive.google.com/file/d/1lrRNi06iCTJejVG6DTBvskxIBW7rYQfj/view?usp=drive_link" target="_blank" className="group flex items-center justify-between p-8 bg-orange-600/10 border border-orange-500/30 rounded-[2.5rem] hover:bg-orange-600/20 transition-all shadow-xl">
-                <div className="flex items-center gap-6 text-left">
-                  <div className="p-5 bg-orange-600 rounded-3xl shadow-lg group-hover:animate-bounce"><PlayCircle size={28} /></div>
-                  <div><h4 className="text-sm font-black uppercase tracking-widest">Cinemática</h4><p className="text-[10px] text-white/40 font-bold uppercase">Intro Personalizada</p></div>
-                </div>
-                <Download size={24} className="text-orange-500 opacity-40" />
-              </a>
+          {/* LADO DERECHO: DRAGONES Y DINOS */}
+          <div className="relative group bg-gradient-to-b from-orange-900/10 to-black border border-white/5 rounded-[4rem] p-10 flex flex-col items-center text-center space-y-8 overflow-hidden hover:border-orange-500/30 transition-all">
+            <div className="absolute top-0 left-0 w-full h-1 bg-orange-600 shadow-[0_0_20px_orange]"></div>
+            <div className="space-y-2">
+              <h2 className="text-6xl font-black italic uppercase tracking-tighter leading-none">DRAGONES <br/><span className="text-orange-500">Y DINOS</span></h2>
+              <p className="text-[10px] font-black text-white/40 tracking-[0.4em]">X10 PVE & PVP • MODS TOP</p>
+            </div>
 
-              <a href="https://drive.google.com/file/d/1HcayYUFxtgnleMhn24uyvRhuKS-JAoHY/view?usp=drive_link" target="_blank" className="group flex items-center justify-between p-8 bg-red-600/10 border border-red-500/30 rounded-[2.5rem] hover:bg-red-600/20 transition-all shadow-xl">
-                <div className="flex items-center gap-6 text-left">
-                  <div className="p-5 bg-red-600 rounded-3xl shadow-lg group-hover:animate-pulse"><VideoOff size={28} /></div>
-                  <div><h4 className="text-sm font-black uppercase tracking-widest">Remover Intro</h4><p className="text-[10px] text-white/40 font-bold uppercase">Parche salto video</p></div>
-                </div>
-                <Download size={24} className="text-red-500 opacity-40" />
+            <div className="grid grid-cols-2 gap-3 w-full">
+               {[
+                 {icon: <Navigation size={12}/>, text: "NPC TELEPORT"},
+                 {icon: <Box size={12}/>, text: "DROP ESPECIAL"},
+                 {icon: <Map size={12}/>, text: "MULTIHOME"},
+                 {icon: <Skull size={12}/>, text: "MISIONES"}
+               ].map((feat, i) => (
+                 <div key={i} className="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-center justify-center gap-2 text-[9px] font-black uppercase text-orange-200">
+                   {feat.icon} {feat.text}
+                 </div>
+               ))}
+            </div>
+
+            <div className="bg-orange-600/10 p-6 rounded-3xl border border-orange-500/20 w-full">
+               <p className="text-[10px] font-black uppercase text-orange-500 mb-2">Estado del Reino</p>
+               <p className="text-2xl font-black italic">¡ONLINE AHORA!</p>
+               <p className="text-[8px] text-white/40 mt-1 uppercase tracking-widest text-center">HORARIO: 17:00 - 23:00</p>
+            </div>
+
+            <div className="flex flex-col w-full gap-4">
+              <button onClick={() => { setSelected(serverData); setOpen(true); }} className="w-full bg-white text-black py-6 rounded-2xl font-black uppercase italic tracking-widest hover:bg-orange-600 hover:text-white transition-all">VER IP / INFO</button>
+              <a href={`steam://run/440900//+connect%20${serverData.ip}:${serverData.port}`} className="w-full bg-orange-600/20 border border-orange-500/40 py-6 rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3 hover:bg-orange-600 transition-all">
+                <Zap size={18} className="animate-pulse"/> CONECTAR AL SERVIDOR
               </a>
             </div>
 
-            {/* NUEVOS ICONOS DE COLECCIONES STEAM */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <a href="http://steamcommunity.com/sharedfiles/filedetails/?id=3674137594" target="_blank" className="group flex items-center gap-6 p-6 bg-blue-900/10 border border-blue-500/20 rounded-[2.5rem] hover:bg-blue-600/20 transition-all">
-                <div className="p-4 bg-blue-600 rounded-2xl group-hover:rotate-12 transition-transform"><Library size={24} /></div>
-                <div className="text-left">
-                  <h4 className="text-[11px] font-black uppercase tracking-widest">Colección Mods</h4>
-                  <p className="text-[13px] font-black italic text-blue-400">DRAGONES Y DINOS</p>
-                </div>
-              </a>
-
-              <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3674162555" target="_blank" className="group flex items-center gap-6 p-6 bg-orange-900/10 border border-orange-500/20 rounded-[2.5rem] hover:bg-orange-600/20 transition-all">
-                <div className="p-4 bg-orange-600 rounded-2xl group-hover:-rotate-12 transition-transform"><Library size={24} /></div>
-                <div className="text-left">
-                  <h4 className="text-[11px] font-black uppercase tracking-widest">Colección Mods</h4>
-                  <p className="text-[13px] font-black italic text-orange-400">LEGIÓN DE REYES</p>
-                </div>
-              </a>
-            </div>
+            <a href="http://steamcommunity.com/sharedfiles/filedetails/?id=3674137594" target="_blank" className="flex items-center gap-3 text-[10px] font-black text-white/40 hover:text-white transition-colors">
+              <Library size={16}/> VER COLECCIÓN DE MODS
+            </a>
           </div>
-        </header>
+        </section>
+
+        {/* REUTILIZABLES (DESCARGAS, RANKING, ETC) */}
+        <div className="grid md:grid-cols-2 gap-6">
+          <a href="https://drive.google.com/file/d/1lrRNi06iCTJejVG6DTBvskxIBW7rYQfj/view?usp=drive_link" target="_blank" className="group flex items-center justify-between p-8 bg-orange-600/10 border border-orange-500/30 rounded-[2.5rem] hover:bg-orange-600/20 transition-all shadow-xl">
+            <div className="flex items-center gap-6 text-left">
+              <div className="p-5 bg-orange-600 rounded-3xl shadow-lg group-hover:animate-bounce"><PlayCircle size={28} /></div>
+              <div><h4 className="text-sm font-black uppercase tracking-widest">Cinemática</h4><p className="text-[10px] text-white/40 font-bold uppercase">Intro Personalizada</p></div>
+            </div>
+            <Download size={24} className="text-orange-500 opacity-40" />
+          </a>
+
+          <a href="https://drive.google.com/file/d/1HcayYUFxtgnleMhn24uyvRhuKS-JAoHY/view?usp=drive_link" target="_blank" className="group flex items-center justify-between p-8 bg-red-600/10 border border-red-500/30 rounded-[2.5rem] hover:bg-red-600/20 transition-all shadow-xl">
+            <div className="flex items-center gap-6 text-left">
+              <div className="p-5 bg-red-600 rounded-3xl shadow-lg group-hover:animate-pulse"><VideoOff size={28} /></div>
+              <div><h4 className="text-sm font-black uppercase tracking-widest">Remover Intro</h4><p className="text-[10px] text-white/40 font-bold uppercase">Parche salto video</p></div>
+            </div>
+            <Download size={24} className="text-red-500 opacity-40" />
+          </a>
+        </div>
 
         {/* RANKING SECTION */}
         <section className="space-y-20 py-10">
@@ -325,7 +328,7 @@ export default function HomePage() {
           <RankingSection />
         </section>
 
-        {/* MODS SECTION (RESTORED) */}
+        {/* MODS SECTION */}
         <section id="mods" className="space-y-20 py-20 relative">
           <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
           <div className="text-center space-y-4">
