@@ -148,6 +148,7 @@ export default function HomePage() {
   const [selected, setSelected] = useState<any>(null);
   const [open, setOpen] = useState(false);
   const [steamName, setSteamName] = useState("");
+  const [charVoteName, setCharVoteName] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   
   const serverData = { 
@@ -188,6 +189,37 @@ export default function HomePage() {
       alert("Error al conectar con Discord.");
     } finally {
       setIsRegistering(false);
+    }
+  };
+
+  const handleVote = async (option: string) => {
+    if (!charVoteName.trim()) {
+      alert("Por favor, ingresa tu nombre de personaje para votar.");
+      return;
+    }
+
+    const webhookUrl = "https://discord.com/api/webhooks/1478851057395302412/TZa1Bhs6xZpHr5C-AX3j_O9mmeXsKC-U0mfs5zTjwgL9-7gt_YnJyTqfKpu-fJplvqAs";
+
+    try {
+      await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          embeds: [{
+            title: "🗳️ NUEVA VOTACIÓN: DRAGONES Y DINOS",
+            color: 16747520,
+            description: `El personaje **${charVoteName}** ha emitido su voto.`,
+            fields: [
+              { name: "Voto por:", value: `**${option}**`, inline: false }
+            ],
+            timestamp: new Date()
+          }]
+        })
+      });
+      alert(`¡Gracias ${charVoteName}! Tu voto ha sido enviado.`);
+      setCharVoteName("");
+    } catch (e) {
+      alert("Error al conectar con Discord.");
     }
   };
 
@@ -266,6 +298,39 @@ export default function HomePage() {
             <div className="space-y-2">
               <h2 className="text-6xl font-black italic uppercase tracking-tighter leading-none">DRAGONES <br/><span className="text-orange-500">Y DINOS</span></h2>
               <p className="text-[10px] font-black text-white/40 tracking-[0.4em]">X10 PVE & PVP • MODS TOP</p>
+            </div>
+
+            {/* SECCIÓN DE ENCUESTA AGREGADA */}
+            <div className="w-full bg-white/5 p-6 rounded-[2.5rem] border border-orange-500/20 space-y-4">
+              <div className="flex items-center justify-center gap-2 text-orange-500 font-black text-[10px] uppercase tracking-widest">
+                <Activity size={14} /> ¿QUIERES WIPE? (VOTACIÓN)
+              </div>
+              
+              <input 
+                type="text" 
+                placeholder="NOMBRE DE TU PERSONAJE..." 
+                value={charVoteName}
+                onChange={(e) => setCharVoteName(e.target.value)}
+                className="w-full bg-black/40 border border-white/10 py-3 px-5 rounded-xl font-black uppercase italic text-[10px] focus:border-orange-500 outline-none text-center"
+              />
+
+              <div className="flex flex-col gap-2">
+                <button 
+                  onClick={() => handleVote("SÍ, QUIERO WIPE")}
+                  className="w-full py-3 bg-orange-600/20 hover:bg-orange-600 border border-orange-600/40 rounded-xl text-[9px] font-black transition-all">
+                  SÍ, QUIERO WIPE
+                </button>
+                <button 
+                  onClick={() => handleVote("NO, ESTOY BIEN ASÍ")}
+                  className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[9px] font-black transition-all">
+                  NO, ESTOY BIEN ASÍ
+                </button>
+                <button 
+                  onClick={() => handleVote("WIPE Y QUIERO AYUDAR")}
+                  className="w-full py-3 bg-green-600/20 hover:bg-green-600 border border-green-600/40 rounded-xl text-[9px] font-black transition-all text-green-400 hover:text-white">
+                  WIPE Y QUIERO AYUDAR
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 w-full">
