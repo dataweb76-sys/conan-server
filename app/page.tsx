@@ -57,10 +57,10 @@ export default function HomePage() {
   // Mantenemos la IP que solicitaste para el Popup
   const serverData = { 
     slug: "legion", 
-    title: "LEGIÓN DE REYES", 
+    title: "Dragones y Demonios", 
     ip: "190.174.176.46", 
-    port: 7783, 
-    queryPort: 27026,
+    port: 7777, 
+    queryPort: 27017,
     image: "/servers/legion_bg.jpg",
   };
 
@@ -141,7 +141,7 @@ export default function HomePage() {
           <div className="max-w-2xl w-full bg-gradient-to-b from-white/10 to-transparent p-12 rounded-[4rem] border border-white/10 space-y-10 backdrop-blur-2xl shadow-3xl">
             <div className="space-y-6">
               <div className="flex items-center justify-center gap-3 text-blue-400 font-black uppercase tracking-[0.4em] text-[10px]">
-                <Clock size={16}/> LANZAMIENTO: 07 MARZO
+                <Clock size={16}/> LANZAMIENTO: 28 de Mayo
               </div>
               <CountdownTimer targetDate="2026-03-07T18:00:00" />
             </div>
