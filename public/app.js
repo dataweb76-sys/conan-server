@@ -289,9 +289,26 @@
     if (costEl) costEl.innerHTML = pippiCost
       ? `<span class="shop-price-icon">🪙</span>${pippiCost} monedas Pippi`
       : '';
-    document.getElementById('shop-charname').value = '';
     const fb = document.getElementById('shop-feedback');
     fb.className = 'form-feedback'; fb.textContent = '';
+
+    const loginPrompt  = document.getElementById('shop-login-prompt');
+    const formContent  = document.getElementById('shop-form-content');
+    const charInput    = document.getElementById('shop-charname');
+
+    if (currentUser) {
+      loginPrompt.style.display = 'none';
+      formContent.style.display = '';
+      const charName = currentUser.user_metadata?.char_name || '';
+      charInput.value    = charName;
+      charInput.readOnly = !!charName;
+      charInput.style.opacity = charName ? '0.75' : '';
+      charInput.style.cursor  = charName ? 'default' : '';
+    } else {
+      loginPrompt.style.display = '';
+      formContent.style.display = 'none';
+    }
+
     document.getElementById('shop-modal').classList.add('open');
   };
 
@@ -437,7 +454,8 @@
   };
 
   // ── Auth (Supabase) ───────────────────────────────
-  let sbClient = null;
+  let sbClient   = null;
+  let currentUser = null;
 
   function initSupabase() {
     if (!window.SUPABASE_URL || !window.SUPABASE_ANON || !window.supabase) return;
@@ -449,6 +467,7 @@
   const ADMIN_EMAIL = 'datawebgames@gmail.com';
 
   function updateAuthNav(user) {
+    currentUser = user;
     const el = document.getElementById('auth-nav');
     if (!el) return;
     if (user) {

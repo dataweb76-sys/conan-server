@@ -462,17 +462,37 @@
     <h3 class="shop-modal-title">Solicitar Ítem</h3>
     <p class="shop-modal-sub" id="shop-modal-item-name"></p>
     <div class="shop-modal-cost" id="shop-modal-cost"></div>
-    <div class="form-group">
-      <label class="form-label" for="shop-charname">Tu personaje en el servidor</label>
-      <input class="form-input" type="text" id="shop-charname" placeholder="Nombre exacto en el juego" maxlength="40" autocomplete="off">
+
+    <!-- No logueado -->
+    <div id="shop-login-prompt" style="display:none;text-align:center;padding:0.5rem 0 0.8rem">
+      <p style="color:var(--c-dim);font-size:0.95rem;margin-bottom:1.2rem">
+        Para solicitar ítems necesitás iniciar sesión o registrarte.
+      </p>
+      <div style="display:flex;gap:0.7rem;justify-content:center;flex-wrap:wrap">
+        <button class="btn-secondary" onclick="closeShopModal()">Cancelar</button>
+        <button class="btn-join" onclick="closeShopModal();openAuthModal('login')">Iniciar Sesión</button>
+      </div>
+      <p style="margin-top:0.9rem;font-size:0.85rem;color:var(--c-dim)">
+        ¿No tenés cuenta?
+        <a href="#" style="color:var(--c-gold)" onclick="closeShopModal();openAuthModal('register');return false">Registrate</a>
+      </p>
     </div>
-    <div class="shop-modal-btns">
-      <button class="btn-secondary" onclick="closeShopModal()">Cancelar</button>
-      <button class="btn-join" id="shop-request-btn" onclick="sendShopRequest()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>
-        Confirmar Pedido
-      </button>
+
+    <!-- Logueado -->
+    <div id="shop-form-content">
+      <div class="form-group">
+        <label class="form-label" for="shop-charname">Tu personaje en el servidor</label>
+        <input class="form-input" type="text" id="shop-charname" placeholder="Nombre exacto en el juego" maxlength="40" autocomplete="off">
+      </div>
+      <div class="shop-modal-btns">
+        <button class="btn-secondary" onclick="closeShopModal()">Cancelar</button>
+        <button class="btn-join" id="shop-request-btn" onclick="sendShopRequest()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>
+          Confirmar Pedido
+        </button>
+      </div>
     </div>
+
     <div class="form-feedback" id="shop-feedback"></div>
   </div>
 </div>
