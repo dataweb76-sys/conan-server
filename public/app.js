@@ -282,7 +282,7 @@
       </div>`).join('');
   }
 
-  window.openShopModal = function (itemId, itemName, pippiCost) {
+  window.openShopModal = async function (itemId, itemName, pippiCost) {
     pendingItem = { id: itemId, name: itemName, cost: pippiCost };
     document.getElementById('shop-modal-item-name').textContent = itemName;
     const costEl = document.getElementById('shop-modal-cost');
@@ -296,6 +296,9 @@
     const formContent  = document.getElementById('shop-form-content');
     const charInput    = document.getElementById('shop-charname');
 
+    // Abrir modal inmediatamente
+    document.getElementById('shop-modal').classList.add('open');
+
     if (!currentUser) {
       loginPrompt.innerHTML = `
         <p style="color:var(--c-dim);font-size:0.95rem;margin-bottom:1.2rem">Para solicitar ítems necesitás iniciar sesión o registrarte.</p>
@@ -306,7 +309,13 @@
         <p style="margin-top:0.9rem;font-size:0.85rem;color:var(--c-dim)">¿No tenés cuenta? <a href="#" style="color:var(--c-gold)" onclick="closeShopModal();openAuthModal('register');return false">Registrate</a></p>`;
       loginPrompt.style.display = '';
       formContent.style.display = 'none';
-    } else if (!currentProfile?.verified) {
+      return;
+    }
+
+    // Siempre refrescar el perfil al abrir el modal para tener datos actualizados
+    await refreshProfile(currentUser.id);
+
+    if (!currentProfile?.verified) {
       loginPrompt.innerHTML = `
         <p style="color:var(--c-gold);font-size:1rem;margin-bottom:0.6rem">⚠️ Personaje no verificado</p>
         <p style="color:var(--c-dim);font-size:0.9rem;margin-bottom:1.2rem">Ingresá al servidor Conan Exiles — recibirás un mensaje de chat con tu código. Luego verificalo en tu perfil.</p>
@@ -319,14 +328,12 @@
     } else {
       loginPrompt.style.display = 'none';
       formContent.style.display = '';
-      const charName = currentProfile.char_name || currentUser.user_metadata?.char_name || '';
+      const charName = currentProfile?.char_name || currentUser.user_metadata?.char_name || '';
       charInput.value    = charName;
       charInput.readOnly = !!charName;
       charInput.style.opacity = charName ? '0.75' : '';
       charInput.style.cursor  = charName ? 'default' : '';
     }
-
-    document.getElementById('shop-modal').classList.add('open');
   };
 
   window.closeShopModal = function () {
@@ -491,7 +498,8 @@
     sbClient.auth.onAuthStateChange(async (_e, session) => {
       const user = session?.user ?? null;
       updateAuthNav(user);
-      if (_e === 'SIGNED_IN' || _e === 'USER_UPDATED') await refreshProfile(user?.id);
+      if ((_e === 'SIGNED_IN' || _e === 'USER_UPDATED' || _e === 'INITIAL_SESSION') && user)
+        await refreshProfile(user.id);
       else if (_e === 'SIGNED_OUT') currentProfile = null;
     });
     sbClient.auth.getSession().then(async ({ data }) => {
