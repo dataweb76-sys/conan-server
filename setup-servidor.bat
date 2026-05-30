@@ -4,40 +4,36 @@ echo  Dragones y Demonios - Setup del servidor
 echo ============================================
 echo.
 
+:: Agregar Git al PATH por si acaso
+set "PATH=%PATH%;C:\Program Files\Git\cmd;C:\Program Files\Git\bin"
+
 :: Verificar Node.js
 node --version >nul 2>&1
 if %errorlevel% neq 0 (
     echo Instalando Node.js...
     powershell -Command "Invoke-WebRequest -Uri 'https://nodejs.org/dist/v20.19.1/node-v20.19.1-x64.msi' -OutFile '%TEMP%\node.msi'"
     msiexec /i "%TEMP%\node.msi" /quiet /norestart
-    echo Node.js instalado. Reiniciando script...
-    pause
-    start "" "%~f0"
-    exit
+    set "PATH=%PATH%;C:\Program Files\nodejs"
 )
-echo Node.js OK: & node --version
+echo Node.js OK
 
-:: Verificar Git
-git --version >nul 2>&1
-if %errorlevel% neq 0 (
+:: Verificar Git (ruta directa)
+set GIT_EXE="C:\Program Files\Git\cmd\git.exe"
+if not exist %GIT_EXE% (
     echo Instalando Git...
     powershell -Command "Invoke-WebRequest -Uri 'https://github.com/git-for-windows/git/releases/download/v2.49.0.windows.1/Git-2.49.0-64-bit.exe' -OutFile '%TEMP%\git.exe'"
     "%TEMP%\git.exe" /VERYSILENT /NORESTART
-    echo Git instalado. Reiniciando script...
-    pause
-    start "" "%~f0"
-    exit
 )
-echo Git OK: & git --version
+echo Git OK
 
 echo.
 echo Descargando codigo...
 cd C:\
 if exist "servidor-web" (
     cd servidor-web
-    git pull
+    %GIT_EXE% pull
 ) else (
-    git clone https://github.com/dataweb76-sys/conan-server.git "servidor-web"
+    %GIT_EXE% clone https://github.com/dataweb76-sys/conan-server.git "servidor-web"
     cd servidor-web
 )
 
