@@ -182,10 +182,14 @@
   async function loadProfile(user) {
     const card = document.getElementById('profile-card');
 
-    const { data: profile } = await sb.from('profiles')
-      .select('id, char_name, verified').eq('id', user.id).maybeSingle();
+    let profile = null;
+    try {
+      const { data } = await sb.from('profiles')
+        .select('id, char_name, verified').eq('id', user.id).maybeSingle();
+      profile = data;
+    } catch { /* schema cache lag — columnas aún no visibles */ }
     const charName = profile?.char_name || '';
-    const verified = profile?.verified ?? false;
+    const verified = profile?.verified === true;
     const initial  = (charName || user.email)[0].toUpperCase();
 
     let gameStats = null;

@@ -155,7 +155,7 @@ async function sendVerificationCodes() {
     for (const p of data) {
       if (!currentOnline.has(p.char_name)) continue;
       try {
-        await rcon(`directmessage Servidor ${p.char_name} "Código de verificación del sitio web: ${p.verification_code}"`);
+        await rcon(`directmessage AdminWeb ${p.char_name} "Código de verificación del sitio web: ${p.verification_code}"`);
         console.log(`[bridge] Código enviado a ${p.char_name}: ${p.verification_code}`);
       } catch (e) {
         console.error(`[bridge] Error enviando código a ${p.char_name}:`, e.message);
@@ -190,7 +190,7 @@ async function deliverPendingItems() {
         try {
           const resp = await rcon(`pippi give ${charName} ${templateId} 1`);
           console.log(`[bridge] pippi give response: "${resp}"`);
-          try { await rcon(`directmessage Servidor ${charName} "¡Tu pedido de ${itemName} fue entregado!"`); } catch {}
+          try { await rcon(`directmessage AdminWeb ${charName} "¡Tu pedido de ${itemName} fue entregado!"`); } catch {}
           rconNote = `Entregado vía Pippi (template ${templateId}). Resp: ${resp}`;
           console.log(`[bridge] ✓ Ítem entregado: ${itemName} → ${charName}`);
         } catch (e) {

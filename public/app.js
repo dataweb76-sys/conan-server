@@ -477,10 +477,12 @@
 
   async function refreshProfile(userId) {
     if (!userId) { currentProfile = null; return; }
-    const { data } = await sbClient.from('profiles')
-      .select('id, char_name, verified')
-      .eq('id', userId).maybeSingle();
-    currentProfile = data;
+    try {
+      const { data } = await sbClient.from('profiles')
+        .select('id, char_name, verified')
+        .eq('id', userId).maybeSingle();
+      currentProfile = data;
+    } catch { currentProfile = null; }
   }
 
   function initSupabase() {
