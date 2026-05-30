@@ -296,17 +296,34 @@
     const formContent  = document.getElementById('shop-form-content');
     const charInput    = document.getElementById('shop-charname');
 
-    if (currentUser) {
+    if (!currentUser) {
+      loginPrompt.innerHTML = `
+        <p style="color:var(--c-dim);font-size:0.95rem;margin-bottom:1.2rem">Para solicitar ítems necesitás iniciar sesión o registrarte.</p>
+        <div style="display:flex;gap:0.7rem;justify-content:center;flex-wrap:wrap">
+          <button class="btn-secondary" onclick="closeShopModal()">Cancelar</button>
+          <button class="btn-join" onclick="closeShopModal();openAuthModal('login')">Iniciar Sesión</button>
+        </div>
+        <p style="margin-top:0.9rem;font-size:0.85rem;color:var(--c-dim)">¿No tenés cuenta? <a href="#" style="color:var(--c-gold)" onclick="closeShopModal();openAuthModal('register');return false">Registrate</a></p>`;
+      loginPrompt.style.display = '';
+      formContent.style.display = 'none';
+    } else if (!currentProfile?.verified) {
+      loginPrompt.innerHTML = `
+        <p style="color:var(--c-gold);font-size:1rem;margin-bottom:0.6rem">⚠️ Personaje no verificado</p>
+        <p style="color:var(--c-dim);font-size:0.9rem;margin-bottom:1.2rem">Ingresá al servidor Conan Exiles — recibirás un mensaje de chat con tu código. Luego verificalo en tu perfil.</p>
+        <div style="display:flex;gap:0.7rem;justify-content:center;flex-wrap:wrap">
+          <button class="btn-secondary" onclick="closeShopModal()">Cancelar</button>
+          <button class="btn-join" onclick="closeShopModal();location.href='profile.html'">Verificar en Mi Perfil</button>
+        </div>`;
+      loginPrompt.style.display = '';
+      formContent.style.display = 'none';
+    } else {
       loginPrompt.style.display = 'none';
       formContent.style.display = '';
-      const charName = currentUser.user_metadata?.char_name || '';
+      const charName = currentProfile.char_name || currentUser.user_metadata?.char_name || '';
       charInput.value    = charName;
       charInput.readOnly = !!charName;
       charInput.style.opacity = charName ? '0.75' : '';
       charInput.style.cursor  = charName ? 'default' : '';
-    } else {
-      loginPrompt.style.display = '';
-      formContent.style.display = 'none';
     }
 
     document.getElementById('shop-modal').classList.add('open');
@@ -454,14 +471,32 @@
   };
 
   // ── Auth (Supabase) ───────────────────────────────
-  let sbClient   = null;
+  let sbClient    = null;
   let currentUser = null;
+  let currentProfile = null;
+
+  async function refreshProfile(userId) {
+    if (!userId) { currentProfile = null; return; }
+    const { data } = await sbClient.from('profiles')
+      .select('id, char_name, verified')
+      .eq('id', userId).maybeSingle();
+    currentProfile = data;
+  }
 
   function initSupabase() {
     if (!window.SUPABASE_URL || !window.SUPABASE_ANON || !window.supabase) return;
     sbClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON);
-    sbClient.auth.onAuthStateChange((_e, session) => updateAuthNav(session?.user ?? null));
-    sbClient.auth.getSession().then(({ data }) => updateAuthNav(data.session?.user ?? null));
+    sbClient.auth.onAuthStateChange(async (_e, session) => {
+      const user = session?.user ?? null;
+      updateAuthNav(user);
+      if (_e === 'SIGNED_IN' || _e === 'USER_UPDATED') await refreshProfile(user?.id);
+      else if (_e === 'SIGNED_OUT') currentProfile = null;
+    });
+    sbClient.auth.getSession().then(async ({ data }) => {
+      const user = data.session?.user ?? null;
+      updateAuthNav(user);
+      if (user) await refreshProfile(user.id);
+    });
   }
 
   const ADMIN_EMAIL = 'datawebgames@gmail.com';
@@ -536,9 +571,14 @@
       });
       if (error) throw error;
       if (data.user) {
-        await sbClient.from('profiles').insert({ id: data.user.id, char_name: charName });
+        const vCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+        await sbClient.from('profiles').insert({
+          id: data.user.id, char_name: charName,
+          verified: false, verification_code: vCode,
+        });
+        await refreshProfile(data.user.id);
       }
-      showAuthOk('¡Cuenta creada! Revisá tu email para confirmar.');
+      showAuthOk('¡Cuenta creada! Ingresá al servidor para recibir tu código de verificación.');
       setTimeout(closeAuthModal, 3000);
     } catch (e) { showAuthErr(e.message || 'Error al registrarse.'); }
     btn.disabled = false; btn.innerHTML = orig;

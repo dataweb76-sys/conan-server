@@ -82,6 +82,31 @@
       border-top: 1px solid var(--c-border);
       display: flex; justify-content: flex-end;
     }
+    .verify-section {
+      margin-top: 1.4rem; padding: 1.1rem 1.3rem;
+      border-radius: 8px; border: 1px solid rgba(200,134,28,0.3);
+      background: rgba(200,134,28,0.05);
+    }
+    .verify-section.ok {
+      border-color: rgba(68,240,112,0.3);
+      background: rgba(68,240,112,0.05);
+    }
+    .verify-title {
+      font-family: var(--f-heading); font-size: 0.72rem;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .verify-title.pending { color: var(--c-gold); }
+    .verify-title.ok      { color: #44f070; }
+    .verify-desc {
+      font-size: 0.88rem; color: var(--c-dim); margin-bottom: 0.9rem; line-height: 1.5;
+    }
+    .verify-input-row { display: flex; gap: 0.5rem; }
+    .verify-input-row .form-input {
+      flex: 1; text-transform: uppercase; letter-spacing: 0.2em;
+      font-family: monospace; font-size: 1.05rem;
+    }
+    .verify-input-row .btn-join { white-space: nowrap; font-size: 0.78rem; padding: 0.6rem 1rem; }
   </style>
 </head>
 <body>
@@ -124,7 +149,6 @@
 (function () {
   'use strict';
 
-  const API_BASE = window.API_BASE || '';
   let sb = null;
 
   async function init() {
@@ -158,20 +182,18 @@
   async function loadProfile(user) {
     const card = document.getElementById('profile-card');
 
-    const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
+    const { data: profile } = await sb.from('profiles')
+      .select('id, char_name, verified').eq('id', user.id).maybeSingle();
     const charName = profile?.char_name || '';
+    const verified = profile?.verified ?? false;
     const initial  = (charName || user.email)[0].toUpperCase();
 
     let gameStats = null;
     if (charName) {
       try {
-        const r  = await fetch(API_BASE + '/api/ranking');
-        const rd = await r.json();
-        if (rd?.players) {
-          gameStats = rd.players.find(
-            p => p.name.toLowerCase() === charName.toLowerCase()
-          );
-        }
+        const { data } = await sb.from('characters_ranking')
+          .select('name, level, clan').eq('name', charName).maybeSingle();
+        if (data) gameStats = data;
       } catch { /* non-critical */ }
     }
 
@@ -186,15 +208,28 @@
           <div class="pstat-val" style="font-size:.9rem">${gameStats.clan || '–'}</div>
           <div class="pstat-label">Clan</div>
         </div>
-        <div class="pstat-div"></div>
-        <div class="pstat">
-          <div class="pstat-val">${gameStats.online ? '🟢' : '⚫'}</div>
-          <div class="pstat-label">Estado</div>
-        </div>
       </div>` : (charName
-        ? '<p class="profile-note">Personaje aún no encontrado en el servidor.</p>'
+        ? '<p class="profile-note">Personaje aún no encontrado en el ranking.</p>'
         : '<p class="profile-note">Vinculá tu personaje del juego para ver tus estadísticas.</p>'
       );
+
+    const verifyHtml = verified
+      ? `<div class="verify-section ok">
+           <div class="verify-title ok">✓ Personaje verificado</div>
+           <div class="verify-desc" style="margin:0">Tu personaje <strong>${esc(charName)}</strong> está verificado. Podés solicitar ítems del mercado.</div>
+         </div>`
+      : `<div class="verify-section">
+           <div class="verify-title pending">⚠️ Personaje no verificado</div>
+           <div class="verify-desc">
+             Ingresá al servidor Conan Exiles con el personaje <strong>${esc(charName) || 'indicado abajo'}</strong>.
+             Cuando estés online, recibirás un mensaje de chat con tu código. Ingresalo acá:
+           </div>
+           <div class="verify-input-row">
+             <input class="form-input" type="text" id="verify-code" placeholder="XXXXXX" maxlength="10" autocomplete="off">
+             <button class="btn-join" onclick="verifyCharacter()">Verificar</button>
+           </div>
+           <div class="form-feedback" id="verify-feedback"></div>
+         </div>`;
 
     card.innerHTML = `
       <div class="profile-card-title">Mi Perfil</div>
@@ -206,8 +241,9 @@
         </div>
       </div>
       ${statsHtml}
-      <div class="form-group">
-        <label class="form-label" for="edit-charname">Personaje en el juego</label>
+      ${charName ? verifyHtml : ''}
+      <div class="form-group" style="margin-top:1.4rem">
+        <label class="form-label" for="edit-charname">Cambiar personaje vinculado</label>
         <div class="profile-edit-row">
           <input class="form-input" type="text" id="edit-charname"
             value="${charName}" placeholder="Nombre exacto en Conan Exiles" maxlength="40">
@@ -220,15 +256,46 @@
       </div>`;
   }
 
+  function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  window.verifyCharacter = async function () {
+    const code = (document.getElementById('verify-code')?.value || '').trim();
+    const fb   = document.getElementById('verify-feedback');
+    if (!code) { fb.className = 'form-feedback err'; fb.textContent = 'Ingresá el código.'; return; }
+    fb.className = 'form-feedback'; fb.textContent = 'Verificando...';
+    try {
+      const { data, error } = await sb.rpc('verify_character', { code });
+      if (error) throw error;
+      if (data === true) {
+        fb.className = 'form-feedback ok';
+        fb.textContent = '¡Personaje verificado! Ya podés solicitar ítems.';
+        setTimeout(() => location.reload(), 1800);
+      } else {
+        fb.className = 'form-feedback err';
+        fb.textContent = 'Código incorrecto. Revisá el mensaje en el servidor.';
+      }
+    } catch (e) {
+      fb.className = 'form-feedback err';
+      fb.textContent = e.message || 'Error al verificar.';
+    }
+  };
+
   window.saveCharName = async function (userId) {
     const charName = document.getElementById('edit-charname').value.trim();
     const fb = document.getElementById('edit-feedback');
     if (!charName) { fb.className = 'form-feedback err'; fb.textContent = 'Ingresá un nombre.'; return; }
-    const { error } = await sb.from('profiles').upsert({ id: userId, char_name: charName });
+    const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const { error } = await sb.from('profiles').upsert({
+      id: userId, char_name: charName,
+      verified: false, verification_code: newCode,
+    });
     if (error) {
       fb.className = 'form-feedback err'; fb.textContent = error.message;
     } else {
-      fb.className = 'form-feedback ok'; fb.textContent = '¡Guardado! Recargá para ver tus stats.';
+      fb.className = 'form-feedback ok'; fb.textContent = '¡Guardado! Ingresá al servidor para recibir tu nuevo código.';
+      setTimeout(() => location.reload(), 2000);
     }
   };
 

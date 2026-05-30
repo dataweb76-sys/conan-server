@@ -140,6 +140,32 @@ async function syncOnlinePlayers() {
   }
 }
 
+async function sendVerificationCodes() {
+  try {
+    const { data } = await supabase
+      .from('profiles')
+      .select('char_name, verification_code')
+      .eq('verified', false)
+      .not('verification_code', 'is', null)
+      .not('char_name', 'is', null)
+      .neq('char_name', '');
+
+    if (!data?.length) return;
+
+    for (const p of data) {
+      if (!currentOnline.has(p.char_name)) continue;
+      try {
+        await rcon(`directmessage Servidor ${p.char_name} "Código de verificación del sitio web: ${p.verification_code}"`);
+        console.log(`[bridge] Código enviado a ${p.char_name}: ${p.verification_code}`);
+      } catch (e) {
+        console.error(`[bridge] Error enviando código a ${p.char_name}:`, e.message);
+      }
+    }
+  } catch (e) {
+    console.error('[bridge] Error sendVerificationCodes:', e.message);
+  }
+}
+
 async function deliverPendingItems() {
   try {
     const { data } = await supabase
@@ -162,9 +188,10 @@ async function deliverPendingItems() {
         rconNote = 'Sin template_id — entregar manualmente vía Pippi.';
       } else {
         try {
-          await rcon(`pippi give ${charName} ${templateId} 1`);
+          const resp = await rcon(`pippi give ${charName} ${templateId} 1`);
+          console.log(`[bridge] pippi give response: "${resp}"`);
           try { await rcon(`directmessage Servidor ${charName} "¡Tu pedido de ${itemName} fue entregado!"`); } catch {}
-          rconNote = `Entregado vía Pippi (template ${templateId}).`;
+          rconNote = `Entregado vía Pippi (template ${templateId}). Resp: ${resp}`;
           console.log(`[bridge] ✓ Ítem entregado: ${itemName} → ${charName}`);
         } catch (e) {
           rconNote = `Pippi falló: ${e.message} — entregar manualmente.`;
@@ -215,10 +242,11 @@ async function run() {
   await deliverPendingItems();
   await syncRanking();
 
-  // Online + entregas: cada 30s
+  // Online + entregas + verificaciones: cada 30s
   setInterval(async () => {
     await syncOnlinePlayers();
     await deliverPendingItems();
+    await sendVerificationCodes();
   }, 30_000);
   // Ranking: cada 5 min
   setInterval(syncRanking, 300_000);
