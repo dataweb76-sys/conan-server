@@ -2,7 +2,7 @@
 // Local (red interna):  'http://192.168.1.42:8100'
 // Vercel (IP pública):  'http://190.174.183.144:8100'
 // Misma máquina:        ''
-window.API_BASE = 'https://dragonesydemonios.loca.lt';
+window.API_BASE = '';
 
 // ── Supabase ────────────────────────────────────────────────────────────────
 window.SUPABASE_URL  = 'https://fpjfygsngkqwybxxhflr.supabase.co';

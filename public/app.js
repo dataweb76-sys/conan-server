@@ -123,32 +123,40 @@
   // ── Fetch players ──────────────────────────────────
   async function fetchPlayers(force) {
     try {
-      const r = await fetch(API_BASE + (force ? '/api/players?force=1' : '/api/players'));
-      renderCards(await r.json());
+      if (!sbClient) { renderCards({ ok: false, players: [] }); return; }
+      const { data, error } = await sbClient.from('online_players').select('*').order('level', { ascending: false });
+      if (error) throw error;
+      const players = (data || []).map(p => ({
+        name: p.name, level: p.level, clan: p.clan,
+        isLeader: p.is_leader, onlineSince: p.online_since
+      }));
+      renderCards({ ok: true, players, ts: new Date().toISOString() });
     } catch (_) {
-      renderCards({ ok: false, error: 'No se pudo contactar con el servidor web', players: [] });
+      renderCards({ ok: false, error: 'No hay jugadores online', players: [] });
     }
   }
 
   // ── Stats (hero counters) ──────────────────────────
   async function fetchStats() {
     try {
-      const r    = await fetch(API_BASE + '/api/stats');
-      const data = await r.json();
-      if (!data.ok) return;
+      if (!sbClient) return;
+      const { data } = await sbClient.from('characters_ranking').select('name, clan');
+      const total = (data || []).length;
+      const clans = new Set((data || []).filter(p => p.clan).map(p => p.clan)).size;
       const totalEl = document.getElementById('hero-total');
       const clansEl = document.getElementById('hero-clans');
-      if (totalEl) totalEl.textContent = data.totalPlayers ?? '–';
-      if (clansEl) clansEl.textContent = data.totalClans   ?? '–';
+      if (totalEl) totalEl.textContent = total || '–';
+      if (clansEl) clansEl.textContent = clans || '–';
     } catch { /* non-critical */ }
   }
 
   // ── Ranking ────────────────────────────────────────
   async function fetchRanking() {
     try {
-      const r    = await fetch(API_BASE + '/api/ranking');
-      const data = await r.json();
-      renderRanking(data.ok ? (data.players || []) : []);
+      if (!sbClient) { renderRanking([]); return; }
+      const { data, error } = await sbClient.from('characters_ranking').select('*').order('level', { ascending: false }).limit(50);
+      if (error) throw error;
+      renderRanking((data || []).map(p => ({ name: p.name, level: p.level, clan: p.clan })));
     } catch {
       document.getElementById('rank-list').innerHTML =
         '<div class="pg-error">⚠️ No se pudo cargar el ranking.</div>';
@@ -203,9 +211,18 @@
   // ── Clanes ─────────────────────────────────────────
   async function fetchClans() {
     try {
-      const r    = await fetch(API_BASE + '/api/clans');
-      const data = await r.json();
-      renderClans(data.ok ? (data.clans || []) : []);
+      if (!sbClient) { renderClans([]); return; }
+      const { data, error } = await sbClient.from('characters_ranking').select('name, clan, level');
+      if (error) throw error;
+      const { data: online } = await sbClient.from('online_players').select('name, clan, is_leader');
+      const leaderMap = {};
+      (online || []).filter(p => p.is_leader && p.clan).forEach(p => { leaderMap[p.clan] = p.name; });
+      const clanMap = {};
+      (data || []).filter(p => p.clan).forEach(p => {
+        if (!clanMap[p.clan]) clanMap[p.clan] = { name: p.clan, members: 0, leader: leaderMap[p.clan] || '–' };
+        clanMap[p.clan].members++;
+      });
+      renderClans(Object.values(clanMap).sort((a, b) => b.members - a.members));
     } catch {
       document.getElementById('clan-grid').innerHTML =
         '<div class="pg-error">⚠️ No se pudo cargar los clanes.</div>';
@@ -235,9 +252,10 @@
 
   async function loadShop() {
     try {
-      const r    = await fetch(API_BASE + '/api/market');
-      const data = await r.json();
-      renderShop(data.ok ? (data.items || []) : []);
+      if (!sbClient) { renderShop([]); return; }
+      const { data, error } = await sbClient.from('market_items').select('*').eq('active', true).order('sort_order');
+      if (error) throw error;
+      renderShop(data || []);
     } catch {
       document.getElementById('shop-grid').innerHTML =
         '<div class="pg-error">⚠️ No se pudo cargar el mercado.</div>';
@@ -296,23 +314,19 @@
     btn.disabled    = true;
     btn.textContent = 'Enviando...';
     try {
-      const r = await fetch(API_BASE + '/api/market/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ characterName, itemId: pendingItem.id, itemName: pendingItem.name }),
+      if (!sbClient) throw new Error('Sin conexión');
+      const { error } = await sbClient.from('requests').insert({
+        type: 'market', character_name: characterName,
+        item_id: pendingItem.id, item_name: pendingItem.name,
+        pippi_cost: pendingItem.cost, status: 'pending'
       });
-      const data = await r.json();
-      if (data.ok) {
-        fb.className = 'form-feedback ok';
-        fb.textContent = data.message;
-        setTimeout(() => window.closeShopModal(), 2600);
-      } else {
-        fb.className = 'form-feedback err';
-        fb.textContent = data.error || 'Error al enviar el pedido.';
-      }
+      if (error) throw error;
+      fb.className = 'form-feedback ok';
+      fb.textContent = '¡Pedido enviado! El admin lo procesará en breve.';
+      setTimeout(() => window.closeShopModal(), 2600);
     } catch {
       fb.className = 'form-feedback err';
-      fb.textContent = 'No se pudo conectar con el servidor.';
+      fb.textContent = 'No se pudo enviar el pedido.';
     }
     btn.disabled  = false;
     btn.innerHTML = origHTML;
@@ -323,11 +337,12 @@
 
   async function fetchDonationStats() {
     try {
-      const r    = await fetch(API_BASE + '/api/donations/stats');
-      const data = await r.json();
-      if (!data.ok) return;
-      const total  = data.total_ars || 0;
-      const donors = data.donors    || 0;
+      if (!sbClient) return;
+      const now   = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const { data } = await sbClient.from('donations').select('amount_ars, donor_name').eq('status', 'confirmed').gte('created_at', start);
+      const total  = (data || []).reduce((s, r) => s + r.amount_ars, 0);
+      const donors = (data || []).length;
       const pct    = Math.min(100, Math.round((total / 100000) * 100));
       const totalEl  = document.getElementById('donate-total');
       const barEl    = document.getElementById('donate-bar');
@@ -376,23 +391,18 @@
     btn.disabled    = true;
     btn.textContent = 'Registrando...';
     try {
-      const r = await fetch(API_BASE + '/api/donations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ donorName, amountArs: pendingDonation, message }),
+      if (!sbClient) throw new Error('Sin conexión');
+      const { error } = await sbClient.from('donations').insert({
+        donor_name: donorName, amount_ars: pendingDonation,
+        message: message || '', status: 'pending'
       });
-      const data = await r.json();
-      if (data.ok) {
-        fb.className = 'form-feedback ok';
-        fb.textContent = '¡Gracias! Tu donación fue registrada. Realizá la transferencia al alias danielmfaggi.';
-        setTimeout(() => { window.closeDonateModal(); fetchDonationStats(); }, 4000);
-      } else {
-        fb.className = 'form-feedback err';
-        fb.textContent = data.error || 'Error al registrar la donación.';
-      }
+      if (error) throw error;
+      fb.className = 'form-feedback ok';
+      fb.textContent = '¡Gracias! Tu donación fue registrada. Realizá la transferencia al alias danielmfaggi.';
+      setTimeout(() => { window.closeDonateModal(); fetchDonationStats(); }, 4000);
     } catch {
       fb.className = 'form-feedback err';
-      fb.textContent = 'No se pudo conectar con el servidor.';
+      fb.textContent = 'No se pudo registrar la donación.';
     }
     btn.disabled  = false;
     btn.innerHTML = origHTML;
@@ -409,23 +419,18 @@
     btn.disabled   = true;
     btn.innerHTML  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg> Enviando...';
     try {
-      const r = await fetch(API_BASE + '/api/clan/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ characterName, message }),
+      if (!sbClient) throw new Error('Sin conexión');
+      const { error } = await sbClient.from('requests').insert({
+        type: 'clan', character_name: characterName,
+        message: message || '', status: 'pending'
       });
-      const data = await r.json();
-      if (data.ok) {
-        fb.className = 'form-feedback ok';
-        fb.textContent = data.message;
-        document.getElementById('join-form').reset();
-      } else {
-        fb.className = 'form-feedback err';
-        fb.textContent = data.error || 'Error al enviar la solicitud.';
-      }
+      if (error) throw error;
+      fb.className = 'form-feedback ok';
+      fb.textContent = '¡Solicitud enviada! Te contactaremos pronto.';
+      document.getElementById('join-form').reset();
     } catch {
       fb.className = 'form-feedback err';
-      fb.textContent = 'No se pudo conectar con el servidor.';
+      fb.textContent = 'No se pudo enviar la solicitud.';
     }
     btn.disabled  = false;
     btn.innerHTML = origHTML;
