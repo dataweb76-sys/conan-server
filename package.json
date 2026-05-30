@@ -1,0 +1,15 @@
+{
+  "name": "dragones-y-demonios",
+  "version": "2.0.0",
+  "description": "Servidor Conan Exiles Enhanced – Dragones y Demonios",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "bridge": "node bridge.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "@supabase/supabase-js": "^2.45.4",
+    "dotenv": "^16.4.5"
+  }
+}

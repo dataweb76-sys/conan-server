@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "name": "Espada de Hierro",
+    "description": "Hoja de hierro forjada a mano. Primer arma de todo exiliado que se respete.",
+    "emoji": "⚔️",
+    "category": "Armas",
+    "templateId": "11001"
+  },
+  {
+    "id": 2,
+    "name": "Hacha de Guerra",
+    "description": "Perfecta para romper armaduras y sembrar el caos en el campo de batalla.",
+    "emoji": "🪓",
+    "category": "Armas",
+    "templateId": "11061"
+  },
+  {
+    "id": 3,
+    "name": "Armadura de Placas Completa",
+    "description": "Set completo de placas de acero. Alta protección ante enemigos y el clima.",
+    "emoji": "🛡️",
+    "category": "Armaduras",
+    "templateId": "52001"
+  },
+  {
+    "id": 4,
+    "name": "Pico de Hierro",
+    "description": "Extrae minerales raros con mayor eficiencia. Esencial para el progreso.",
+    "emoji": "⛏️",
+    "category": "Recursos",
+    "templateId": "51001"
+  },
+  {
+    "id": 5,
+    "name": "Kit de Supervivencia",
+    "description": "Comida, vendas y materiales básicos para sobrevivir los primeros días.",
+    "emoji": "🎒",
+    "category": "Recursos",
+    "templateId": "18000"
+  },
+  {
+    "id": 6,
+    "name": "Pergamino de Conocimiento",
+    "description": "Desbloquea recetas avanzadas y habilidades de construcción.",
+    "emoji": "📜",
+    "category": "Especiales",
+    "templateId": "30000"
+  }
+]
