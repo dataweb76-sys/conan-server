@@ -194,6 +194,16 @@ body {
   display: inline-flex; align-items: center;
 }
 .nav-register:hover { border-color: var(--c-gold-dim); color: var(--c-gold); background: rgba(200,134,28,0.12); }
+.nav-admin {
+  padding: 0.28rem 0.75rem;
+  border: 1px solid rgba(180,60,60,0.5); border-radius: 3px;
+  background: rgba(180,60,60,0.1); color: #e07070;
+  font-family: var(--f-heading); font-size: 0.7rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  text-decoration: none; cursor: pointer; transition: all 0.2s;
+  display: inline-flex; align-items: center;
+}
+.nav-admin:hover { border-color: #e07070; color: #ff9999; background: rgba(180,60,60,0.2); }
 
 /* ── Hero enter button ── */
 .btn-enter {

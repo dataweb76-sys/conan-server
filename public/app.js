@@ -446,12 +446,16 @@
     sbClient.auth.getSession().then(({ data }) => updateAuthNav(data.session?.user ?? null));
   }
 
+  const ADMIN_EMAIL = 'datawebgames@gmail.com';
+
   function updateAuthNav(user) {
     const el = document.getElementById('auth-nav');
     if (!el) return;
     if (user) {
-      const name = user.user_metadata?.char_name || user.email;
+      const name    = user.user_metadata?.char_name || user.email;
+      const isAdmin = user.email === ADMIN_EMAIL;
       el.innerHTML = `
+        ${isAdmin ? `<a href="admin.html" class="nav-link nav-admin">⚙️ Admin</a>` : ''}
         <a href="profile.html" class="nav-link nav-register">👤 ${esc(name)}</a>
         <a href="#" class="nav-link" onclick="doLogout();return false;">Salir</a>`;
     } else {

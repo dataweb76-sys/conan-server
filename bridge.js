@@ -7,6 +7,7 @@
 require('dotenv').config();
 const net = require('net');
 const { createClient } = require('@supabase/supabase-js');
+const ws = require('ws');
 
 const RCON_HOST = process.env.RCON_HOST || '190.174.183.144';
 const RCON_PORT = parseInt(process.env.RCON_PORT) || 25575;
@@ -14,7 +15,8 @@ const RCON_PASS = process.env.RCON_PASS || 'dani123';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
+  process.env.SUPABASE_SERVICE_KEY,
+  { realtime: { transport: ws } }
 );
 
 // ── RCON ──────────────────────────────────────────────
