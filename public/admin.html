@@ -218,25 +218,6 @@
     .btn-refresh:hover { border-color: var(--c-gold-dim); color: var(--c-gold); }
 
     /* ── Market management ── */
-    .market-key-form {
-      background: var(--c-card); border: 1px solid var(--c-border);
-      border-radius: 8px; padding: 1rem 1.4rem;
-      display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;
-      margin-bottom: 1.2rem;
-    }
-    .market-key-form label { font-family: var(--f-h); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-dim); }
-    .market-key-input {
-      background: rgba(255,255,255,0.04); border: 1px solid var(--c-border);
-      border-radius: 4px; padding: 0.4rem 0.8rem; color: var(--c-text);
-      font-family: monospace; font-size: 0.9rem; flex: 1; min-width: 160px; outline: none;
-    }
-    .market-key-input:focus { border-color: var(--c-gold-dim); }
-    .btn-key-save {
-      font-family: var(--f-h); font-size: 0.7rem; padding: 0.4rem 0.9rem;
-      background: rgba(200,134,28,0.1); border: 1px solid var(--c-gold-dim);
-      border-radius: 4px; color: var(--c-gold); cursor: pointer; transition: all 0.2s;
-    }
-    .btn-key-save:hover { background: rgba(200,134,28,0.2); }
     .market-toolbar {
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;
@@ -356,17 +337,10 @@
   </div>
 
   <div class="req-list" id="req-list">
-    <div class="empty-state">Cargando solicitudes...</div>
+    <div class="empty-state">Verificando sesión...</div>
   </div>
 
   <div id="market-panel" style="display:none">
-    <div class="market-key-form">
-      <label for="admin-key-input">Clave Admin</label>
-      <input class="market-key-input" type="password" id="admin-key-input" placeholder="dani_admin_2024" autocomplete="off">
-      <button class="btn-key-save" onclick="saveKey()">Guardar</button>
-      <span id="key-status" style="font-size:0.72rem;font-family:var(--f-h);color:var(--c-dim)"></span>
-    </div>
-
     <div class="market-toolbar">
       <span style="font-family:var(--f-h);font-size:0.72rem;color:var(--c-dim);letter-spacing:0.08em">ÍTEMS EN EL MERCADO</span>
       <button class="btn-add-item" onclick="openItemForm(null)">+ Agregar Ítem</button>
@@ -412,7 +386,7 @@
     </div>
 
     <div class="item-grid" id="item-grid">
-      <div class="empty-state">Ingresá la clave admin para ver los ítems.</div>
+      <div class="empty-state">Cargando ítems...</div>
     </div>
   </div>
 </main>
@@ -420,32 +394,13 @@
 <script src="config.js"></script>
 <script>
 (function () {
-  if (!window.SUPABASE_URL || !window.SUPABASE_ANON || !window.supabase) return;
-  const _sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON);
-  window._adminSb = _sb;
-  function _updateAuthNav(user) {
-    const el = document.getElementById('auth-nav');
-    if (!el) return;
-    if (user) {
-      el.innerHTML = `<a href="/profile.html" class="nav-link nav-register">👤 Perfil</a>
-        <a href="#" class="nav-link" onclick="window._adminSb.auth.signOut().then(()=>location.href='/')">Salir</a>`;
-    } else {
-      el.innerHTML = `<a href="/" class="nav-link nav-register">Registrarse</a>`;
-    }
-  }
-  _sb.auth.getSession().then(({ data }) => _updateAuthNav(data.session?.user ?? null));
-  _sb.auth.onAuthStateChange((_e, session) => _updateAuthNav(session?.user ?? null));
-})();
-</script>
-<script>
-(function () {
   'use strict';
 
-  const API_BASE    = window.API_BASE || '';
+  let sbClient      = null;
   let allRequests   = [];
   let currentTab    = 'clan';
-  let adminKey      = localStorage.getItem('ad_key') || '';
   let editingItemId = null;
+  const ADMIN_EMAIL = 'datawebgames@gmail.com';
 
   function esc(s) {
     return String(s)
@@ -470,6 +425,43 @@
     return `<span class="req-status-pill ${cls}">${label}</span>`;
   }
 
+  // ── Auth ──────────────────────────────────────────────
+  function initAdmin() {
+    if (!window.SUPABASE_URL || !window.SUPABASE_ANON || !window.supabase) {
+      document.getElementById('req-list').innerHTML =
+        '<div class="empty-state">⚠️ Supabase no configurado.</div>';
+      return;
+    }
+    sbClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON);
+    sbClient.auth.getSession().then(({ data }) => {
+      const user = data.session?.user;
+      updateAuthNav(user);
+      if (!user || user.email !== ADMIN_EMAIL) {
+        document.getElementById('req-list').innerHTML =
+          '<div class="empty-state">⚠️ Acceso denegado. <a href="/" style="color:var(--c-gold)">Iniciá sesión como admin</a></div>';
+        return;
+      }
+      loadRequests();
+      setInterval(loadRequests, 30_000);
+    });
+    sbClient.auth.onAuthStateChange((_e, session) => {
+      updateAuthNav(session?.user ?? null);
+    });
+  }
+
+  function updateAuthNav(user) {
+    const el = document.getElementById('auth-nav');
+    if (!el) return;
+    if (user) {
+      const name = user.user_metadata?.char_name || user.email;
+      el.innerHTML = `
+        <a href="profile.html" class="nav-link nav-register">👤 ${esc(name)}</a>
+        <a href="#" class="nav-link" onclick="doAdminLogout()">Salir</a>`;
+    } else {
+      el.innerHTML = `<a href="/" class="nav-link nav-register">Volver</a>`;
+    }
+  }
+
   // ── Tabs ──────────────────────────────────────────────
   function setTab(tab) {
     currentTab = tab;
@@ -487,8 +479,6 @@
     document.getElementById('req-list').style.display     = isMarket ? 'none' : '';
     document.getElementById('market-panel').style.display = isMarket ? ''     : 'none';
     if (isMarket) {
-      const ki = document.getElementById('admin-key-input');
-      if (ki && adminKey) ki.value = adminKey;
       loadMarketItems();
     } else {
       renderList();
@@ -500,8 +490,8 @@
     const list    = document.getElementById('req-list');
     const typeMap = { clan: 'clan', 'market-req': 'market' };
     const filtered = currentTab === 'all'
-      ? [...allRequests].reverse()
-      : [...allRequests].reverse().filter(r => r.type === (typeMap[currentTab] || currentTab));
+      ? allRequests
+      : allRequests.filter(r => r.type === (typeMap[currentTab] || currentTab));
 
     const pending = filtered.filter(r => r.status === 'pending').length;
     document.getElementById('pending-badge').textContent = pending;
@@ -512,7 +502,6 @@
     }
 
     list.innerHTML = filtered.map(r => {
-      const idx       = r.idx ?? allRequests.indexOf(r);
       const isPending = r.status === 'pending';
       const icon      = r.type === 'clan' ? '⚔️' : '🪙';
       const subject   = r.type === 'clan'
@@ -523,16 +512,16 @@
       let actions = '';
       if (r.type === 'clan' && isPending) {
         actions = `
-          <button class="btn-approve" onclick="approve(${idx}, this)">✓ Aprobar</button>
-          <button class="btn-reject"  onclick="reject(${idx},  this)">✕ Rechazar</button>`;
+          <button class="btn-approve" onclick="approve(${r.id}, this)">✓ Aprobar</button>
+          <button class="btn-reject"  onclick="reject(${r.id},  this)">✕ Rechazar</button>`;
       } else if (r.type === 'market' && isPending) {
         actions = `
-          <button class="btn-deliver" onclick="deliver(${idx}, this)">📦 Dar ítem</button>
-          <button class="btn-reject"  onclick="reject(${idx},  this)">✕ Rechazar</button>`;
+          <button class="btn-deliver" onclick="deliver(${r.id}, this)">📦 Dar ítem</button>
+          <button class="btn-reject"  onclick="reject(${r.id},  this)">✕ Rechazar</button>`;
       }
 
       return `
-        <div class="req-card ${r.status}" id="req-${idx}">
+        <div class="req-card ${r.status}" id="req-${r.id}">
           <div class="req-type-icon">${icon}</div>
           <div class="req-body">
             <div class="req-name">${esc(r.characterName)} ${statusPill(r.status)}</div>
@@ -541,7 +530,7 @@
           </div>
           <div class="req-actions">
             ${actions}
-            <div class="req-feedback" id="fb-${idx}"></div>
+            <div class="req-feedback" id="fb-${r.id}"></div>
           </div>
         </div>`;
     }).join('');
@@ -549,9 +538,21 @@
 
   async function loadRequests() {
     try {
-      const r    = await fetch(API_BASE + '/api/requests');
-      const data = await r.json();
-      allRequests = data.requests || [];
+      const { data, error } = await sbClient.from('requests')
+        .select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      allRequests = (data || []).map(r => ({
+        id:            r.id,
+        type:          r.type,
+        characterName: r.character_name,
+        itemId:        r.item_id,
+        itemName:      r.item_name,
+        pippiCost:     r.pippi_cost,
+        message:       r.message,
+        status:        r.status,
+        rconNote:      r.rcon_note,
+        ts:            r.created_at,
+      }));
 
       const pClan   = allRequests.filter(r => r.type === 'clan'   && r.status === 'pending').length;
       const pMarket = allRequests.filter(r => r.type === 'market' && r.status === 'pending').length;
@@ -561,112 +562,81 @@
         'Actualizado: ' + new Date().toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
 
       if (currentTab !== 'market') renderList();
-    } catch {
+    } catch (e) {
       document.getElementById('req-list').innerHTML =
-        '<div class="empty-state">⚠️ No se pudo cargar. ¿Está corriendo el servidor?</div>';
+        `<div class="empty-state">⚠️ ${esc(e.message || 'Error al cargar.')}</div>`;
     }
   }
 
-  async function approve(idx, btn) {
-    const fb = document.getElementById(`fb-${idx}`);
+  async function approve(id, btn) {
+    const fb = document.getElementById(`fb-${id}`);
     btn.disabled = true; btn.textContent = 'Aprobando...';
     const sibling = btn.nextElementSibling;
     if (sibling) sibling.disabled = true;
     try {
-      const r    = await fetch(API_BASE + `/api/requests/${idx}/approve`, { method: 'POST' });
-      const data = await r.json();
-      if (data.ok) {
-        fb.className = 'req-feedback ok'; fb.textContent = data.message;
-        document.getElementById(`req-${idx}`).className = 'req-card approved';
-        btn.remove(); if (sibling) sibling.remove();
-        setTimeout(loadRequests, 1200);
-      } else {
-        fb.className = 'req-feedback err'; fb.textContent = data.error;
-        btn.disabled = false; btn.textContent = '✓ Aprobar';
-        if (sibling) sibling.disabled = false;
-      }
-    } catch {
-      fb.className = 'req-feedback err'; fb.textContent = 'Error de red.';
+      const { error } = await sbClient.from('requests')
+        .update({ status: 'approved', processed_at: new Date().toISOString() }).eq('id', id);
+      if (error) throw error;
+      fb.className = 'req-feedback ok'; fb.textContent = '¡Aprobado!';
+      document.getElementById(`req-${id}`).className = 'req-card approved';
+      btn.remove(); if (sibling) sibling.remove();
+      setTimeout(loadRequests, 1200);
+    } catch (e) {
+      fb.className = 'req-feedback err'; fb.textContent = e.message || 'Error.';
       btn.disabled = false; btn.textContent = '✓ Aprobar';
       if (sibling) sibling.disabled = false;
     }
   }
 
-  async function reject(idx, btn) {
+  async function reject(id, btn) {
     if (!confirm('¿Rechazar esta solicitud?')) return;
     btn.disabled = true; btn.textContent = 'Rechazando...';
     const sibling = btn.previousElementSibling;
     if (sibling) sibling.disabled = true;
     try {
-      const r    = await fetch(API_BASE + `/api/requests/${idx}/reject`, { method: 'POST' });
-      const data = await r.json();
-      if (data.ok) {
-        document.getElementById(`req-${idx}`).className = 'req-card rejected';
-        btn.remove(); if (sibling) sibling.remove();
-        setTimeout(loadRequests, 1200);
-      } else {
-        btn.disabled = false; btn.textContent = '✕ Rechazar';
-        if (sibling) sibling.disabled = false;
-      }
+      const { error } = await sbClient.from('requests')
+        .update({ status: 'rejected', processed_at: new Date().toISOString() }).eq('id', id);
+      if (error) throw error;
+      document.getElementById(`req-${id}`).className = 'req-card rejected';
+      btn.remove(); if (sibling) sibling.remove();
+      setTimeout(loadRequests, 1200);
     } catch {
       btn.disabled = false; btn.textContent = '✕ Rechazar';
       if (sibling) sibling.disabled = false;
     }
   }
 
-  async function deliver(idx, btn) {
-    const fb = document.getElementById(`fb-${idx}`);
-    btn.disabled = true; btn.textContent = 'Entregando...';
+  async function deliver(id, btn) {
+    const fb = document.getElementById(`fb-${id}`);
+    btn.disabled = true; btn.textContent = 'Marcando...';
     const sibling = btn.nextElementSibling;
     if (sibling) sibling.disabled = true;
     try {
-      const r    = await fetch(API_BASE + `/api/requests/${idx}/deliver`, { method: 'POST' });
-      const data = await r.json();
-      if (data.ok) {
-        document.getElementById(`req-${idx}`).className = 'req-card delivered';
-        btn.remove(); if (sibling) sibling.remove();
-        if (fb && data.rconMsg) {
-          fb.className = data.rconOk ? 'req-feedback ok' : 'req-feedback err';
-          fb.textContent = data.rconMsg;
-        }
-        setTimeout(loadRequests, 3000);
-      } else {
-        fb.className = 'req-feedback err'; fb.textContent = data.error || 'Error.';
-        btn.disabled = false; btn.textContent = '📦 Dar ítem';
-        if (sibling) sibling.disabled = false;
-      }
-    } catch {
-      fb.className = 'req-feedback err'; fb.textContent = 'Error de red.';
+      const { error } = await sbClient.from('requests')
+        .update({ status: 'delivered', processed_at: new Date().toISOString() }).eq('id', id);
+      if (error) throw error;
+      document.getElementById(`req-${id}`).className = 'req-card delivered';
+      btn.remove(); if (sibling) sibling.remove();
+      if (fb) { fb.className = 'req-feedback ok'; fb.textContent = 'Marcado como entregado. Dale el ítem via Pippi.'; }
+      setTimeout(loadRequests, 3000);
+    } catch (e) {
+      fb.className = 'req-feedback err'; fb.textContent = e.message || 'Error.';
       btn.disabled = false; btn.textContent = '📦 Dar ítem';
       if (sibling) sibling.disabled = false;
     }
   }
 
   // ── Market management ─────────────────────────────────
-  function saveKey() {
-    adminKey = document.getElementById('admin-key-input').value.trim();
-    localStorage.setItem('ad_key', adminKey);
-    document.getElementById('key-status').textContent = adminKey ? '✓ Guardado' : '';
-    loadMarketItems();
-  }
-
   async function loadMarketItems() {
     const grid = document.getElementById('item-grid');
-    if (!adminKey) {
-      grid.innerHTML = '<div class="empty-state">Ingresá la clave admin para ver los ítems.</div>';
-      return;
-    }
     grid.innerHTML = '<div class="empty-state">Cargando...</div>';
     try {
-      const r    = await fetch(API_BASE + `/api/admin/market?key=${encodeURIComponent(adminKey)}`);
-      const data = await r.json();
-      if (!data.ok) {
-        grid.innerHTML = `<div class="empty-state">⚠️ ${esc(data.error || 'Error al cargar.')}</div>`;
-        return;
-      }
-      renderMarketItems(data.items || []);
-    } catch {
-      grid.innerHTML = '<div class="empty-state">⚠️ Error de conexión.</div>';
+      const { data, error } = await sbClient.from('market_items')
+        .select('*').order('sort_order');
+      if (error) throw error;
+      renderMarketItems(data || []);
+    } catch (e) {
+      grid.innerHTML = `<div class="empty-state">⚠️ ${esc(e.message || 'Error al cargar.')}</div>`;
     }
   }
 
@@ -737,25 +707,16 @@
     const origText = btn.textContent;
     btn.disabled = true; btn.textContent = 'Guardando...';
     try {
-      const url    = editingItemId
-        ? `/api/admin/market/${editingItemId}?key=${encodeURIComponent(adminKey)}`
-        : `/api/admin/market?key=${encodeURIComponent(adminKey)}`;
-      const r    = await fetch(url, {
-        method: editingItemId ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      const data = await r.json();
-      if (data.ok) {
-        fb.className = 'market-feedback ok';
-        fb.textContent = editingItemId ? 'Ítem actualizado.' : 'Ítem creado.';
-        setTimeout(() => { closeItemForm(); loadMarketItems(); }, 1200);
-      } else {
-        fb.className = 'market-feedback err';
-        fb.textContent = data.error || 'Error al guardar.';
-      }
-    } catch {
-      fb.className = 'market-feedback err'; fb.textContent = 'Error de conexión.';
+      const { error } = editingItemId
+        ? await sbClient.from('market_items').update(body).eq('id', editingItemId)
+        : await sbClient.from('market_items').insert(body);
+      if (error) throw error;
+      fb.className = 'market-feedback ok';
+      fb.textContent = editingItemId ? 'Ítem actualizado.' : 'Ítem creado.';
+      setTimeout(() => { closeItemForm(); loadMarketItems(); }, 1200);
+    } catch (e) {
+      fb.className = 'market-feedback err';
+      fb.textContent = e.message || 'Error al guardar.';
     }
     btn.disabled = false; btn.textContent = origText;
   }
@@ -763,13 +724,9 @@
   async function toggleItem(id, currentlyActive, btn) {
     btn.disabled = true;
     try {
-      const r    = await fetch(API_BASE + `/api/admin/market/${id}?key=${encodeURIComponent(adminKey)}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ active: !currentlyActive }),
-      });
-      const data = await r.json();
-      if (data.ok) loadMarketItems();
+      const { error } = await sbClient.from('market_items')
+        .update({ active: !currentlyActive }).eq('id', id);
+      if (!error) loadMarketItems();
       else btn.disabled = false;
     } catch { btn.disabled = false; }
   }
@@ -779,16 +736,13 @@
   window.reject        = reject;
   window.deliver       = deliver;
   window.loadRequests  = loadRequests;
-  window.saveKey       = saveKey;
   window.openItemForm  = openItemForm;
   window.closeItemForm = closeItemForm;
   window.saveItem      = saveItem;
   window.toggleItem    = toggleItem;
+  window.doAdminLogout = function () { sbClient && sbClient.auth.signOut().then(() => location.href = '/'); };
 
-  const ki = document.getElementById('admin-key-input');
-  if (ki && adminKey) ki.value = adminKey;
-  loadRequests();
-  setInterval(loadRequests, 30_000);
+  initAdmin();
 })();
 </script>
 </body>
