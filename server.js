@@ -5,6 +5,7 @@ const net     = require('net');
 const path    = require('path');
 const fs      = require('fs');
 const { createClient } = require('@supabase/supabase-js');
+const ws = require('ws');
 
 const app  = express();
 const PORT = process.env.PORT || 8100;
@@ -28,7 +29,7 @@ const ADMIN_KEY  = process.env.ADMIN_KEY  || 'dani_admin_2024';
 
 // Supabase (SERVICE_KEY para operaciones del servidor)
 const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY)
-  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY, { global: { fetch }, realtime: { transport: ws } })
   : null;
 
 const DATA = p => path.join(__dirname, 'data', p);
@@ -478,7 +479,6 @@ app.get('/api/donations/stats', async (req, res) => {
   if (error) return res.json({ ok: false, error: error.message });
   const total = (data || []).reduce((s, r) => s + r.amount_ars, 0);
   res.json({ ok: true, total, target: 100000, count: (data||[]).length });
-});
 });
 
 app.listen(PORT, () => console.log(`\n  🐉  Dragones y Demonios → http://localhost:${PORT}\n`));

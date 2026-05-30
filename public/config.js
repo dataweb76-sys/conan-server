@@ -2,7 +2,7 @@
 // Local (red interna):  'http://192.168.1.42:8100'
 // Vercel (IP pública):  'http://190.174.183.144:8100'
 // Misma máquina:        ''
-window.API_BASE = 'http://190.174.183.144:8100';
+window.API_BASE = 'http://190.174.183.144:3000';
 
 // ── Supabase ────────────────────────────────────────────────────────────────
 window.SUPABASE_URL  = 'https://fpjfygsngkqwybxxhflr.supabase.co';
