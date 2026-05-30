@@ -87,7 +87,8 @@ function parseSqlRows(raw) {
 
 // ── Sync funciones ────────────────────────────────────
 
-const onlineSince = new Map();
+const onlineSince    = new Map();
+let   currentOnline  = new Set(); // nombres de jugadores online ahora
 
 async function syncOnlinePlayers() {
   try {
@@ -114,6 +115,8 @@ async function syncOnlinePlayers() {
       };
     });
 
+    currentOnline = new Set(names);
+
     const now = Date.now();
     names.forEach(n => { if (!onlineSince.has(n)) onlineSince.set(n, now); });
     for (const [n] of onlineSince) { if (!names.includes(n)) onlineSince.delete(n); }
@@ -134,6 +137,49 @@ async function syncOnlinePlayers() {
     console.log(`[bridge] ${names.length} jugadores online sincronizados`);
   } catch (e) {
     console.error('[bridge] Error sync players:', e.message);
+  }
+}
+
+async function deliverPendingItems() {
+  try {
+    const { data } = await supabase
+      .from('requests')
+      .select('id, character_name, item_name, market_items(template_id)')
+      .eq('type', 'market')
+      .eq('status', 'approved');
+
+    if (!data?.length) return;
+
+    for (const req of data) {
+      const charName   = req.character_name;
+      const templateId = req.market_items?.template_id;
+      const itemName   = req.item_name || '?';
+
+      if (!currentOnline.has(charName)) continue; // offline, reintenta en 30s
+
+      let rconNote;
+      if (!templateId) {
+        rconNote = 'Sin template_id — entregar manualmente vía Pippi.';
+      } else {
+        try {
+          await rcon(`pippi give ${charName} ${templateId} 1`);
+          try { await rcon(`directmessage Servidor ${charName} "¡Tu pedido de ${itemName} fue entregado!"`); } catch {}
+          rconNote = `Entregado vía Pippi (template ${templateId}).`;
+          console.log(`[bridge] ✓ Ítem entregado: ${itemName} → ${charName}`);
+        } catch (e) {
+          rconNote = `Pippi falló: ${e.message} — entregar manualmente.`;
+          console.error(`[bridge] Delivery falló para ${charName}:`, e.message);
+        }
+      }
+
+      await supabase.from('requests').update({
+        status:       'delivered',
+        processed_at: new Date().toISOString(),
+        rcon_note:    rconNote,
+      }).eq('id', req.id);
+    }
+  } catch (e) {
+    console.error('[bridge] Error deliverPendingItems:', e.message);
   }
 }
 
@@ -166,10 +212,14 @@ async function run() {
   }
 
   await syncOnlinePlayers();
+  await deliverPendingItems();
   await syncRanking();
 
-  // Online: cada 30s
-  setInterval(syncOnlinePlayers, 30_000);
+  // Online + entregas: cada 30s
+  setInterval(async () => {
+    await syncOnlinePlayers();
+    await deliverPendingItems();
+  }, 30_000);
   // Ranking: cada 5 min
   setInterval(syncRanking, 300_000);
 }

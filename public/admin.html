@@ -608,16 +608,16 @@
 
   async function deliver(id, btn) {
     const fb = document.getElementById(`fb-${id}`);
-    btn.disabled = true; btn.textContent = 'Marcando...';
+    btn.disabled = true; btn.textContent = 'Aprobando...';
     const sibling = btn.nextElementSibling;
     if (sibling) sibling.disabled = true;
     try {
       const { error } = await sbClient.from('requests')
-        .update({ status: 'delivered', processed_at: new Date().toISOString() }).eq('id', id);
+        .update({ status: 'approved' }).eq('id', id);
       if (error) throw error;
-      document.getElementById(`req-${id}`).className = 'req-card delivered';
+      document.getElementById(`req-${id}`).className = 'req-card approved';
       btn.remove(); if (sibling) sibling.remove();
-      if (fb) { fb.className = 'req-feedback ok'; fb.textContent = 'Marcado como entregado. Dale el ítem via Pippi.'; }
+      if (fb) { fb.className = 'req-feedback ok'; fb.textContent = 'Aprobado. El bridge entregará el ítem automáticamente cuando el jugador esté online.'; }
       setTimeout(loadRequests, 3000);
     } catch (e) {
       fb.className = 'req-feedback err'; fb.textContent = e.message || 'Error.';
