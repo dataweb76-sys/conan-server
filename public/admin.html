@@ -200,6 +200,20 @@
     }
     .req-feedback.ok  { display: block; color: #44f070; background: rgba(68,240,112,0.08); border: 1px solid rgba(68,240,112,0.25); }
     .req-feedback.err { display: block; color: #f07070; background: rgba(240,68,68,0.08); border: 1px solid rgba(240,68,68,0.25); }
+    .req-rcon {
+      font-size: 0.78rem; color: var(--c-dim); font-family: monospace;
+      padding: 0.3rem 0.6rem; border-radius: 3px; margin-top: 0.4rem;
+      background: rgba(0,0,0,0.3); border: 1px solid rgba(100,80,40,0.3);
+      word-break: break-all; max-width: 400px;
+    }
+    .btn-secondary-sm {
+      padding: 0.35rem 0.7rem; border-radius: 4px; cursor: pointer;
+      font-family: var(--f-h); font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase;
+      background: transparent; border: 1px solid var(--c-border); color: var(--c-dim);
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-secondary-sm:hover { border-color: var(--c-gold-dim); color: var(--c-gold); }
+    .btn-secondary-sm:disabled { opacity: 0.4; cursor: default; }
 
     .empty-state {
       padding: 3rem 1rem; text-align: center;
@@ -516,9 +530,14 @@
           <button class="btn-reject"  onclick="reject(${r.id},  this)">✕ Rechazar</button>`;
       } else if (r.type === 'market' && isPending) {
         actions = `
-          <button class="btn-deliver" onclick="deliver(${r.id}, this)">📦 Dar ítem</button>
+          <button class="btn-deliver" onclick="deliver(${r.id}, this)">📦 Aprobar entrega</button>
           <button class="btn-reject"  onclick="reject(${r.id},  this)">✕ Rechazar</button>`;
+      } else if (r.type === 'market' && (r.status === 'delivered' || r.status === 'approved')) {
+        actions = `<button class="btn-secondary-sm" onclick="retry(${r.id}, this)">↩ Reintentar</button>`;
       }
+
+      const rconBlock = r.rconNote
+        ? `<div class="req-rcon" title="Respuesta RCON">🔧 ${esc(r.rconNote)}</div>` : '';
 
       return `
         <div class="req-card ${r.status}" id="req-${r.id}">
@@ -527,6 +546,7 @@
             <div class="req-name">${esc(r.characterName)} ${statusPill(r.status)}</div>
             <div class="req-meta">${subject} · ${fmtDate(r.ts)}</div>
             ${msgBlock}
+            ${rconBlock}
           </div>
           <div class="req-actions">
             ${actions}
@@ -623,6 +643,21 @@
       fb.className = 'req-feedback err'; fb.textContent = e.message || 'Error.';
       btn.disabled = false; btn.textContent = '📦 Dar ítem';
       if (sibling) sibling.disabled = false;
+    }
+  }
+
+  async function retry(id, btn) {
+    const fb = document.getElementById(`fb-${id}`);
+    btn.disabled = true; btn.textContent = 'Reintentando...';
+    try {
+      const { error } = await sbClient.from('requests')
+        .update({ status: 'approved', rcon_note: null }).eq('id', id);
+      if (error) throw error;
+      if (fb) { fb.className = 'req-feedback ok'; fb.textContent = 'Reintento enviado. El bridge lo entregará cuando el jugador esté online.'; }
+      setTimeout(loadRequests, 3000);
+    } catch (e) {
+      if (fb) { fb.className = 'req-feedback err'; fb.textContent = e.message || 'Error.'; }
+      btn.disabled = false; btn.textContent = '↩ Reintentar';
     }
   }
 
@@ -736,6 +771,7 @@
   window.reject        = reject;
   window.deliver       = deliver;
   window.loadRequests  = loadRequests;
+  window.retry         = retry;
   window.openItemForm  = openItemForm;
   window.closeItemForm = closeItemForm;
   window.saveItem      = saveItem;
