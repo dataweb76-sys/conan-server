@@ -703,4 +703,26 @@
   fetchDonationStats();
   resetTimer();
   setInterval(tickTimers, 1000);
+
+  // ── Bfcache / tab visibility recovery ──────────────
+  // Cuando el navegador restaura la página desde bfcache (botón Atrás),
+  // el JS no se vuelve a ejecutar — re-fetch manual.
+  window.addEventListener('pageshow', function (e) {
+    if (e.persisted) {
+      if (!sbClient) initSupabase();
+      fetchPlayers(true);
+      fetchStats();
+      fetchRanking();
+      fetchClans();
+      fetchDonationStats();
+      resetTimer();
+    }
+  });
+  // Cuando el usuario vuelve a la pestaña después de tenerla en segundo plano
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) {
+      fetchPlayers(true);
+      fetchStats();
+    }
+  });
 })();
