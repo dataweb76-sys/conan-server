@@ -313,15 +313,15 @@
       </p>
     </div>
 
-    <!-- No verificado -->
+    <!-- Sin personaje registrado -->
     <div id="buy-no-verify" style="display:none;text-align:center;padding:0.5rem 0">
-      <p style="color:var(--c-gold);font-size:1rem;margin-bottom:0.5rem">⚠️ Personaje no verificado</p>
+      <p style="color:var(--c-gold);font-size:1rem;margin-bottom:0.5rem">⚠️ Sin personaje registrado</p>
       <p style="color:var(--c-text-dim);font-size:0.9rem;margin-bottom:1.2rem">
-        Ingresá al servidor Conan Exiles — recibirás un código de chat. Verificalo en tu perfil.
+        Para comprar ítems necesitás tener tu nombre de personaje registrado en tu perfil.
       </p>
       <div style="display:flex;gap:0.7rem;justify-content:center;flex-wrap:wrap">
         <button class="btn-secondary" onclick="closeBuyModal()">Cancelar</button>
-        <button class="btn-join" onclick="closeBuyModal();location.href='profile.html'">Verificar Personaje</button>
+        <button class="btn-join" onclick="closeBuyModal();location.href='profile.html'">Ir a Mi Perfil</button>
       </div>
     </div>
 
@@ -465,7 +465,7 @@
     document.getElementById('buy-emoji').textContent = pendingItem.emoji || '📦';
     document.getElementById('buy-item-name').textContent = pendingItem.name;
     const priceEl = document.getElementById('buy-price');
-    priceEl.innerHTML = `<span>🪙</span><span>${pendingItem.pippi_cost ?? 0} monedas Pippi</span>`;
+    priceEl.innerHTML = '<span>🪙</span><span>' + (pendingItem.pippi_cost ?? 0) + ' monedas Pippi</span>';
 
     // Reset sections
     document.getElementById('buy-no-auth').style.display   = 'none';
@@ -482,17 +482,22 @@
       return;
     }
 
-    // Refresh profile
+    // Cargar perfil para obtener el nombre del personaje
     await window.refreshProfile(user.id);
     const profile = window.currentProfile;
 
-    if (!profile?.verified) {
+    // Nombre del personaje: del perfil o del metadata del registro
+    const charName = (profile && profile.char_name)
+      || (user.user_metadata && user.user_metadata.char_name)
+      || '';
+
+    if (!charName) {
+      // Logueado pero sin personaje registrado en el perfil
       document.getElementById('buy-no-verify').style.display = '';
       return;
     }
 
     document.getElementById('buy-form').style.display = '';
-    const charName = profile.char_name || user.user_metadata?.char_name || '';
     document.getElementById('buy-charname').value = charName;
   };
 
