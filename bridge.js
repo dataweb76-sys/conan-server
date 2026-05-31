@@ -68,7 +68,7 @@ function parsePlayers(raw) {
   return raw.split('\n').map(l => l.trim()).filter(l => /^\d+/.test(l))
     .map(line => {
       const p = line.split('|').map(s => s.trim());
-      return { name: p[1] || '?' };
+      return { idx: parseInt(p[0]) || 0, name: p[1] || '?' };
     });
 }
 
@@ -88,16 +88,18 @@ function parseSqlRows(raw) {
 // ── Sync funciones ────────────────────────────────────
 
 const onlineSince    = new Map();
-let   currentOnline  = new Set(); // nombres de jugadores online ahora
+let   currentOnline  = new Map(); // nombre → idx de jugadores online ahora
 
 async function syncOnlinePlayers() {
   try {
-    const raw   = await rcon('listplayers');
-    const names = parsePlayers(raw).map(p => p.name).filter(n => n !== '?');
+    const raw     = await rcon('listplayers');
+    const players = parsePlayers(raw).filter(p => p.name !== '?');
+    const names   = players.map(p => p.name);
 
     if (!names.length) {
       await supabase.from('online_players').delete().neq('name', '__never__');
       onlineSince.clear();
+      currentOnline.clear();
       console.log('[bridge] 0 jugadores online — tabla limpiada');
       return;
     }
@@ -115,7 +117,8 @@ async function syncOnlinePlayers() {
       };
     });
 
-    currentOnline = new Set(names);
+    // Mapa nombre → idx para usar con el comando 'con'
+    currentOnline = new Map(players.map(p => [p.name, p.idx]));
 
     const now = Date.now();
     names.forEach(n => { if (!onlineSince.has(n)) onlineSince.set(n, now); });
@@ -155,7 +158,7 @@ async function sendVerificationCodes() {
     for (const p of data) {
       if (!currentOnline.has(p.char_name)) continue;
       try {
-        await rcon(`directmessage AdminWeb ${p.char_name} "Código de verificación del sitio web: ${p.verification_code}"`);
+        await rcon(`directmessage "Tienda D&D" "${p.char_name}" "Código de verificación del sitio web: ${p.verification_code}"`);
         console.log(`[bridge] Código enviado a ${p.char_name}: ${p.verification_code}`);
       } catch (e) {
         console.error(`[bridge] Error enviando código a ${p.char_name}:`, e.message);
@@ -181,20 +184,22 @@ async function deliverPendingItems() {
       const templateId = req.market_items?.template_id;
       const itemName   = req.item_name || '?';
 
-      if (!currentOnline.has(charName)) continue; // offline, reintenta en 30s
+      const playerIdx = currentOnline.get(charName);
+      if (playerIdx === undefined) continue; // offline, reintenta en 30s
 
       let rconNote;
       if (!templateId) {
-        rconNote = 'Sin template_id — entregar manualmente vía Pippi.';
+        rconNote = 'Sin template_id — actualizar el ID en MERCADO y reintentar.';
       } else {
         try {
-          const resp = await rcon(`pippi give ${charName} ${templateId} 1`);
-          console.log(`[bridge] pippi give response: "${resp}"`);
-          try { await rcon(`directmessage AdminWeb ${charName} "¡Tu pedido de ${itemName} fue entregado!"`); } catch {}
-          rconNote = `Entregado vía Pippi (template ${templateId}). Resp: ${resp}`;
+          const resp = await rcon(`con ${playerIdx} SpawnItem ${templateId} 1`);
+          console.log(`[bridge] SpawnItem response: "${resp}"`);
+          // Notificar al jugador
+          try { await rcon(`directmessage "Tienda D&D" "${charName}" "Tu pedido de ${itemName} fue entregado! Revisa tu inventario."`); } catch {}
+          rconNote = `Entregado (SpawnItem ${templateId}, idx=${playerIdx}). Resp: ${resp}`;
           console.log(`[bridge] ✓ Ítem entregado: ${itemName} → ${charName}`);
         } catch (e) {
-          rconNote = `Pippi falló: ${e.message} — entregar manualmente.`;
+          rconNote = `SpawnItem falló: ${e.message} — entregar manualmente.`;
           console.error(`[bridge] Delivery falló para ${charName}:`, e.message);
         }
       }
