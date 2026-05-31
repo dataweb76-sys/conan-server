@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jugadores Online · Dragones y Demonios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Page hero ── */
+    .page-hero {
+      position: relative;
+      min-height: 280px;
+      display: flex; align-items: flex-end;
+      overflow: hidden;
+    }
+    .page-hero-bg {
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(to bottom, rgba(5,3,2,0.25) 0%, rgba(5,3,2,0.55) 55%, var(--c-bg) 100%),
+        url('players-bg.jpg') center 30%/cover no-repeat;
+    }
+    /* CSS fallback cuando no hay imagen — dos siluetas de guerreros */
+    .page-hero-bg::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 35% 70% at 22% 100%, rgba(220,90,0,0.55) 0%, transparent 55%),
+        radial-gradient(ellipse 35% 70% at 78% 100%, rgba(180,60,0,0.45) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 100%, rgba(140,40,0,0.3) 0%, transparent 60%),
+        linear-gradient(to bottom, #050304 0%, #1d0a04 35%, #2e1208 60%, #0a0603 100%);
+    }
+    /* Silueta masculina (izquierda) */
+    .char-left, .char-right {
+      position: absolute; bottom: 0;
+      width: 160px; height: 230px;
+      pointer-events: none;
+    }
+    .char-left  { left: 8%; }
+    .char-right { right: 8%; transform: scaleX(-1); }
+    .char-left svg, .char-right svg { width: 100%; height: 100%; }
+
+    .page-hero-content {
+      position: relative; z-index: 2;
+      width: 100%; text-align: center;
+      padding: 2.5rem 1rem 2.8rem;
+    }
+    .page-eyebrow {
+      font-family: var(--f-heading); font-size: 0.68rem; letter-spacing: 0.28em;
+      text-transform: uppercase; color: var(--c-gold-dim); margin-bottom: 0.5rem;
+    }
+    .page-title {
+      font-family: var(--f-display); font-size: clamp(1.8rem, 5vw, 3rem);
+      color: var(--c-gold-light); text-shadow: var(--glow-gold), 0 0 60px rgba(220,90,0,0.4);
+      margin-bottom: 0.5rem; line-height: 1.15;
+    }
+    .page-subtitle {
+      font-family: var(--f-body); font-size: 1rem; color: var(--c-text-dim);
+      font-style: italic;
+    }
+
+    /* ── Status bar ── */
+    .status-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      padding: 0.75rem 1rem;
+      background: rgba(10,6,4,0.75);
+      border: 1px solid var(--c-border);
+      border-radius: 8px;
+      backdrop-filter: blur(8px);
+    }
+    .status-left { display: flex; align-items: center; gap: 0.9rem; }
+    .status-count {
+      font-family: var(--f-heading); font-size: 0.82rem; letter-spacing: 0.08em;
+      color: var(--c-text);
+    }
+    .status-count strong { color: var(--c-gold-light); font-size: 1.1rem; }
+    .status-ts { font-family: var(--f-heading); font-size: 0.65rem; letter-spacing: 0.05em; color: var(--c-text-dim); }
+    .btn-refresh-sm {
+      font-family: var(--f-heading); font-size: 0.68rem; letter-spacing: 0.1em;
+      text-transform: uppercase; padding: 0.35rem 0.9rem;
+      background: transparent; border: 1px solid var(--c-border);
+      border-radius: 4px; color: var(--c-text-dim); cursor: pointer; transition: all 0.2s;
+    }
+    .btn-refresh-sm:hover { border-color: var(--c-gold-dim); color: var(--c-gold); }
+
+    /* ── Player cards (override for this page) ── */
+    .player-section {
+      padding: 1.5rem 0 4rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-wrap">
+  <div class="bg-img"></div>
+  <div class="bg-overlay"></div>
+</div>
+<div id="particles" aria-hidden="true"></div>
+
+<!-- ══ HEADER ════════════════════════════════════════════ -->
+<header class="site-header">
+  <div class="header-inner container">
+    <a class="header-brand" href="/">
+      <span class="brand-sub">Conan Exiles Enhanced</span>
+      <span class="brand-name">Dragones y Demonios</span>
+    </a>
+    <nav class="header-nav">
+      <a href="/" class="nav-link">Inicio</a>
+      <a href="players.html" class="nav-link" style="color:var(--c-gold-light)">⚔️ Jugadores</a>
+      <a href="ranking.html" class="nav-link">🏆 Ranking</a>
+      <a href="clanes.html" class="nav-link">🏰 Clanes</a>
+      <a href="tienda.html" class="nav-link">🛒 Tienda</a>
+      <div class="auth-nav" id="auth-nav"></div>
+    </nav>
+  </div>
+</header>
+
+<!-- ══ PAGE HERO ══════════════════════════════════════════ -->
+<section class="page-hero">
+  <div class="page-hero-bg">
+    <!-- Silueta guerrero (izquierda) -->
+    <div class="char-left">
+      <svg viewBox="0 0 160 230" fill="none" xmlns="http://www.w3.org/2000/svg" opacity="0.18">
+        <ellipse cx="80" cy="28" rx="18" ry="22" fill="#ff6600"/>
+        <path d="M62 50 C50 80 46 130 52 170 L70 172 L75 130 L85 130 L90 172 L108 170 C114 130 110 80 98 50 Z" fill="#ff4400"/>
+        <rect x="40" y="58" width="18" height="80" rx="4" fill="#cc3300"/>
+        <rect x="102" y="58" width="18" height="80" rx="4" fill="#cc3300"/>
+        <rect x="62" y="170" width="18" height="60" rx="3" fill="#aa2200"/>
+        <rect x="82" y="170" width="18" height="60" rx="3" fill="#aa2200"/>
+        <!-- Espada -->
+        <rect x="22" y="30" width="4" height="90" rx="2" fill="#ffaa44"/>
+        <path d="M20 30 L26 30 L24 10 Z" fill="#ffcc66"/>
+        <rect x="14" y="56" width="18" height="4" rx="1" fill="#cc8833"/>
+      </svg>
+    </div>
+    <!-- Silueta guerrera (derecha) -->
+    <div class="char-right">
+      <svg viewBox="0 0 160 230" fill="none" xmlns="http://www.w3.org/2000/svg" opacity="0.15">
+        <ellipse cx="80" cy="26" rx="16" ry="20" fill="#ff5500"/>
+        <path d="M64 46 C53 74 50 124 56 162 L72 164 L77 126 L83 126 L88 164 L104 162 C110 124 107 74 96 46 Z" fill="#ee3300"/>
+        <rect x="44" y="54" width="15" height="72" rx="4" fill="#cc2200"/>
+        <rect x="101" y="54" width="15" height="72" rx="4" fill="#cc2200"/>
+        <rect x="64" y="162" width="16" height="55" rx="3" fill="#aa1100"/>
+        <rect x="82" y="162" width="16" height="55" rx="3" fill="#aa1100"/>
+        <!-- Arco -->
+        <path d="M120 20 Q145 80 120 160" stroke="#ffbb44" stroke-width="3" fill="none"/>
+        <line x1="120" y1="20" x2="120" y2="160" stroke="#cc8833" stroke-width="1.5"/>
+      </svg>
+    </div>
+  </div>
+  <div class="page-hero-content">
+    <p class="page-eyebrow">⚔️ Servidor Dragones y Demonios ⚔️</p>
+    <h1 class="page-title">Guerreros en el Exilio</h1>
+    <p class="page-subtitle">Jugadores conectados al servidor ahora mismo</p>
+  </div>
+</section>
+
+<!-- ══ JUGADORES ═════════════════════════════════════════ -->
+<div class="player-section">
+  <div class="container">
+
+    <div class="status-bar">
+      <div class="status-left">
+        <span class="online-dot" id="status-dot"></span>
+        <span class="status-count">Online ahora: <strong id="player-count">–</strong></span>
+        <span class="status-ts" id="last-update">–</span>
+      </div>
+      <button class="btn-refresh-sm" onclick="refreshNow()">↻ Actualizar</button>
+    </div>
+
+    <div id="player-grid" class="player-grid">
+      <div class="pg-loading">
+        <div class="spinner"></div>
+        <span>Contactando con el servidor...</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ FOOTER ════════════════════════════════════════════ -->
+<footer class="site-footer">
+  <div class="container">
+    <p class="footer-title">Dragones y Demonios</p>
+    <p class="footer-sub">Servidor PVP / PVE en Español · Conan Exiles Enhanced</p>
+    <p class="footer-copy">¡Nos vemos en el exilio!</p>
+  </div>
+</footer>
+
+<!-- ══ AUTH MODAL ════════════════════════════════════════ -->
+<div class="shop-modal" id="auth-modal" onclick="if(event.target===this)closeAuthModal()">
+  <div class="shop-modal-card auth-modal-card">
+    <button class="shop-modal-close" onclick="closeAuthModal()" aria-label="Cerrar">✕</button>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-register" onclick="switchAuthTab('register')">Registrarse</button>
+      <button class="auth-tab" id="tab-login" onclick="switchAuthTab('login')">Iniciar Sesión</button>
+    </div>
+    <div id="auth-register-form">
+      <div class="form-group">
+        <label class="form-label" for="auth-charname">Nombre en el juego</label>
+        <input class="form-input" type="text" id="auth-charname" placeholder="Tal como aparece en Conan Exiles" maxlength="40" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="auth-email">Email</label>
+        <input class="form-input" type="email" id="auth-email" placeholder="tu@email.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="auth-password">Contraseña</label>
+        <input class="form-input" type="password" id="auth-password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+      </div>
+      <button class="btn-join btn-submit" onclick="doRegister()">Crear Cuenta</button>
+    </div>
+    <div id="auth-login-form" style="display:none">
+      <div class="form-group">
+        <label class="form-label" for="login-email">Email</label>
+        <input class="form-input" type="email" id="login-email" placeholder="tu@email.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="login-password">Contraseña</label>
+        <input class="form-input" type="password" id="login-password" placeholder="Tu contraseña" autocomplete="current-password">
+      </div>
+      <button class="btn-join btn-submit" onclick="doLogin()">Iniciar Sesión</button>
+    </div>
+    <div class="form-feedback" id="auth-feedback"></div>
+  </div>
+</div>
+
+<script src="supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="shared.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const MAX_LEVEL = 60;
+  let timer;
+
+  function nameToColor(name) {
+    let h = 5381;
+    for (let i = 0; i < name.length; i++) h = ((h << 5) + h) + name.charCodeAt(i);
+    return 'hsl(' + (5 + ((h >>> 0) % 50)) + ', 80%, 55%)';
+  }
+
+  function renderPlayers(players, ok) {
+    const grid    = document.getElementById('player-grid');
+    const countEl = document.getElementById('player-count');
+    const dot     = document.getElementById('status-dot');
+    const ts      = document.getElementById('last-update');
+
+    if (countEl) countEl.textContent = players.length;
+    if (dot) dot.className = ok ? 'online-dot' : 'online-dot red';
+    if (ts) ts.textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+
+    if (!ok) {
+      grid.innerHTML = '<div class="pg-error">⚠️ No se pudo conectar con el servidor.</div>'; return;
+    }
+    if (!players.length) {
+      grid.innerHTML = '<div class="pg-empty">El exilio está vacío por ahora...<br><small style="font-size:.9rem">¿Serás el primero en llegar?</small></div>'; return;
+    }
+
+    const now = Date.now();
+    grid.innerHTML = players.map(function (p) {
+      const color   = nameToColor(p.name);
+      const initial = p.name.charAt(0).toUpperCase();
+      const crown   = p.isLeader ? '<span class="pcard-crown">👑</span>' : '';
+      const clan    = p.clan ? '🏰 ' + window.esc(p.clan) : '&nbsp;';
+      const lvl     = p.level || null;
+      const lvlPct  = lvl ? Math.round((lvl / MAX_LEVEL) * 100) : 0;
+      const onMs    = p.onlineSince ? (now - p.onlineSince) : 0;
+      const levelBar = lvl ? `
+        <div class="pcard-level">
+          <span class="level-label">Nivel</span>
+          <div class="level-track"><div class="level-fill" style="width:${lvlPct}%;--pcolor:${color}"></div></div>
+          <span class="level-num">${lvl}<span style="font-size:.65em;opacity:.55"> / ${MAX_LEVEL}</span></span>
+        </div>` : '';
+      return `
+        <div class="pcard" style="--pcolor:${color}">
+          <div class="pcard-top">
+            <div class="pcard-avatar" style="background:${color}">${initial}</div>
+            <div class="pcard-identity">
+              <span class="pcard-name">${window.esc(p.name)} ${crown}</span>
+              <span class="pcard-clan">${clan}</span>
+            </div>
+            <div class="pcard-time-badge">
+              <div class="pcard-online-dot"></div>
+              <span class="pcard-time" data-since="${p.onlineSince || ''}">${window.fmtMs(onMs)}</span>
+            </div>
+          </div>
+          ${levelBar}
+        </div>`;
+    }).join('');
+  }
+
+  async function fetchPlayers() {
+    const sb = window.getSbAnon();
+    if (!sb) { renderPlayers([], false); return; }
+    try {
+      const { data, error } = await sb.from('online_players').select('*').order('level', { ascending: false });
+      if (error) throw error;
+      renderPlayers((data || []).map(function (p) {
+        return { name: p.name, level: p.level, clan: p.clan, isLeader: p.is_leader, onlineSince: p.online_since };
+      }), true);
+    } catch {
+      renderPlayers([], false);
+    }
+  }
+
+  function tickTimers() {
+    const now = Date.now();
+    document.querySelectorAll('.pcard-time[data-since]').forEach(function (el) {
+      const since = parseInt(el.dataset.since);
+      if (!since || isNaN(since)) return;
+      el.textContent = window.fmtMs(now - since);
+    });
+  }
+
+  function initParticles() {
+    const c = document.getElementById('particles');
+    if (!c) return;
+    for (let i = 0; i < 28; i++) {
+      const e = document.createElement('div');
+      const sz = 1.5 + Math.random() * 2.5, l = Math.random() * 100, b = Math.random() * 30;
+      const dur = 5 + Math.random() * 6, del = Math.random() * 8, dx = (Math.random() - .5) * 100;
+      e.className = 'ember';
+      e.style.cssText = `width:${sz}px;height:${sz}px;left:${l}%;bottom:${b}%;--dur:${dur}s;--delay:${del}s;--dx:${dx}px;animation-delay:${del}s`;
+      c.appendChild(e);
+    }
+  }
+
+  window.refreshNow = function () { fetchPlayers(); };
+
+  window.onPageRefresh = function () { fetchPlayers(); };
+  window.onTabFocus    = function () { fetchPlayers(); };
+
+  // Init
+  window.initShared();
+  initParticles();
+  fetchPlayers();
+  timer = setInterval(fetchPlayers, 30000);
+  setInterval(tickTimers, 1000);
+
+})();
+</script>
+</body>
+</html>

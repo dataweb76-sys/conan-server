@@ -26,7 +26,7 @@
       <span class="brand-sub">Conan Exiles Enhanced</span>
       <span class="brand-name">Dragones y Demonios</span>
     </a>
-    <button class="btn-donate-nav" onclick="scrollToDonate()">
+    <button class="btn-donate-nav" onclick="openDonateModal(10000)">
       <span class="donate-nav-dot"></span>
       ❤️ Donaciones
     </button>
@@ -35,14 +35,17 @@
         <span class="online-dot" id="status-dot"></span>
         <span id="status-text">...</span>
       </div>
-      <a href="/" class="nav-link">Inicio</a>
+      <a href="players.html" class="nav-link">⚔️ Jugadores</a>
+      <a href="ranking.html" class="nav-link">🏆 Ranking</a>
+      <a href="clanes.html" class="nav-link">🏰 Clanes</a>
+      <a href="tienda.html" class="nav-link">🛒 Tienda</a>
       <div class="auth-nav" id="auth-nav"></div>
     </nav>
   </div>
 </header>
 
 <!-- ══ HERO ═══════════════════════════════════════════ -->
-<section class="hero">
+<section class="hero" style="min-height:100vh">
   <div class="hero-inner">
     <p class="hero-eyebrow">⚔️ &nbsp; Conan Exiles Enhanced &nbsp; ⚔️</p>
     <h1 class="hero-title">
@@ -80,7 +83,7 @@
     </div>
     <button class="btn-enter" onclick="openNavPopup()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      Entrar al Servidor
+      Explorar el Servidor
     </button>
     <div class="hero-ip-row">
       <span class="online-dot" id="hero-status-dot" style="width:7px;height:7px"></span>
@@ -89,270 +92,10 @@
     </div>
   </div>
 
-  <!-- Silueta de montañas que separa el hero del contenido -->
   <div class="hero-mountains">
     <svg viewBox="0 0 1440 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M0,100 L0,72 L60,58 L100,65 L160,38 L210,52 L270,20 L330,36 L390,14 L440,28 L490,8 L540,22 L590,4 L650,18 L710,0 L770,14 L830,4 L890,20 L950,6 L1010,24 L1070,10 L1130,28 L1190,12 L1260,32 L1320,16 L1380,36 L1440,22 L1440,100 Z" fill="#0a0705"/>
     </svg>
-  </div>
-</section>
-
-<!-- ══ JUGADORES ══════════════════════════════════════ -->
-<section class="section" id="players-section">
-  <div class="container">
-    <h2 class="section-title">
-      <span class="section-icon">⚔️</span>
-      Guerreros en el Exilio
-      <span class="section-icon">⚔️</span>
-    </h2>
-
-    <div class="players-bar">
-      <div class="players-bar-left">
-        <span class="players-label">Online ahora:</span>
-        <span class="players-badge" id="player-count">–</span>
-      </div>
-      <button class="btn-refresh" id="btn-refresh" onclick="refreshPlayers(true)">
-        <span id="refresh-icon">↻</span> Actualizar
-      </button>
-    </div>
-
-    <div id="player-grid" class="player-grid">
-      <div class="pg-loading">
-        <div class="spinner"></div>
-        <span>Contactando con el servidor...</span>
-      </div>
-    </div>
-
-    <div class="players-foot">
-      <span id="last-update">–</span>
-      <span>· Auto-actualiza cada 30 s</span>
-    </div>
-  </div>
-</section>
-
-<!-- ══ RANKING ════════════════════════════════════════ -->
-<section class="section section-dark" id="ranking-section">
-  <div class="container">
-    <h2 class="section-title">
-      <span class="section-icon">🏆</span>
-      Ranking de Poder
-      <span class="section-icon">🏆</span>
-    </h2>
-    <div id="ranking-top-banner"></div>
-    <div class="rank-list" id="rank-list">
-      <div class="pg-loading"><div class="spinner"></div><span>Cargando ranking...</span></div>
-    </div>
-  </div>
-</section>
-
-<!-- ══ CLANES ══════════════════════════════════════════ -->
-<section class="section" id="clans-section">
-  <div class="container">
-    <h2 class="section-title">
-      <span class="section-icon">🏰</span>
-      Clanes del Servidor
-      <span class="section-icon">🏰</span>
-    </h2>
-    <div class="clan-grid" id="clan-grid">
-      <div class="pg-loading" style="grid-column:1/-1"><div class="spinner"></div><span>Cargando clanes...</span></div>
-    </div>
-  </div>
-</section>
-
-<!-- ══ ÚNETE AL CLAN ═══════════════════════════════════ -->
-<section class="section section-dark" id="join-section">
-  <div class="container">
-    <h2 class="section-title">
-      <span class="section-icon">⚔️</span>
-      Únete al Clan
-      <span class="section-icon">⚔️</span>
-    </h2>
-    <div class="join-wrap">
-      <div class="join-card">
-        <p class="join-intro">¿Querés formar parte de nuestro clan? Enviá tu solicitud y Carlota te contactará en el juego.</p>
-        <form class="join-form" id="join-form" onsubmit="submitJoinRequest(event)">
-          <div class="form-group">
-            <label class="form-label" for="join-charname">Nombre del personaje</label>
-            <input class="form-input" type="text" id="join-charname" placeholder="Tal como aparece en el juego" required maxlength="40" autocomplete="off">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="join-message">Mensaje (opcional)</label>
-            <textarea class="form-input form-textarea" id="join-message" placeholder="Contanos algo sobre vos o por qué querés unirte..." maxlength="300" rows="3"></textarea>
-          </div>
-          <button class="btn-join btn-submit" type="submit" id="join-submit">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>
-            Enviar Solicitud
-          </button>
-          <div class="form-feedback" id="join-feedback"></div>
-        </form>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══ MERCADO PIPPI ════════════════════════════════════ -->
-<section class="section" id="market-section">
-  <div class="container">
-    <h2 class="section-title">
-      <span class="section-icon">🪙</span>
-      Mercado Pippi
-      <span class="section-icon">🪙</span>
-    </h2>
-    <p class="shop-note">Cambiá tus monedas Pippi por ítems exclusivos. Enviá tu pedido y el admin lo entrega en el juego.</p>
-    <div class="shop-grid" id="shop-grid">
-      <div class="pg-loading" style="grid-column:1/-1"><div class="spinner"></div><span>Cargando mercado...</span></div>
-    </div>
-  </div>
-</section>
-
-<!-- ══ DONACIONES ══════════════════════════════════════ -->
-<section class="section section-dark" id="donations-section">
-  <div class="container">
-    <h2 class="section-title">
-      <span class="section-icon">❤️</span>
-      Apoyá el Servidor
-      <span class="section-icon">❤️</span>
-    </h2>
-    <div class="donations-wrap">
-      <p class="donate-intro">El mantenimiento mensual cuesta <strong>$100.000 ARS</strong>. Cada aporte ayuda a mantener el servidor activo para toda la comunidad.</p>
-
-      <div class="target-bar-wrap">
-        <div class="target-bar-header">
-          <span class="target-bar-label">Meta mensual</span>
-          <span class="target-bar-fill-label"><span id="donate-total">$0</span> / <span class="target-goal">$100.000 ARS</span></span>
-        </div>
-        <div class="target-bar-track">
-          <div class="target-bar-progress" id="donate-bar" style="width:0%"></div>
-        </div>
-        <div class="target-bar-foot" id="donate-donors">0 donantes este mes</div>
-      </div>
-
-      <div class="tier-grid">
-        <button class="tier-card" onclick="openDonateModal(5000)">
-          <span class="tier-emoji">🔥</span>
-          <span class="tier-amount">$5.000</span>
-          <span class="tier-label">Aventurero</span>
-        </button>
-        <button class="tier-card" onclick="openDonateModal(10000)">
-          <span class="tier-emoji">⚔️</span>
-          <span class="tier-amount">$10.000</span>
-          <span class="tier-label">Guerrero</span>
-        </button>
-        <button class="tier-card" onclick="openDonateModal(15000)">
-          <span class="tier-emoji">🛡️</span>
-          <span class="tier-amount">$15.000</span>
-          <span class="tier-label">Guardián</span>
-        </button>
-        <button class="tier-card" onclick="openDonateModal(20000)">
-          <span class="tier-emoji">🏰</span>
-          <span class="tier-amount">$20.000</span>
-          <span class="tier-label">Señor del Castillo</span>
-        </button>
-        <button class="tier-card tier-featured" onclick="openDonateModal(40000)">
-          <span class="tier-emoji">🐉</span>
-          <span class="tier-amount">$40.000</span>
-          <span class="tier-label">Cazador de Dragones</span>
-        </button>
-        <button class="tier-card tier-featured" onclick="openDonateModal(50000)">
-          <span class="tier-emoji">💎</span>
-          <span class="tier-amount">$50.000</span>
-          <span class="tier-label">Leyenda del Exilio</span>
-        </button>
-        <button class="tier-card tier-hero" onclick="openDonateModal(100000)">
-          <span class="tier-emoji">👑</span>
-          <span class="tier-amount">$100.000</span>
-          <span class="tier-label">Fundador del Servidor</span>
-        </button>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══ MODS ═══════════════════════════════════════════ -->
-<section class="section section-dark" id="mods-section">
-  <div class="container">
-    <h2 class="section-title">
-      <span class="section-icon">🔮</span>
-      Mods del Servidor
-      <span class="section-icon">🔮</span>
-    </h2>
-    <div class="mod-order-note">
-      <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 15h-2v-2h2zm0-4h-2V7h2z"/></svg>
-      Instala y ordena los mods <strong>exactamente en este orden</strong> en tu launcher
-    </div>
-
-    <div class="mod-category">
-      <h3 class="cat-title">🛠️ Gestión y Comunidad</h3>
-      <div class="mod-grid">
-        <article class="mod-card"><div class="mod-num">01</div><div class="mod-content"><h4 class="mod-name">Enhanced Pippi</h4><p class="mod-desc">La herramienta definitiva de administración. Gestiona eventos, economías, portales, rangos e interfaz interactiva para una experiencia única.</p></div></article>
-      </div>
-    </div>
-
-    <div class="mod-category">
-      <h3 class="cat-title">👥 Seguidores y Compañeros</h3>
-      <div class="mod-grid">
-        <article class="mod-card"><div class="mod-num">02</div><div class="mod-content"><h4 class="mod-name">Player Ignore Followers</h4><p class="mod-desc">Permite traspasar a los seguidores sin que bloqueen el paso en pasillos y bases.</p></div></article>
-        <article class="mod-card"><div class="mod-num">05</div><div class="mod-content"><h4 class="mod-name">Better Thralls</h4><p class="mod-desc">Lleva más compañeros, configura su comportamiento avanzado y evita que mueran por caídas absurdas.</p></div></article>
-      </div>
-    </div>
-
-    <div class="mod-category">
-      <h3 class="cat-title">📊 Interfaz y Navegación</h3>
-      <div class="mod-grid">
-        <article class="mod-card"><div class="mod-num">03</div><div class="mod-content"><h4 class="mod-name">Twin Bar</h4><p class="mod-desc">Expande tu hotbar a dos barras para alternar entre armas y herramientas al instante.</p></div></article>
-        <article class="mod-card"><div class="mod-num">08</div><div class="mod-content"><h4 class="mod-name">Simple Minimap</h4><p class="mod-desc">Minimapa clásico en pantalla para orientarte en tiempo real sin abrir el mapa general.</p></div></article>
-      </div>
-    </div>
-
-    <div class="mod-category">
-      <h3 class="cat-title">🎒 Calidad de Vida</h3>
-      <div class="mod-grid">
-        <article class="mod-card"><div class="mod-num">04</div><div class="mod-content"><h4 class="mod-name">Stacksize Plus</h4><p class="mod-desc">Aumenta el límite de apilamiento. Menos cofres, menos peso innecesario, almacenamiento limpio.</p></div></article>
-      </div>
-    </div>
-
-    <div class="mod-category">
-      <h3 class="cat-title">🛡️ Seguridad y Supervivencia</h3>
-      <div class="mod-grid">
-        <article class="mod-card"><div class="mod-num">06</div><div class="mod-content"><h4 class="mod-name">Safe Zones</h4><p class="mod-desc">Zonas protegidas sin daño para comercio, mercados comunitarios y puntos de encuentro neutral.</p></div></article>
-        <article class="mod-card"><div class="mod-num">07</div><div class="mod-content"><h4 class="mod-name">Player DBNO System</h4><p class="mod-desc"><em>Down But Not Out</em>: quedas incapacitado antes de morir. Tus aliados pueden reanimarte en plena batalla.</p></div></article>
-      </div>
-    </div>
-
-    <div class="mod-category">
-      <h3 class="cat-title">🗺️ Contenido y Expansión</h3>
-      <div class="mod-grid">
-        <article class="mod-card"><div class="mod-num">09</div><div class="mod-content"><h4 class="mod-name">Al-Meryab Reborn</h4><p class="mod-desc">Nuevas mecánicas, zonas y lore que expanden las posibilidades de exploración y los desafíos del servidor.</p></div></article>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══ CONEXIÓN ════════════════════════════════════════ -->
-<section class="section" id="connect-section">
-  <div class="container">
-    <h2 class="section-title">
-      <span class="section-icon">🏰</span>
-      ¿Cómo Conectarse?
-      <span class="section-icon">🏰</span>
-    </h2>
-    <div class="connect-grid">
-      <div class="step-cards">
-        <div class="step-card"><span class="step-n">1</span><div><strong>Instala los 9 mods</strong> desde Steam Workshop en el orden indicado arriba.</div></div>
-        <div class="step-card"><span class="step-n">2</span><div>Abre <strong>Conan Exiles</strong> → <em>Juego multijugador</em> → <em>Servidor directo</em>.</div></div>
-        <div class="step-card"><span class="step-n">3</span><div>Introduce la IP y el puerto en el campo de conexión directa.</div></div>
-        <div class="step-card"><span class="step-n">4</span><div>¡Únete y empieza tu <strong>aventura en el exilio</strong>!</div></div>
-      </div>
-      <div class="connect-card">
-        <div class="connect-detail"><span class="connect-label">IP del servidor</span><code class="connect-value">190.174.183.144</code></div>
-        <div class="connect-detail"><span class="connect-label">Puerto de juego</span><code class="connect-value">7777</code></div>
-        <div class="connect-detail"><span class="connect-label">Puerto Steam/Query</span><code class="connect-value">27017</code></div>
-        <button class="btn-join btn-join-full" onclick="copyIP()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          Copiar IP : 7777
-        </button>
-      </div>
-    </div>
   </div>
 </section>
 
@@ -371,33 +114,33 @@
     <button class="nav-popup-close" onclick="closeNavPopup()" aria-label="Cerrar">✕</button>
     <p class="nav-popup-title">¿Qué querés explorar?</p>
     <div class="nav-popup-grid">
-      <button class="npb" onclick="navTo('#players-section')">
+      <button class="npb" onclick="location.href='players.html'">
         <span class="npb-icon">⚔️</span>
         <span class="npb-label">Jugadores Online</span>
       </button>
-      <button class="npb" onclick="navTo('#ranking-section')">
+      <button class="npb" onclick="location.href='ranking.html'">
         <span class="npb-icon">🏆</span>
         <span class="npb-label">Ranking</span>
       </button>
-      <button class="npb" onclick="navTo('#clans-section')">
+      <button class="npb" onclick="location.href='clanes.html'">
         <span class="npb-icon">🏰</span>
         <span class="npb-label">Clanes</span>
       </button>
-      <button class="npb" onclick="navTo('#market-section')">
-        <span class="npb-icon">🪙</span>
+      <button class="npb" onclick="location.href='tienda.html'">
+        <span class="npb-icon">🛒</span>
         <span class="npb-label">Tienda Online</span>
       </button>
-      <button class="npb" onclick="navTo('#mods-section')">
-        <span class="npb-icon">🔮</span>
-        <span class="npb-label">Mods del Servidor</span>
-      </button>
-      <button class="npb" onclick="navTo('#connect-section')">
-        <span class="npb-icon">🗺️</span>
-        <span class="npb-label">Cómo Conectarse</span>
-      </button>
-      <button class="npb npb-wide" onclick="openAuthModal('register')">
+      <button class="npb" onclick="closeNavPopup();openAuthModal('register')">
         <span class="npb-icon">👤</span>
-        <span class="npb-label">Registrarse / Iniciar Sesión</span>
+        <span class="npb-label">Registrarse</span>
+      </button>
+      <button class="npb" onclick="closeNavPopup();openAuthModal('login')">
+        <span class="npb-icon">🔑</span>
+        <span class="npb-label">Iniciar Sesión</span>
+      </button>
+      <button class="npb npb-wide" onclick="closeNavPopup();openDonateModal(10000)">
+        <span class="npb-icon">❤️</span>
+        <span class="npb-label">Donar / Apoyar el Servidor</span>
       </button>
     </div>
     <div class="nav-popup-ip">
@@ -452,48 +195,6 @@
     </div>
 
     <div class="form-feedback" id="auth-feedback"></div>
-  </div>
-</div>
-
-<!-- ══ MARKET MODAL ════════════════════════════════════ -->
-<div class="shop-modal" id="shop-modal" onclick="if(event.target===this)closeShopModal()">
-  <div class="shop-modal-card">
-    <button class="shop-modal-close" onclick="closeShopModal()" aria-label="Cerrar">✕</button>
-    <h3 class="shop-modal-title">Solicitar Ítem</h3>
-    <p class="shop-modal-sub" id="shop-modal-item-name"></p>
-    <div class="shop-modal-cost" id="shop-modal-cost"></div>
-
-    <!-- No logueado -->
-    <div id="shop-login-prompt" style="display:none;text-align:center;padding:0.5rem 0 0.8rem">
-      <p style="color:var(--c-dim);font-size:0.95rem;margin-bottom:1.2rem">
-        Para solicitar ítems necesitás iniciar sesión o registrarte.
-      </p>
-      <div style="display:flex;gap:0.7rem;justify-content:center;flex-wrap:wrap">
-        <button class="btn-secondary" onclick="closeShopModal()">Cancelar</button>
-        <button class="btn-join" onclick="closeShopModal();openAuthModal('login')">Iniciar Sesión</button>
-      </div>
-      <p style="margin-top:0.9rem;font-size:0.85rem;color:var(--c-dim)">
-        ¿No tenés cuenta?
-        <a href="#" style="color:var(--c-gold)" onclick="closeShopModal();openAuthModal('register');return false">Registrate</a>
-      </p>
-    </div>
-
-    <!-- Logueado -->
-    <div id="shop-form-content">
-      <div class="form-group">
-        <label class="form-label" for="shop-charname">Tu personaje en el servidor</label>
-        <input class="form-input" type="text" id="shop-charname" placeholder="Nombre exacto en el juego" maxlength="40" autocomplete="off">
-      </div>
-      <div class="shop-modal-btns">
-        <button class="btn-secondary" onclick="closeShopModal()">Cancelar</button>
-        <button class="btn-join" id="shop-request-btn" onclick="sendShopRequest()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>
-          Confirmar Pedido
-        </button>
-      </div>
-    </div>
-
-    <div class="form-feedback" id="shop-feedback"></div>
   </div>
 </div>
 

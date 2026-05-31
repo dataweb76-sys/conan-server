@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tienda Online · Dragones y Demonios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Shop hero ── */
+    .shop-hero {
+      position: relative; min-height: 300px;
+      display: flex; align-items: flex-end;
+      overflow: hidden;
+    }
+    .shop-hero-bg {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 55% 60% at 50% 100%, rgba(200,134,28,0.45) 0%, transparent 55%),
+        radial-gradient(ellipse 35% 50% at 15% 80%,  rgba(220,80,0,0.35) 0%, transparent 50%),
+        radial-gradient(ellipse 35% 50% at 85% 80%,  rgba(220,80,0,0.3)  0%, transparent 50%),
+        linear-gradient(to bottom, #040202 0%, #160802 30%, #2e1208 60%, #0a0603 100%);
+    }
+    /* Cajas/cofres decorativos con CSS */
+    .shop-hero-bg::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(circle 2px at 15% 40%, rgba(255,180,0,0.7) 0%, transparent 100%),
+        radial-gradient(circle 3px at 85% 35%, rgba(255,150,0,0.6) 0%, transparent 100%),
+        radial-gradient(circle 2px at 30% 65%, rgba(255,200,0,0.5) 0%, transparent 100%),
+        radial-gradient(circle 2px at 70% 55%, rgba(255,170,0,0.6) 0%, transparent 100%);
+    }
+    .shop-hero-content {
+      position: relative; z-index: 2; width: 100%;
+      text-align: center; padding: 2.5rem 1rem 3rem;
+    }
+    .shop-hero-icon {
+      font-size: 3.5rem; margin-bottom: 0.6rem; line-height: 1;
+      filter: drop-shadow(0 0 20px rgba(255,180,0,0.5));
+      animation: store-float 4s ease-in-out infinite;
+    }
+    @keyframes store-float {
+      0%, 100% { transform: translateY(0) rotate(-2deg); }
+      50%       { transform: translateY(-8px) rotate(2deg); }
+    }
+    .page-eyebrow {
+      font-family: var(--f-heading); font-size: 0.68rem; letter-spacing: 0.28em;
+      text-transform: uppercase; color: var(--c-gold-dim); margin-bottom: 0.5rem;
+    }
+    .shop-hero-title {
+      font-family: var(--f-display); font-size: clamp(2rem, 6vw, 3.4rem);
+      color: var(--c-gold-light); line-height: 1.1; margin-bottom: 0.5rem;
+      text-shadow: var(--glow-gold), 0 0 80px rgba(220,100,0,0.4);
+    }
+    .shop-hero-sub {
+      font-family: var(--f-body); font-size: 1.05rem;
+      color: var(--c-text-dim); font-style: italic; max-width: 500px;
+      margin: 0 auto 1.2rem;
+    }
+    .shop-hero-info {
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      background: rgba(200,134,28,0.08); border: 1px solid rgba(200,134,28,0.25);
+      border-radius: 20px; padding: 0.35rem 1rem;
+      font-family: var(--f-heading); font-size: 0.7rem; letter-spacing: 0.08em;
+      color: var(--c-gold-dim);
+    }
+
+    /* ── Category filter ── */
+    .shop-filters {
+      display: flex; align-items: center; gap: 0.5rem;
+      flex-wrap: wrap; margin-bottom: 2rem;
+    }
+    .filter-btn {
+      font-family: var(--f-heading); font-size: 0.68rem; letter-spacing: 0.1em;
+      text-transform: uppercase; padding: 0.4rem 1rem;
+      background: transparent; border: 1px solid var(--c-border);
+      border-radius: 20px; color: var(--c-text-dim); cursor: pointer;
+      transition: all 0.22s;
+    }
+    .filter-btn:hover  { border-color: var(--c-gold-dim); color: var(--c-gold); }
+    .filter-btn.active {
+      background: rgba(200,134,28,0.15); border-color: rgba(200,134,28,0.5);
+      color: var(--c-gold-light);
+    }
+
+    /* ── Shop cards ── */
+    .shop-grid-v2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 1.3rem;
+    }
+    .shop-item-card {
+      background: linear-gradient(160deg, rgba(16,8,3,0.98) 0%, rgba(22,11,4,0.94) 100%);
+      border: 1px solid rgba(150,90,15,0.32);
+      border-radius: 14px;
+      padding: 1.6rem 1.4rem 1.3rem;
+      display: flex; flex-direction: column; gap: 0.8rem;
+      position: relative; overflow: hidden;
+      transition: transform 0.28s, box-shadow 0.28s, border-color 0.28s;
+    }
+    .shop-item-card::after {
+      content: '';
+      position: absolute; inset: 0; border-radius: inherit;
+      background: radial-gradient(ellipse 60% 50% at 50% 100%, rgba(200,134,28,0.07) 0%, transparent 70%);
+      pointer-events: none; transition: opacity 0.3s; opacity: 0;
+    }
+    .shop-item-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 18px 50px rgba(200,134,28,0.2), 0 4px 20px rgba(0,0,0,0.5);
+      border-color: rgba(220,155,30,0.6);
+    }
+    .shop-item-card:hover::after { opacity: 1; }
+
+    .shop-item-card .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .shop-cat-badge {
+      font-family: var(--f-heading); font-size: 0.55rem; letter-spacing: 0.18em;
+      text-transform: uppercase; padding: 0.18rem 0.6rem;
+      background: rgba(200,134,28,0.1); border: 1px solid rgba(200,134,28,0.25);
+      border-radius: 10px; color: var(--c-gold-dim);
+    }
+    .shop-item-emoji-wrap {
+      width: 64px; height: 64px; border-radius: 14px;
+      background: linear-gradient(135deg, rgba(200,134,28,0.18), rgba(180,80,0,0.12));
+      border: 1px solid rgba(200,134,28,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.2rem; margin: 0.2rem 0 0.4rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 20px rgba(200,134,28,0.1);
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .shop-item-card:hover .shop-item-emoji-wrap {
+      transform: scale(1.08) rotate(-3deg);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.5), 0 0 28px rgba(200,134,28,0.22);
+    }
+    .shop-item-name {
+      font-family: var(--f-heading); font-size: 1.05rem; font-weight: 700;
+      color: var(--c-text); line-height: 1.2;
+    }
+    .shop-item-desc {
+      font-family: var(--f-body); font-size: 0.9rem; color: var(--c-text-dim);
+      font-style: italic; flex: 1; line-height: 1.5;
+    }
+    .shop-item-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: auto; gap: 0.8rem; border-top: 1px solid var(--c-border); padding-top: 0.9rem;
+    }
+    .shop-price-v2 {
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .shop-price-coin {
+      font-size: 1.2rem;
+      animation: coin-spin 3s ease-in-out infinite;
+    }
+    @keyframes coin-spin {
+      0%, 80%, 100% { transform: rotateY(0); }
+      40%            { transform: rotateY(180deg); }
+    }
+    .shop-price-amount {
+      font-family: var(--f-display); font-size: 1.1rem; color: var(--c-gold-light);
+    }
+    .shop-price-label {
+      font-family: var(--f-heading); font-size: 0.55rem; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--c-gold-dim);
+    }
+    .btn-buy {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 1.1rem; border-radius: 8px;
+      background: linear-gradient(135deg, rgba(200,134,28,0.2), rgba(180,80,0,0.15));
+      border: 1px solid rgba(200,134,28,0.5); color: var(--c-gold-light);
+      font-family: var(--f-heading); font-size: 0.72rem; letter-spacing: 0.1em;
+      text-transform: uppercase; cursor: pointer; white-space: nowrap;
+      transition: all 0.22s;
+    }
+    .btn-buy:hover {
+      background: linear-gradient(135deg, rgba(200,134,28,0.35), rgba(180,80,0,0.25));
+      box-shadow: 0 0 20px rgba(200,134,28,0.3); color: #fff;
+    }
+    .btn-buy svg { width: 0.85rem; height: 0.85rem; }
+
+    /* ── Buy modal ── */
+    .buy-modal-header {
+      text-align: center; margin-bottom: 1.2rem;
+    }
+    .buy-modal-emoji {
+      font-size: 2.8rem; margin-bottom: 0.4rem; display: block;
+      filter: drop-shadow(0 0 12px rgba(200,134,28,0.4));
+    }
+    .buy-modal-item  { font-family: var(--f-heading); font-size: 1.1rem; color: var(--c-text); margin-bottom: 0.2rem; }
+    .buy-modal-price {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-family: var(--f-heading); font-size: 0.85rem; color: var(--c-gold);
+      background: rgba(200,134,28,0.1); border: 1px solid rgba(200,134,28,0.25);
+      padding: 0.25rem 0.8rem; border-radius: 14px;
+    }
+    .char-locked {
+      font-family: var(--f-heading); font-size: 0.7rem; letter-spacing: 0.05em;
+      color: var(--c-gold-dim); margin-top: 0.2rem;
+      display: flex; align-items: center; gap: 0.35rem;
+    }
+    .char-locked::before { content: '🔒'; font-size: 0.75rem; }
+
+    /* Loading / empty */
+    .shop-loading-wrap {
+      grid-column: 1/-1; display: flex; flex-direction: column; align-items: center;
+      gap: 0.8rem; padding: 4rem 1rem; color: var(--c-text-dim);
+    }
+    .shop-empty-wrap {
+      grid-column: 1/-1; text-align: center; padding: 4rem 1rem;
+      color: var(--c-text-dim); font-style: italic;
+    }
+
+    /* Section padding */
+    .shop-main { padding: 1.5rem 0 4rem; }
+  </style>
+</head>
+<body>
+
+<div class="bg-wrap">
+  <div class="bg-img"></div>
+  <div class="bg-overlay"></div>
+</div>
+<div id="particles" aria-hidden="true"></div>
+
+<!-- ══ HEADER ════════════════════════════════════════════ -->
+<header class="site-header">
+  <div class="header-inner container">
+    <a class="header-brand" href="/">
+      <span class="brand-sub">Conan Exiles Enhanced</span>
+      <span class="brand-name">Dragones y Demonios</span>
+    </a>
+    <nav class="header-nav">
+      <a href="/" class="nav-link">Inicio</a>
+      <a href="players.html" class="nav-link">⚔️ Jugadores</a>
+      <a href="ranking.html" class="nav-link">🏆 Ranking</a>
+      <a href="clanes.html" class="nav-link">🏰 Clanes</a>
+      <a href="tienda.html" class="nav-link" style="color:var(--c-gold-light)">🛒 Tienda</a>
+      <div class="auth-nav" id="auth-nav"></div>
+    </nav>
+  </div>
+</header>
+
+<!-- ══ SHOP HERO ═════════════════════════════════════════ -->
+<section class="shop-hero">
+  <div class="shop-hero-bg"></div>
+  <div class="shop-hero-content">
+    <div class="shop-hero-icon">🛒</div>
+    <p class="page-eyebrow">✦ &nbsp; Mercado exclusivo del servidor &nbsp; ✦</p>
+    <h1 class="shop-hero-title">Tienda del Exilio</h1>
+    <p class="shop-hero-sub">Cambiá tus monedas Pippi por ítems exclusivos. El admin los entrega directamente en tu inventario.</p>
+    <div class="shop-hero-info">
+      <span>🪙</span>
+      <span>Requiere monedas Pippi · Necesitás estar registrado y verificado</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SHOP MAIN ══════════════════════════════════════════ -->
+<div class="shop-main">
+  <div class="container">
+
+    <!-- Filtros -->
+    <div class="shop-filters" id="shop-filters">
+      <button class="filter-btn active" data-cat="" onclick="setFilter(this,'')">Todos</button>
+    </div>
+
+    <!-- Grid de ítems -->
+    <div class="shop-grid-v2" id="shop-grid">
+      <div class="shop-loading-wrap">
+        <div class="spinner"></div>
+        <span>Cargando el mercado...</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ FOOTER ════════════════════════════════════════════ -->
+<footer class="site-footer">
+  <div class="container">
+    <p class="footer-title">Dragones y Demonios</p>
+    <p class="footer-sub">Servidor PVP / PVE en Español · Conan Exiles Enhanced</p>
+    <p class="footer-copy">¡Nos vemos en el exilio!</p>
+  </div>
+</footer>
+
+<!-- ══ BUY MODAL ════════════════════════════════════════ -->
+<div class="shop-modal" id="buy-modal" onclick="if(event.target===this)closeBuyModal()">
+  <div class="shop-modal-card">
+    <button class="shop-modal-close" onclick="closeBuyModal()">✕</button>
+
+    <div class="buy-modal-header">
+      <span class="buy-modal-emoji" id="buy-emoji">📦</span>
+      <div class="buy-modal-item" id="buy-item-name">–</div>
+      <div class="buy-modal-price" id="buy-price" style="margin:0.5rem auto;display:inline-flex"></div>
+    </div>
+
+    <!-- No logueado -->
+    <div id="buy-no-auth" style="display:none;text-align:center;padding:0.5rem 0">
+      <p style="color:var(--c-text-dim);font-size:0.95rem;margin-bottom:1.2rem">
+        Para comprar ítems necesitás iniciar sesión o registrarte.
+      </p>
+      <div style="display:flex;gap:0.7rem;justify-content:center;flex-wrap:wrap">
+        <button class="btn-secondary" onclick="closeBuyModal()">Cancelar</button>
+        <button class="btn-join" onclick="closeBuyModal();openAuthModal('login')">Iniciar Sesión</button>
+      </div>
+      <p style="margin-top:0.9rem;font-size:0.85rem;color:var(--c-text-dim)">
+        ¿No tenés cuenta?
+        <a href="#" style="color:var(--c-gold)" onclick="closeBuyModal();openAuthModal('register');return false">Registrate</a>
+      </p>
+    </div>
+
+    <!-- No verificado -->
+    <div id="buy-no-verify" style="display:none;text-align:center;padding:0.5rem 0">
+      <p style="color:var(--c-gold);font-size:1rem;margin-bottom:0.5rem">⚠️ Personaje no verificado</p>
+      <p style="color:var(--c-text-dim);font-size:0.9rem;margin-bottom:1.2rem">
+        Ingresá al servidor Conan Exiles — recibirás un código de chat. Verificalo en tu perfil.
+      </p>
+      <div style="display:flex;gap:0.7rem;justify-content:center;flex-wrap:wrap">
+        <button class="btn-secondary" onclick="closeBuyModal()">Cancelar</button>
+        <button class="btn-join" onclick="closeBuyModal();location.href='profile.html'">Verificar Personaje</button>
+      </div>
+    </div>
+
+    <!-- Logueado y verificado -->
+    <div id="buy-form" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Tu personaje en el servidor</label>
+        <input class="form-input" type="text" id="buy-charname" placeholder="Nombre en el juego" maxlength="40" autocomplete="off" readonly style="opacity:.75;cursor:default">
+        <div class="char-locked">El ítem será entregado a este personaje</div>
+      </div>
+      <p style="font-size:0.82rem;color:var(--c-text-dim);margin-bottom:1rem;line-height:1.5">
+        Al confirmar, el admin revisará tu pedido y el bridge lo entregará automáticamente a tu inventario cuando estés conectado al servidor.
+      </p>
+      <div class="shop-modal-btns">
+        <button class="btn-secondary" onclick="closeBuyModal()">Cancelar</button>
+        <button class="btn-join" id="btn-confirm-buy" onclick="confirmBuy()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:1rem;height:1rem"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>
+          Confirmar Pedido
+        </button>
+      </div>
+    </div>
+
+    <div class="form-feedback" id="buy-feedback"></div>
+  </div>
+</div>
+
+<!-- ══ AUTH MODAL ════════════════════════════════════════ -->
+<div class="shop-modal" id="auth-modal" onclick="if(event.target===this)closeAuthModal()">
+  <div class="shop-modal-card auth-modal-card">
+    <button class="shop-modal-close" onclick="closeAuthModal()">✕</button>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-register" onclick="switchAuthTab('register')">Registrarse</button>
+      <button class="auth-tab" id="tab-login" onclick="switchAuthTab('login')">Iniciar Sesión</button>
+    </div>
+    <div id="auth-register-form">
+      <div class="form-group"><label class="form-label">Nombre en el juego</label><input class="form-input" type="text" id="auth-charname" maxlength="40" autocomplete="off"></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="auth-email" autocomplete="email"></div>
+      <div class="form-group"><label class="form-label">Contraseña</label><input class="form-input" type="password" id="auth-password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
+      <button class="btn-join btn-submit" onclick="doRegister()">Crear Cuenta</button>
+    </div>
+    <div id="auth-login-form" style="display:none">
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="login-email" autocomplete="email"></div>
+      <div class="form-group"><label class="form-label">Contraseña</label><input class="form-input" type="password" id="login-password" autocomplete="current-password"></div>
+      <button class="btn-join btn-submit" onclick="doLogin()">Iniciar Sesión</button>
+    </div>
+    <div class="form-feedback" id="auth-feedback"></div>
+  </div>
+</div>
+
+<script src="supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="shared.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  let allItems    = [];
+  let activeFilter = '';
+  let pendingItem  = null;
+
+  /* ── Load shop ── */
+  async function loadShop() {
+    const sb = window.getSbAnon();
+    if (!sb) return;
+    try {
+      const { data, error } = await sb.from('market_items')
+        .select('*').eq('active', true).order('sort_order');
+      if (error) throw error;
+      allItems = data || [];
+      buildFilters();
+      renderItems(allItems);
+    } catch {
+      document.getElementById('shop-grid').innerHTML =
+        '<div class="shop-empty-wrap">⚠️ No se pudo cargar el mercado. Intentá de nuevo en unos momentos.</div>';
+    }
+  }
+
+  /* ── Filters ── */
+  function buildFilters() {
+    const cats = [...new Set(allItems.map(function (i) { return i.category; }).filter(Boolean))];
+    const bar  = document.getElementById('shop-filters');
+    const existing = bar.querySelectorAll('[data-cat]');
+    existing.forEach(function (b) { if (b.dataset.cat !== '') b.remove(); });
+    cats.forEach(function (cat) {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.cat = cat;
+      btn.textContent = cat;
+      btn.onclick = function () { setFilter(btn, cat); };
+      bar.appendChild(btn);
+    });
+  }
+
+  window.setFilter = function (btn, cat) {
+    activeFilter = cat;
+    document.querySelectorAll('.filter-btn').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.cat === cat);
+    });
+    const filtered = cat ? allItems.filter(function (i) { return i.category === cat; }) : allItems;
+    renderItems(filtered);
+  };
+
+  /* ── Render ── */
+  function renderItems(items) {
+    const grid = document.getElementById('shop-grid');
+    if (!items.length) {
+      grid.innerHTML = '<div class="shop-empty-wrap">No hay ítems disponibles en esta categoría.</div>';
+      return;
+    }
+    grid.innerHTML = items.map(function (item) {
+      return `
+        <div class="shop-item-card" id="sic-${item.id}">
+          <div class="top-bar">
+            <span class="shop-cat-badge">${window.esc(item.category || 'Ítem')}</span>
+          </div>
+          <div class="shop-item-emoji-wrap">${item.emoji || '📦'}</div>
+          <div class="shop-item-name">${window.esc(item.name)}</div>
+          <div class="shop-item-desc">${window.esc(item.description || '')}</div>
+          <div class="shop-item-footer">
+            <div class="shop-price-v2">
+              <span class="shop-price-coin">🪙</span>
+              <div>
+                <div class="shop-price-amount">${item.pippi_cost ?? 0}</div>
+                <div class="shop-price-label">Monedas Pippi</div>
+              </div>
+            </div>
+            <button class="btn-buy" onclick="openBuyModal(${item.id})">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>
+              Comprar
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  /* ── Buy modal ── */
+  window.openBuyModal = async function (itemId) {
+    pendingItem = allItems.find(function (i) { return i.id === itemId; });
+    if (!pendingItem) return;
+
+    document.getElementById('buy-emoji').textContent = pendingItem.emoji || '📦';
+    document.getElementById('buy-item-name').textContent = pendingItem.name;
+    const priceEl = document.getElementById('buy-price');
+    priceEl.innerHTML = `<span>🪙</span><span>${pendingItem.pippi_cost ?? 0} monedas Pippi</span>`;
+
+    // Reset sections
+    document.getElementById('buy-no-auth').style.display   = 'none';
+    document.getElementById('buy-no-verify').style.display = 'none';
+    document.getElementById('buy-form').style.display      = 'none';
+    const fb = document.getElementById('buy-feedback');
+    fb.className = 'form-feedback'; fb.textContent = '';
+
+    document.getElementById('buy-modal').classList.add('open');
+
+    const user = window.currentUser;
+    if (!user) {
+      document.getElementById('buy-no-auth').style.display = '';
+      return;
+    }
+
+    // Refresh profile
+    await window.refreshProfile(user.id);
+    const profile = window.currentProfile;
+
+    if (!profile?.verified) {
+      document.getElementById('buy-no-verify').style.display = '';
+      return;
+    }
+
+    document.getElementById('buy-form').style.display = '';
+    const charName = profile.char_name || user.user_metadata?.char_name || '';
+    document.getElementById('buy-charname').value = charName;
+  };
+
+  window.closeBuyModal = function () {
+    document.getElementById('buy-modal').classList.remove('open');
+    pendingItem = null;
+  };
+
+  window.confirmBuy = async function () {
+    const sb      = window.getSb();
+    const charName = document.getElementById('buy-charname').value.trim();
+    const fb      = document.getElementById('buy-feedback');
+    const btn     = document.getElementById('btn-confirm-buy');
+    if (!charName || !pendingItem) return;
+    if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+    try {
+      if (!sb) throw new Error('Sin conexión');
+      const { error } = await sb.from('requests').insert({
+        type:           'market',
+        character_name: charName,
+        item_id:        pendingItem.id,
+        item_name:      pendingItem.name,
+        pippi_cost:     pendingItem.pippi_cost,
+        status:         'pending'
+      });
+      if (error) throw error;
+      fb.className = 'form-feedback ok';
+      fb.textContent = '¡Pedido enviado! El admin lo revisará y el bridge lo entregará a tu inventario cuando estés online.';
+      setTimeout(window.closeBuyModal, 3500);
+    } catch (e) {
+      fb.className = 'form-feedback err';
+      fb.textContent = e.message || 'No se pudo enviar el pedido.';
+    }
+    if (btn) { btn.disabled = false; btn.textContent = 'Confirmar Pedido'; }
+  };
+
+  /* ── Particles ── */
+  function initParticles() {
+    const c = document.getElementById('particles'); if (!c) return;
+    for (let i = 0; i < 32; i++) {
+      const e = document.createElement('div');
+      const sz = 1.5 + Math.random() * 3, l = Math.random() * 100, b = Math.random() * 35;
+      const dur = 4 + Math.random() * 8, del = Math.random() * 8, dx = (Math.random() - .5) * 120;
+      e.className = 'ember';
+      e.style.cssText = `width:${sz}px;height:${sz}px;left:${l}%;bottom:${b}%;--dur:${dur}s;--delay:${del}s;--dx:${dx}px;animation-delay:${del}s`;
+      c.appendChild(e);
+    }
+  }
+
+  window.onPageRefresh = function () { loadShop(); };
+
+  window.initShared();
+  initParticles();
+  loadShop();
+
+})();
+</script>
+</body>
+</html>
