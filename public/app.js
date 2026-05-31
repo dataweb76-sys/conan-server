@@ -123,8 +123,8 @@
   // ── Fetch players ──────────────────────────────────
   async function fetchPlayers(force) {
     try {
-      if (!sbClient) { renderCards({ ok: false, players: [] }); return; }
-      const { data, error } = await sbClient.from('online_players').select('*').order('level', { ascending: false });
+      if (!sbAnon) { renderCards({ ok: false, players: [] }); return; }
+      const { data, error } = await sbAnon.from('online_players').select('*').order('level', { ascending: false });
       if (error) throw error;
       const players = (data || []).map(p => ({
         name: p.name, level: p.level, clan: p.clan,
@@ -139,8 +139,8 @@
   // ── Stats (hero counters) ──────────────────────────
   async function fetchStats() {
     try {
-      if (!sbClient) return;
-      const { data } = await sbClient.from('characters_ranking').select('name, clan');
+      if (!sbAnon) return;
+      const { data } = await sbAnon.from('characters_ranking').select('name, clan');
       const total = (data || []).length;
       const clans = new Set((data || []).filter(p => p.clan).map(p => p.clan)).size;
       const totalEl = document.getElementById('hero-total');
@@ -153,8 +153,8 @@
   // ── Ranking ────────────────────────────────────────
   async function fetchRanking() {
     try {
-      if (!sbClient) { renderRanking([]); return; }
-      const { data, error } = await sbClient.from('characters_ranking').select('*').order('level', { ascending: false }).limit(50);
+      if (!sbAnon) { renderRanking([]); return; }
+      const { data, error } = await sbAnon.from('characters_ranking').select('*').order('level', { ascending: false }).limit(50);
       if (error) throw error;
       renderRanking((data || []).map(p => ({ name: p.name, level: p.level, clan: p.clan })));
     } catch {
@@ -211,10 +211,10 @@
   // ── Clanes ─────────────────────────────────────────
   async function fetchClans() {
     try {
-      if (!sbClient) { renderClans([]); return; }
-      const { data, error } = await sbClient.from('characters_ranking').select('name, clan, level');
+      if (!sbAnon) { renderClans([]); return; }
+      const { data, error } = await sbAnon.from('characters_ranking').select('name, clan, level');
       if (error) throw error;
-      const { data: online } = await sbClient.from('online_players').select('name, clan, is_leader');
+      const { data: online } = await sbAnon.from('online_players').select('name, clan, is_leader');
       const leaderMap = {};
       (online || []).filter(p => p.is_leader && p.clan).forEach(p => { leaderMap[p.clan] = p.name; });
       const clanMap = {};
@@ -252,8 +252,8 @@
 
   async function loadShop() {
     try {
-      if (!sbClient) { renderShop([]); return; }
-      const { data, error } = await sbClient.from('market_items').select('*').eq('active', true).order('sort_order');
+      if (!sbAnon) { renderShop([]); return; }
+      const { data, error } = await sbAnon.from('market_items').select('*').eq('active', true).order('sort_order');
       if (error) throw error;
       renderShop(data || []);
     } catch {
@@ -378,10 +378,10 @@
 
   async function fetchDonationStats() {
     try {
-      if (!sbClient) return;
+      if (!sbAnon) return;
       const now   = new Date();
       const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-      const { data } = await sbClient.from('donations').select('amount_ars, donor_name').eq('status', 'confirmed').gte('created_at', start);
+      const { data } = await sbAnon.from('donations').select('amount_ars, donor_name').eq('status', 'confirmed').gte('created_at', start);
       const total  = (data || []).reduce((s, r) => s + r.amount_ars, 0);
       const donors = (data || []).length;
       const pct    = Math.min(100, Math.round((total / 100000) * 100));
@@ -478,7 +478,8 @@
   };
 
   // ── Auth (Supabase) ───────────────────────────────
-  let sbClient    = null;
+  let sbClient    = null;   // cliente autenticado  (auth + mutaciones)
+  let sbAnon      = null;   // cliente anónimo fijo (lecturas públicas — nunca usa JWT de usuario)
   let currentUser = null;
   let currentProfile = null;
 
@@ -494,6 +495,11 @@
 
   function initSupabase() {
     if (!window.SUPABASE_URL || !window.SUPABASE_ANON || !window.supabase) return;
+    // Cliente anónimo fijo — lecturas públicas, nunca incluye JWT del usuario logueado
+    sbAnon = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+    });
+    // Cliente autenticado — login/register/mutaciones
     sbClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON);
     sbClient.auth.onAuthStateChange(async (_e, session) => {
       const user = session?.user ?? null;
@@ -709,7 +715,9 @@
   // el JS no se vuelve a ejecutar — re-fetch manual.
   window.addEventListener('pageshow', function (e) {
     if (e.persisted) {
-      if (!sbClient) initSupabase();
+      // Recrear siempre el cliente auth — el bfcacheado puede tener sesión rota
+      sbClient = null;
+      initSupabase();
       fetchPlayers(true);
       fetchStats();
       fetchRanking();
