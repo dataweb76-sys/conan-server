@@ -332,8 +332,10 @@
     const sb = window.getSbAnon();
     if (!sb) return;
     try {
+      // characters_ranking: nombre, nivel, clan (y is_leader si ya existe la columna)
+      // online_players: siempre tiene is_leader porque el bridge lo escribe en tiempo real
       const [charsRes, onlineRes] = await Promise.all([
-        sb.from('characters_ranking').select('name, clan, level, is_leader'),
+        sb.from('characters_ranking').select('name, clan, level'),
         sb.from('online_players').select('name, clan, is_leader')
       ]);
       if (charsRes.error) throw charsRes.error;
@@ -341,44 +343,41 @@
       const online = onlineRes.data || [];
       const onlineNames = online.map(function (p) { return p.name; });
 
-      // 1) Líderes de jugadores actualmente online (campo is_leader del servidor)
+      // 1) Líderes online ahora — is_leader viene directo del servidor
       const leaderMap = {};
       online.filter(function (p) { return p.is_leader && p.clan; })
             .forEach(function (p) { leaderMap[p.clan] = p.name; });
 
-      // 2) Líderes registrados en characters_ranking (campo is_leader persistido)
-      chars.filter(function (p) { return p.is_leader && p.clan; })
-           .forEach(function (p) {
-             if (!leaderMap[p.clan]) leaderMap[p.clan] = p.name;
-           });
-
-      // 3) Armar mapa de clanes
+      // 2) Armar mapa de clanes desde characters_ranking
       const clanMap = {};
       chars.filter(function (p) { return p.clan && p.clan.trim(); }).forEach(function (p) {
         const clanName = p.clan.trim();
         if (!clanMap[clanName]) {
-          clanMap[clanName] = { name: clanName, members: 0, maxLevel: 0, memberNames: [] };
+          clanMap[clanName] = { name: clanName, members: 0, maxLevel: 0, memberNames: [], topPlayer: null };
         }
         clanMap[clanName].members++;
-        if ((p.level || 0) > clanMap[clanName].maxLevel) clanMap[clanName].maxLevel = p.level || 0;
+        if ((p.level || 0) > clanMap[clanName].maxLevel) {
+          clanMap[clanName].maxLevel = p.level || 0;
+          clanMap[clanName].topPlayer = p.name; // miembro de mayor nivel como fallback
+        }
         clanMap[clanName].memberNames.push(p.name);
       });
 
-      // 4) Asignar líder a cada clan
-      const clanList = Object.values(clanMap)
-        .filter(function (c) { return c.members >= 1; })
-        .sort(function (a, b) { return b.members - a.members; });
-
-      clanList.forEach(function (c) {
-        if (leaderMap[c.name]) {
-          c.leader = leaderMap[c.name];
-        } else {
-          // Fallback: miembro con mayor nivel
-          const topChar = chars
-            .filter(function (p) { return p.clan === c.name; })
-            .sort(function (a, b) { return (b.level || 0) - (a.level || 0); })[0];
-          c.leader = topChar ? topChar.name : '?';
+      // 3) Completar con miembros online que no estén en el ranking todavía
+      online.filter(function (p) { return p.clan && p.clan.trim(); }).forEach(function (p) {
+        const clanName = p.clan.trim();
+        if (!clanMap[clanName]) {
+          clanMap[clanName] = { name: clanName, members: 1, maxLevel: p.level || 0, memberNames: [p.name], topPlayer: p.name };
+        } else if (!clanMap[clanName].memberNames.includes(p.name)) {
+          clanMap[clanName].members++;
+          clanMap[clanName].memberNames.push(p.name);
         }
+      });
+
+      // 4) Asignar líder: primero online con is_leader, sino miembro de mayor nivel
+      const clanList = Object.values(clanMap).sort(function (a, b) { return b.members - a.members; });
+      clanList.forEach(function (c) {
+        c.leader = leaderMap[c.name] || c.topPlayer || '?';
       });
 
       renderClans(clanList, onlineNames);

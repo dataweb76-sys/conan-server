@@ -217,13 +217,15 @@ async function deliverPendingItems() {
 
 async function syncRanking() {
   try {
-    const raw  = await rcon('sql SELECT c.char_name, c.level, g.name as clan FROM characters c LEFT JOIN guilds g ON c.guild = g.guildId WHERE c.level > 0 ORDER BY c.level DESC LIMIT 30');
+    // Incluye c.id y g.owner para saber quién es líder del clan
+    const raw  = await rcon('sql SELECT c.char_name, c.level, c.id, g.name as clan, g.owner FROM characters c LEFT JOIN guilds g ON c.guild = g.guildId WHERE c.level > 0 ORDER BY c.level DESC LIMIT 200');
     const rows = parseSqlRows(raw);
     if (!rows.length) return;
     const upserts = rows.map(r => ({
       name:       r.char_name,
       level:      parseInt(r.level) || 0,
       clan:       r.clan && r.clan !== 'void' ? r.clan : null,
+      is_leader:  !!(r.owner && r.id && r.owner.trim() === r.id.trim()),
       updated_at: new Date().toISOString(),
     }));
     await supabase.from('characters_ranking').upsert(upserts, { onConflict: 'name' });
