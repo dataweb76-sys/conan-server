@@ -333,43 +333,57 @@
     if (!sb) return;
     try {
       const [charsRes, onlineRes] = await Promise.all([
-        sb.from('characters_ranking').select('name, clan, level'),
-        sb.from('online_players').select('name, clan')
+        sb.from('characters_ranking').select('name, clan, level, is_leader'),
+        sb.from('online_players').select('name, clan, is_leader')
       ]);
       if (charsRes.error) throw charsRes.error;
       const chars  = charsRes.data  || [];
       const online = onlineRes.data || [];
       const onlineNames = online.map(function (p) { return p.name; });
 
-      // Build clan map
+      // 1) Líderes de jugadores actualmente online (campo is_leader del servidor)
       const leaderMap = {};
       online.filter(function (p) { return p.is_leader && p.clan; })
             .forEach(function (p) { leaderMap[p.clan] = p.name; });
 
+      // 2) Líderes registrados en characters_ranking (campo is_leader persistido)
+      chars.filter(function (p) { return p.is_leader && p.clan; })
+           .forEach(function (p) {
+             if (!leaderMap[p.clan]) leaderMap[p.clan] = p.name;
+           });
+
+      // 3) Armar mapa de clanes
       const clanMap = {};
-      chars.filter(function (p) { return p.clan; }).forEach(function (p) {
-        if (!clanMap[p.clan]) {
-          clanMap[p.clan] = { name: p.clan, members: 0, maxLevel: 0, memberNames: [] };
+      chars.filter(function (p) { return p.clan && p.clan.trim(); }).forEach(function (p) {
+        const clanName = p.clan.trim();
+        if (!clanMap[clanName]) {
+          clanMap[clanName] = { name: clanName, members: 0, maxLevel: 0, memberNames: [] };
         }
-        clanMap[p.clan].members++;
-        if (p.level > clanMap[p.clan].maxLevel) clanMap[p.clan].maxLevel = p.level;
-        clanMap[p.clan].memberNames.push(p.name);
+        clanMap[clanName].members++;
+        if ((p.level || 0) > clanMap[clanName].maxLevel) clanMap[clanName].maxLevel = p.level || 0;
+        clanMap[clanName].memberNames.push(p.name);
       });
 
-      // Find leaders from characters_ranking if not in online
-      // (use the highest level member as fallback)
-      const clanList = Object.values(clanMap).sort(function (a, b) { return b.members - a.members; });
+      // 4) Asignar líder a cada clan
+      const clanList = Object.values(clanMap)
+        .filter(function (c) { return c.members >= 1; })
+        .sort(function (a, b) { return b.members - a.members; });
+
       clanList.forEach(function (c) {
-        if (!c.leader) {
-          // Pick highest level char
-          const topChar = chars.filter(function (p) { return p.clan === c.name; })
-                               .sort(function (a, b) { return b.level - a.level; })[0];
+        if (leaderMap[c.name]) {
+          c.leader = leaderMap[c.name];
+        } else {
+          // Fallback: miembro con mayor nivel
+          const topChar = chars
+            .filter(function (p) { return p.clan === c.name; })
+            .sort(function (a, b) { return (b.level || 0) - (a.level || 0); })[0];
           c.leader = topChar ? topChar.name : '?';
         }
       });
 
       renderClans(clanList, onlineNames);
-    } catch {
+    } catch (err) {
+      console.error('fetchClans error:', err);
       document.getElementById('clan-grid').innerHTML =
         '<div class="pg-error" style="grid-column:1/-1">⚠️ No se pudo cargar los clanes.</div>';
     }
