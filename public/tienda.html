@@ -487,25 +487,25 @@
     // Determinar usuario logueado
     var user = window.currentUser;
     if (!user) {
-      // No está logueado
       document.getElementById('buy-no-auth').style.display = 'block';
       return;
     }
 
-    // Nombre del personaje: del perfil o del metadata
+    // Usuario logueado → mostrar formulario de compra
+    // Intentar obtener el nombre del personaje del perfil o del metadata
     await window.refreshProfile(user.id);
     var profile = window.currentProfile;
     var charName = (profile && profile.char_name)
       || (user.user_metadata && user.user_metadata.char_name)
       || '';
 
-    if (!charName) {
-      document.getElementById('buy-no-verify').style.display = 'block';
-      return;
-    }
-
-    document.getElementById('buy-form').style.display = '';
-    document.getElementById('buy-charname').value = charName;
+    var buyForm = document.getElementById('buy-form');
+    buyForm.style.display = 'block';
+    var charInput = document.getElementById('buy-charname');
+    charInput.value    = charName;
+    charInput.readOnly = !!charName;  // editable si no se detectó nombre
+    charInput.style.opacity = charName ? '0.75' : '1';
+    charInput.style.cursor  = charName ? 'default' : 'text';
   };
 
   window.closeBuyModal = function () {

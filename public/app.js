@@ -24,13 +24,16 @@
       if (statusTxt) statusTxt.textContent = 'En línea';
       if (heroDot)   heroDot.style.display = '';
 
-      // Personajes registrados + clanes → hero-total, hero-clans
-      const { data: chars } = await sbAnon.from('characters_ranking').select('name, clan');
+      // Personajes registrados → hero-total
+      const { data: chars } = await sbAnon.from('characters_ranking').select('name');
       const total = (chars || []).length;
-      const clans = new Set((chars || []).filter(p => p.clan).map(p => p.clan)).size;
       const totalEl = document.getElementById('hero-total');
-      const clansEl = document.getElementById('hero-clans');
       if (totalEl) totalEl.textContent = total || '–';
+
+      // Clanes → hero-clans (desde tabla clans)
+      const { data: clansData } = await sbAnon.from('clans').select('clan_name');
+      const clans = (clansData || []).length;
+      const clansEl = document.getElementById('hero-clans');
       if (clansEl) clansEl.textContent = clans || '–';
     } catch { /* non-critical */ }
   }
