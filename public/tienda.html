@@ -474,9 +474,9 @@
     document.getElementById('buy-emoji').textContent = pendingItem.emoji || '📦';
     document.getElementById('buy-item-name').textContent = pendingItem.name;
     document.getElementById('buy-price').innerHTML =
-      '<span>🪙</span><span>' + (pendingItem.pippi_cost ?? 0) + ' monedas Pippi</span>';
+      '<span>🪙</span><span>' + (pendingItem.pippi_cost || 0) + ' monedas Pippi</span>';
 
-    // Reset
+    // Reset explícito
     document.getElementById('buy-no-auth').style.display   = 'none';
     document.getElementById('buy-no-verify').style.display = 'none';
     document.getElementById('buy-form').style.display      = 'none';
@@ -484,25 +484,15 @@
     fb.className = 'form-feedback'; fb.textContent = '';
     document.getElementById('buy-modal').classList.add('open');
 
-    // Obtener sesión — usar caché o consultar directo
+    // Determinar usuario logueado
     var user = window.currentUser;
     if (!user) {
-      var sbDirect = window.getSb();
-      if (sbDirect) {
-        try {
-          var res = await sbDirect.auth.getSession();
-          user = (res.data && res.data.session && res.data.session.user) || null;
-          if (user) window.currentUser = user;
-        } catch (e) {}
-      }
-    }
-
-    if (!user) {
-      document.getElementById('buy-no-auth').style.display = '';
+      // No está logueado
+      document.getElementById('buy-no-auth').style.display = 'block';
       return;
     }
 
-    // Cargar perfil (char_name)
+    // Nombre del personaje: del perfil o del metadata
     await window.refreshProfile(user.id);
     var profile = window.currentProfile;
     var charName = (profile && profile.char_name)
@@ -510,7 +500,7 @@
       || '';
 
     if (!charName) {
-      document.getElementById('buy-no-verify').style.display = '';
+      document.getElementById('buy-no-verify').style.display = 'block';
       return;
     }
 
