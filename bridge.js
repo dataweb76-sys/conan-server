@@ -104,9 +104,9 @@ async function syncOnlinePlayers() {
       return;
     }
 
-    // Enriquecer con nivel y clan
+    // Enriquecer con nivel y clan — CAST porque g.name es BLOB en SQLite
     const list  = names.map(n => `'${n.replace(/'/g, "''")}'`).join(',');
-    const raw2  = await rcon(`sql SELECT c.char_name, c.level, c.id, g.name as clan, g.owner FROM characters c LEFT JOIN guilds g ON c.guild = g.guildId WHERE c.char_name IN (${list})`);
+    const raw2  = await rcon(`sql SELECT c.char_name, c.level, c.id, CAST(g.name AS TEXT) as clan, g.owner FROM characters c LEFT JOIN guilds g ON c.guild = g.guildId WHERE c.char_name IN (${list})`);
     const rows  = parseSqlRows(raw2);
     const charMap = {};
     rows.forEach(r => {
@@ -217,8 +217,8 @@ async function deliverPendingItems() {
 
 async function syncRanking() {
   try {
-    // c.id y g.owner para calcular is_leader (se activa cuando exista la columna en Supabase)
-    const raw  = await rcon('sql SELECT c.char_name, c.level, c.id, g.name as clan, g.owner FROM characters c LEFT JOIN guilds g ON c.guild = g.guildId WHERE c.level > 0 ORDER BY c.level DESC LIMIT 200');
+    // CAST porque g.name es BLOB en SQLite — sin esto devuelve la palabra "BLOB" literalmente
+    const raw  = await rcon('sql SELECT c.char_name, c.level, c.id, CAST(g.name AS TEXT) as clan, g.owner FROM characters c LEFT JOIN guilds g ON c.guild = g.guildId WHERE c.level > 0 ORDER BY c.level DESC LIMIT 200');
     const rows = parseSqlRows(raw);
     if (!rows.length) return;
 
