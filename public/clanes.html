@@ -461,7 +461,10 @@
               }
             });
 
+      // Filtrar nombres inválidos (BLOB = tipo SQLite, no nombre real)
+      var INVALID = ['BLOB', 'blob', 'NULL', 'null', 'TEXT', 'text', 'INTEGER', 'integer', 'void'];
       var clanList = Object.values(clanMap)
+        .filter(function (c) { return INVALID.indexOf(c.name) === -1; })
         .sort(function (a, b) { return b.members - a.members; })
         .map(function (c) {
           return {

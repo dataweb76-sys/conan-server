@@ -278,6 +278,23 @@ async function syncClans() {
   }
 }
 
+// ── Diagnóstico guilds ────────────────────────────────
+// Corre una sola vez al inicio para descubrir cómo leer el nombre del clan
+async function diagGuilds() {
+  console.log('\n[bridge] ── DIAGNÓSTICO GUILDS ──────────────────');
+  try {
+    const schema = await rcon('sql PRAGMA table_info(guilds)');
+    console.log('[bridge] Columnas de guilds:\n', schema);
+    const hexSample = await rcon('sql SELECT guildId, HEX(name) as nameHex, owner FROM guilds LIMIT 5');
+    console.log('[bridge] Muestra (HEX de name):\n', hexSample);
+    const rawSample = await rcon('sql SELECT guildId, name, owner FROM guilds LIMIT 5');
+    console.log('[bridge] Muestra (name raw):\n', rawSample);
+  } catch (e) {
+    console.log('[bridge] Error diagnóstico guilds:', e.message);
+  }
+  console.log('[bridge] ─────────────────────────────────────────\n');
+}
+
 // ── Loop principal ────────────────────────────────────
 
 async function run() {
@@ -288,6 +305,8 @@ async function run() {
     process.exit(1);
   }
 
+  // Diagnóstico único al arrancar — ver logs para entender columnas de guilds
+  await diagGuilds();
   await syncOnlinePlayers();
   await deliverPendingItems();
   await syncRanking();
