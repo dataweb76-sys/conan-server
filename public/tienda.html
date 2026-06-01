@@ -492,8 +492,7 @@
     }
 
     // Usuario logueado → mostrar formulario de compra
-    // Intentar obtener el nombre del personaje del perfil o del metadata
-    await window.refreshProfile(user.id);
+    // Usar el perfil ya cargado al iniciar la página (no hacer fetch extra que puede colgarse)
     var profile = window.currentProfile;
     var charName = (profile && profile.char_name)
       || (user.user_metadata && user.user_metadata.char_name)
