@@ -424,7 +424,7 @@
       // clans: datos del bridge (nombre real, lider, miembros) — sin JOINs en RCON
       // online_players: quiénes están conectados ahora
       var results = await Promise.all([
-        sb.from('clans').select('clan_name, leader_name, members_count, description, emblem_url').order('members_count', { ascending: false }),
+        sb.from('clans').select('clan_name, leader_name, members_count, description, logo').order('members_count', { ascending: false }),
         sb.from('online_players').select('name, clan')
       ]);
 
@@ -438,7 +438,7 @@
           name:        c.clan_name    || '?',
           leader:      c.leader_name  || '?',
           description: c.description  || '',
-          emblem:      c.emblem_url   || null,
+          emblem:      c.logo         || null,
           members:     c.members_count || 0,
           maxLevel:    0,
           onlineCount: onlineCount

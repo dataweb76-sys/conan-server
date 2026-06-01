@@ -306,6 +306,7 @@ async function syncClans() {
       updated_at:    new Date().toISOString(),
     }));
 
+    // upsert — la columna de imagen es "logo" en esta tabla
     await supabase.from('clans').upsert(upserts, { onConflict: 'clan_name' });
     console.log(`[bridge] ${upserts.length} clanes sincronizados`);
   } catch (e) {
