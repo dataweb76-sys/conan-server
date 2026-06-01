@@ -423,14 +423,26 @@
     try {
       // clans: datos del bridge (nombre real, lider, miembros) — sin JOINs en RCON
       // online_players: quiénes están conectados ahora
-      var results = await Promise.all([
-        sb.from('clans').select('clan_name, leader_name, members_count, description, logo').order('members_count', { ascending: false }),
-        sb.from('online_players').select('name, clan')
-      ]);
+var results = await Promise.all([
+  sb.from('clans')
+    .select('clan_name, leader_name, description, logo'),
 
-      var clans  = results[0].data || [];
-      var online = results[1].data || [];
+  sb.from('online_players')
+    .select('name, clan'),
+
+  sb.from('clan_members')
+    .select('clan_name')
+]);
+
+var clans   = results[0].data || [];
+var online  = results[1].data || [];
+var members = results[2].data || [];
       var onlineNames = online.map(function (p) { return p.name; });
+      var memberMap = {};
+
+members.forEach(function(m) {
+  memberMap[m.clan_name] = (memberMap[m.clan_name] || 0) + 1;
+});
 
       var clanList = clans.map(function (c) {
         var onlineCount = online.filter(function (o) { return o.clan === c.clan_name; }).length;
@@ -439,7 +451,7 @@
           leader:      c.leader_name  || '?',
           description: c.description  || '',
           emblem:      c.logo         || null,
-          members:     c.members_count || 0,
+          members: memberMap[c.clan_name] || 0,
           maxLevel:    0,
           onlineCount: onlineCount
         };
