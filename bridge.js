@@ -2,7 +2,10 @@
 /**
  * bridge.js — sincroniza datos del servidor Conan Exiles con Supabase
  * Correr con: node bridge.js
- * Se puede agregar al inicio de Windows con pm2 o Task Scheduler.
+ *
+ * IMPORTANTE: el RCON de Conan Exiles devuelve "BLOB" para columnas TEXT
+ * cuando se usa un JOIN. La solución es usar dos queries separadas y
+ * hacer el merge en JavaScript.
  */
 require('dotenv').config();
 const net = require('net');
@@ -46,7 +49,8 @@ function rcon(command) {
         const size = buf.readInt32LE(0);
         if (size < 10 || size > 65536) { finish(new Error('bad packet')); return; }
         if (buf.length < 4 + size) break;
-        const id = buf.readInt32LE(4), type = buf.readInt32LE(8);
+        const id   = buf.readInt32LE(4);
+        const type = buf.readInt32LE(8);
         const body = buf.slice(12, Math.max(12, size + 2)).toString('utf8').replace(/\x00/g, '').trim();
         buf = buf.slice(4 + size);
         if (!authed) {
@@ -85,10 +89,30 @@ function parseSqlRows(raw) {
   });
 }
 
+// ── Helpers ───────────────────────────────────────────
+
+/**
+ * Obtiene el mapa de guilds: guildId (string) → { name, owner }
+ * Query directa SIN JOIN — evita el bug de BLOB en RCON
+ */
+async function fetchGuildMap() {
+  const raw = await rcon('sql SELECT guildId, name, owner FROM guilds');
+  const rows = parseSqlRows(raw);
+  const map = {};
+  rows.forEach(r => {
+    const id = String(r.guildId || '').trim();
+    const name = (r.name || '').trim();
+    if (id && name && name !== 'void' && name !== '0') {
+      map[id] = { name, owner: String(r.owner || '').trim() };
+    }
+  });
+  return map;
+}
+
 // ── Sync funciones ────────────────────────────────────
 
-const onlineSince    = new Map();
-let   currentOnline  = new Map(); // nombre → idx de jugadores online ahora
+const onlineSince   = new Map();
+let   currentOnline = new Map(); // nombre → idx de jugadores online ahora
 
 async function syncOnlinePlayers() {
   try {
@@ -104,20 +128,26 @@ async function syncOnlinePlayers() {
       return;
     }
 
-    // Enriquecer con nivel y clan — CAST porque g.name es BLOB en SQLite
-    const list  = names.map(n => `'${n.replace(/'/g, "''")}'`).join(',');
-    const raw2  = await rcon(`sql SELECT c.char_name, c.level, c.id, CAST(g.name AS TEXT) as clan, g.owner FROM characters c LEFT JOIN guilds g ON c.guild = g.guildId WHERE c.char_name IN (${list})`);
-    const rows  = parseSqlRows(raw2);
-    const charMap = {};
-    rows.forEach(r => {
+    const list = names.map(n => `'${n.replace(/'/g, "''")}'`).join(',');
+
+    // Dos queries separadas — sin JOIN (el JOIN rompe TEXT → devuelve "BLOB")
+    const [charRaw, guildMap] = await Promise.all([
+      rcon(`sql SELECT char_name, level, id, guild FROM characters WHERE char_name IN (${list})`),
+      fetchGuildMap()
+    ]);
+
+    const charRows = parseSqlRows(charRaw);
+    const charMap  = {};
+    charRows.forEach(r => {
+      const guildId = String(r.guild || '').trim();
+      const guild   = guildId && guildId !== '0' ? guildMap[guildId] : null;
       charMap[r.char_name] = {
         level:     parseInt(r.level) || 0,
-        clan:      r.clan && r.clan !== 'void' ? r.clan : null,
-        is_leader: r.owner && r.id && r.owner.trim() === r.id.trim(),
+        clan:      guild ? guild.name : null,
+        is_leader: guild ? String(r.id).trim() === guild.owner : false,
       };
     });
 
-    // Mapa nombre → idx para usar con el comando 'con'
     currentOnline = new Map(players.map(p => [p.name, p.idx]));
 
     const now = Date.now();
@@ -126,16 +156,16 @@ async function syncOnlinePlayers() {
 
     const upserts = names.map(name => ({
       name,
-      level:       charMap[name]?.level ?? 0,
-      clan:        charMap[name]?.clan  ?? null,
-      is_leader:   charMap[name]?.is_leader ?? false,
+      level:        charMap[name]?.level     ?? 0,
+      clan:         charMap[name]?.clan      ?? null,
+      is_leader:    charMap[name]?.is_leader ?? false,
       online_since: onlineSince.get(name),
-      updated_at:  new Date().toISOString(),
+      updated_at:   new Date().toISOString(),
     }));
 
     await supabase.from('online_players').upsert(upserts, { onConflict: 'name' });
-    // Eliminar los que ya no están online
-    await supabase.from('online_players').delete().not('name', 'in', `(${names.map(n => `"${n}"`).join(',')})`);
+    await supabase.from('online_players').delete()
+      .not('name', 'in', `(${names.map(n => `"${n}"`).join(',')})`);
 
     console.log(`[bridge] ${names.length} jugadores online sincronizados`);
   } catch (e) {
@@ -185,7 +215,7 @@ async function deliverPendingItems() {
       const itemName   = req.item_name || '?';
 
       const playerIdx = currentOnline.get(charName);
-      if (playerIdx === undefined) continue; // offline, reintenta en 30s
+      if (playerIdx === undefined) continue;
 
       let rconNote;
       if (!templateId) {
@@ -194,7 +224,6 @@ async function deliverPendingItems() {
         try {
           const resp = await rcon(`con ${playerIdx} SpawnItem ${templateId} 1`);
           console.log(`[bridge] SpawnItem response: "${resp}"`);
-          // Notificar al jugador
           try { await rcon(`directmessage "Tienda D&D" "${charName}" "Tu pedido de ${itemName} fue entregado! Revisa tu inventario."`); } catch {}
           rconNote = `Entregado (SpawnItem ${templateId}, idx=${playerIdx}). Resp: ${resp}`;
           console.log(`[bridge] ✓ Ítem entregado: ${itemName} → ${charName}`);
@@ -217,82 +246,71 @@ async function deliverPendingItems() {
 
 async function syncRanking() {
   try {
-    // CAST porque g.name es BLOB en SQLite — sin esto devuelve la palabra "BLOB" literalmente
-    const raw  = await rcon('sql SELECT c.char_name, c.level, c.id, CAST(g.name AS TEXT) as clan, g.owner FROM characters c LEFT JOIN guilds g ON c.guild = g.guildId WHERE c.level > 0 ORDER BY c.level DESC LIMIT 200');
-    const rows = parseSqlRows(raw);
+    // Dos queries separadas — sin JOIN
+    const [charRaw, guildMap] = await Promise.all([
+      rcon('sql SELECT char_name, level, id, guild FROM characters WHERE level > 0 ORDER BY level DESC LIMIT 200'),
+      fetchGuildMap()
+    ]);
+
+    const rows = parseSqlRows(charRaw);
     if (!rows.length) return;
 
-    const upserts = rows.map(r => ({
-      name:       r.char_name,
-      level:      parseInt(r.level) || 0,
-      clan:       r.clan && r.clan !== 'void' ? r.clan : null,
-      updated_at: new Date().toISOString(),
-    }));
+    const upserts = rows.map(r => {
+      const guildId = String(r.guild || '').trim();
+      const guild   = guildId && guildId !== '0' ? guildMap[guildId] : null;
+      return {
+        name:       r.char_name,
+        level:      parseInt(r.level) || 0,
+        clan:       guild ? guild.name : null,
+        updated_at: new Date().toISOString(),
+      };
+    });
+
     await supabase.from('characters_ranking').upsert(upserts, { onConflict: 'name' });
-
-    // Persistir is_leader una vez que la columna exista:
-    // ALTER TABLE characters_ranking ADD COLUMN IF NOT EXISTS is_leader boolean DEFAULT false;
-    // Luego descomentar:
-    // for (const r of rows) {
-    //   const isLeader = !!(r.owner && r.id && r.owner.trim() === r.id.trim());
-    //   if (isLeader) await supabase.from('characters_ranking').update({ is_leader: true }).eq('name', r.char_name);
-    // }
-
     console.log(`[bridge] Ranking actualizado (${rows.length} personajes)`);
   } catch (e) {
     console.error('[bridge] Error sync ranking:', e.message);
   }
 }
+
 async function syncClans() {
   try {
+    // Dos queries separadas — sin JOIN
+    const [guildMap, charRaw] = await Promise.all([
+      fetchGuildMap(),
+      rcon('sql SELECT id, char_name, guild FROM characters WHERE level > 0 LIMIT 500')
+    ]);
 
-    const raw = await rcon(
-      `sql SELECT
-        CAST(g.name AS TEXT) as clan,
-        g.owner,
-        COUNT(c.id) as members_count
-       FROM guilds g
-       LEFT JOIN characters c ON c.guild = g.guildId
-       GROUP BY g.guildId`
-    );
+    if (!Object.keys(guildMap).length) return;
 
-    const rows = parseSqlRows(raw);
+    const charRows = parseSqlRows(charRaw);
 
-    if (!rows.length) return;
+    // Mapa id → char_name (para nombre del líder)
+    const charIdMap = {};
+    charRows.forEach(r => {
+      if (r.id) charIdMap[String(r.id).trim()] = r.char_name;
+    });
 
-    const upserts = rows.map(r => ({
-      clan_name: r.clan,
-      leader_id: r.owner,
-      members_count: parseInt(r.members_count) || 0,
-      updated_at: new Date().toISOString()
+    // Contar miembros por guildId
+    const memberCount = {};
+    charRows.forEach(r => {
+      const gId = String(r.guild || '').trim();
+      if (gId && gId !== '0') memberCount[gId] = (memberCount[gId] || 0) + 1;
+    });
+
+    const upserts = Object.entries(guildMap).map(([guildId, g]) => ({
+      clan_name:     g.name,
+      leader_name:   charIdMap[g.owner] || null,
+      leader_id:     parseInt(g.owner)  || null,
+      members_count: memberCount[guildId] || 0,
+      updated_at:    new Date().toISOString(),
     }));
 
-    await supabase
-      .from('clans')
-      .upsert(upserts, { onConflict: 'clan_name' });
-
-    console.log(`[bridge] ${rows.length} clanes sincronizados`);
-
+    await supabase.from('clans').upsert(upserts, { onConflict: 'clan_name' });
+    console.log(`[bridge] ${upserts.length} clanes sincronizados`);
   } catch (e) {
     console.error('[bridge] Error sync clans:', e.message);
   }
-}
-
-// ── Diagnóstico guilds ────────────────────────────────
-// Corre una sola vez al inicio para descubrir cómo leer el nombre del clan
-async function diagGuilds() {
-  console.log('\n[bridge] ── DIAGNÓSTICO GUILDS ──────────────────');
-  try {
-    const schema = await rcon('sql PRAGMA table_info(guilds)');
-    console.log('[bridge] Columnas de guilds:\n', schema);
-    const hexSample = await rcon('sql SELECT guildId, HEX(name) as nameHex, owner FROM guilds LIMIT 5');
-    console.log('[bridge] Muestra (HEX de name):\n', hexSample);
-    const rawSample = await rcon('sql SELECT guildId, name, owner FROM guilds LIMIT 5');
-    console.log('[bridge] Muestra (name raw):\n', rawSample);
-  } catch (e) {
-    console.log('[bridge] Error diagnóstico guilds:', e.message);
-  }
-  console.log('[bridge] ─────────────────────────────────────────\n');
 }
 
 // ── Loop principal ────────────────────────────────────
@@ -305,8 +323,6 @@ async function run() {
     process.exit(1);
   }
 
-  // Diagnóstico único al arrancar — ver logs para entender columnas de guilds
-  await diagGuilds();
   await syncOnlinePlayers();
   await deliverPendingItems();
   await syncRanking();
@@ -318,9 +334,12 @@ async function run() {
     await deliverPendingItems();
     await sendVerificationCodes();
   }, 30_000);
-  // Ranking: cada 5 min
-  setInterval(syncRanking, 300_000);
-  setInterval(syncClans, 300000);
+
+  // Ranking + clanes: cada 5 min
+  setInterval(async () => {
+    await syncRanking();
+    await syncClans();
+  }, 300_000);
 }
 
 run();

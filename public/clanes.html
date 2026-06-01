@@ -421,62 +421,29 @@
     if (!sb) return;
 
     try {
+      // clans: datos del bridge (nombre real, lider, miembros) — sin JOINs en RCON
+      // online_players: quiénes están conectados ahora
       var results = await Promise.all([
-        sb.from('characters_ranking').select('name, clan, level'),
-        sb.from('online_players').select('name, clan, is_leader')
+        sb.from('clans').select('clan_name, leader_name, members_count, description, emblem_url').order('members_count', { ascending: false }),
+        sb.from('online_players').select('name, clan')
       ]);
 
-      var chars  = results[0].data || [];
+      var clans  = results[0].data || [];
       var online = results[1].data || [];
       var onlineNames = online.map(function (p) { return p.name; });
 
-      // Líderes actuales (online con is_leader=true)
-      var leaderMap = {};
-      online.filter(function (p) { return p.is_leader && p.clan; })
-            .forEach(function (p) { leaderMap[p.clan] = p.name; });
-
-      // Construir mapa de clanes desde characters_ranking
-      var clanMap = {};
-      chars.filter(function (p) { return p.clan && p.clan.trim(); })
-           .forEach(function (p) {
-             var cn = p.clan.trim();
-             if (!clanMap[cn]) clanMap[cn] = { name: cn, members: 0, maxLevel: 0, memberNames: [], topPlayer: null };
-             clanMap[cn].members++;
-             if ((p.level || 0) > clanMap[cn].maxLevel) {
-               clanMap[cn].maxLevel = p.level || 0;
-               clanMap[cn].topPlayer = p.name;
-             }
-             clanMap[cn].memberNames.push(p.name);
-           });
-
-      // Sumar miembros online que no estén en el ranking todavía
-      online.filter(function (p) { return p.clan && p.clan.trim(); })
-            .forEach(function (p) {
-              var cn = p.clan.trim();
-              if (!clanMap[cn]) {
-                clanMap[cn] = { name: cn, members: 1, maxLevel: p.level || 0, memberNames: [p.name], topPlayer: p.name };
-              } else if (clanMap[cn].memberNames.indexOf(p.name) === -1) {
-                clanMap[cn].members++;
-                clanMap[cn].memberNames.push(p.name);
-              }
-            });
-
-      // Filtrar nombres inválidos (BLOB = tipo SQLite, no nombre real)
-      var INVALID = ['BLOB', 'blob', 'NULL', 'null', 'TEXT', 'text', 'INTEGER', 'integer', 'void'];
-      var clanList = Object.values(clanMap)
-        .filter(function (c) { return INVALID.indexOf(c.name) === -1; })
-        .sort(function (a, b) { return b.members - a.members; })
-        .map(function (c) {
-          return {
-            name:       c.name,
-            leader:     leaderMap[c.name] || c.topPlayer || '?',
-            description: '',
-            emblem:     null,
-            members:    c.members,
-            maxLevel:   c.maxLevel,
-            onlineCount: online.filter(function (o) { return o.clan === c.name; }).length
-          };
-        });
+      var clanList = clans.map(function (c) {
+        var onlineCount = online.filter(function (o) { return o.clan === c.clan_name; }).length;
+        return {
+          name:        c.clan_name    || '?',
+          leader:      c.leader_name  || '?',
+          description: c.description  || '',
+          emblem:      c.emblem_url   || null,
+          members:     c.members_count || 0,
+          maxLevel:    0,
+          onlineCount: onlineCount
+        };
+      });
 
       renderClans(clanList, onlineNames);
 
