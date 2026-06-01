@@ -217,18 +217,27 @@ async function deliverPendingItems() {
 
 async function syncRanking() {
   try {
-    // Incluye c.id y g.owner para saber quién es líder del clan
+    // c.id y g.owner para calcular is_leader (se activa cuando exista la columna en Supabase)
     const raw  = await rcon('sql SELECT c.char_name, c.level, c.id, g.name as clan, g.owner FROM characters c LEFT JOIN guilds g ON c.guild = g.guildId WHERE c.level > 0 ORDER BY c.level DESC LIMIT 200');
     const rows = parseSqlRows(raw);
     if (!rows.length) return;
+
     const upserts = rows.map(r => ({
       name:       r.char_name,
       level:      parseInt(r.level) || 0,
       clan:       r.clan && r.clan !== 'void' ? r.clan : null,
-      is_leader:  !!(r.owner && r.id && r.owner.trim() === r.id.trim()),
       updated_at: new Date().toISOString(),
     }));
     await supabase.from('characters_ranking').upsert(upserts, { onConflict: 'name' });
+
+    // Persistir is_leader una vez que la columna exista:
+    // ALTER TABLE characters_ranking ADD COLUMN IF NOT EXISTS is_leader boolean DEFAULT false;
+    // Luego descomentar:
+    // for (const r of rows) {
+    //   const isLeader = !!(r.owner && r.id && r.owner.trim() === r.id.trim());
+    //   if (isLeader) await supabase.from('characters_ranking').update({ is_leader: true }).eq('name', r.char_name);
+    // }
+
     console.log(`[bridge] Ranking actualizado (${rows.length} personajes)`);
   } catch (e) {
     console.error('[bridge] Error sync ranking:', e.message);

@@ -238,6 +238,7 @@
       <a href="ranking.html" class="nav-link">🏆 Ranking</a>
       <a href="clanes.html" class="nav-link">🏰 Clanes</a>
       <a href="tienda.html" class="nav-link" style="color:var(--c-gold-light)">🛒 Tienda</a>
+      <a href="https://discord.gg/7WUNGkyPt3" target="_blank" rel="noopener" class="nav-link" title="Discord">💬</a>
       <div class="auth-nav" id="auth-nav"></div>
     </nav>
   </div>
@@ -283,6 +284,14 @@
   <div class="container">
     <p class="footer-title">Dragones y Demonios</p>
     <p class="footer-sub">Servidor PVP / PVE en Español · Conan Exiles Enhanced</p>
+    <div class="footer-social">
+      <a href="https://discord.gg/7WUNGkyPt3" target="_blank" rel="noopener" class="footer-social-link">
+        <span class="sicon">💬</span> Discord
+      </a>
+      <a href="https://www.facebook.com/DatawebGames/" target="_blank" rel="noopener" class="footer-social-link">
+        <span class="sicon">📘</span> Facebook
+      </a>
+    </div>
     <p class="footer-copy">¡Nos vemos en el exilio!</p>
   </div>
 </footer>
@@ -464,35 +473,43 @@
 
     document.getElementById('buy-emoji').textContent = pendingItem.emoji || '📦';
     document.getElementById('buy-item-name').textContent = pendingItem.name;
-    const priceEl = document.getElementById('buy-price');
-    priceEl.innerHTML = '<span>🪙</span><span>' + (pendingItem.pippi_cost ?? 0) + ' monedas Pippi</span>';
+    document.getElementById('buy-price').innerHTML =
+      '<span>🪙</span><span>' + (pendingItem.pippi_cost ?? 0) + ' monedas Pippi</span>';
 
-    // Reset sections
+    // Reset
     document.getElementById('buy-no-auth').style.display   = 'none';
     document.getElementById('buy-no-verify').style.display = 'none';
     document.getElementById('buy-form').style.display      = 'none';
-    const fb = document.getElementById('buy-feedback');
+    var fb = document.getElementById('buy-feedback');
     fb.className = 'form-feedback'; fb.textContent = '';
-
     document.getElementById('buy-modal').classList.add('open');
 
-    const user = window.currentUser;
+    // Obtener sesión — usar caché o consultar directo
+    var user = window.currentUser;
+    if (!user) {
+      var sbDirect = window.getSb();
+      if (sbDirect) {
+        try {
+          var res = await sbDirect.auth.getSession();
+          user = (res.data && res.data.session && res.data.session.user) || null;
+          if (user) window.currentUser = user;
+        } catch (e) {}
+      }
+    }
+
     if (!user) {
       document.getElementById('buy-no-auth').style.display = '';
       return;
     }
 
-    // Cargar perfil para obtener el nombre del personaje
+    // Cargar perfil (char_name)
     await window.refreshProfile(user.id);
-    const profile = window.currentProfile;
-
-    // Nombre del personaje: del perfil o del metadata del registro
-    const charName = (profile && profile.char_name)
+    var profile = window.currentProfile;
+    var charName = (profile && profile.char_name)
       || (user.user_metadata && user.user_metadata.char_name)
       || '';
 
     if (!charName) {
-      // Logueado pero sin personaje registrado en el perfil
       document.getElementById('buy-no-verify').style.display = '';
       return;
     }
