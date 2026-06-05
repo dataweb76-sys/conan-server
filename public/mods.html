@@ -10,207 +10,144 @@
   <link rel="stylesheet" href="style.css">
   <script src="supabase.min.js"></script>
   <style>
-    /* ── Page hero ── */
-    .page-hero {
-      position: relative; min-height: 220px;
-      display: flex; align-items: flex-end; overflow: hidden;
-    }
+    .page-hero { position:relative; min-height:200px; display:flex; align-items:flex-end; overflow:hidden; }
     .page-hero-bg {
-      position: absolute; inset: 0;
+      position:absolute; inset:0;
       background:
         radial-gradient(ellipse 50% 60% at 50% 100%, rgba(200,134,28,0.35) 0%, transparent 60%),
         linear-gradient(to bottom, #050304 0%, #1a0904 35%, #2a1208 60%, #0a0603 100%);
     }
-    .page-hero-content {
-      position: relative; z-index: 2; width: 100%;
-      text-align: center; padding: 2rem 1rem 2.5rem;
-    }
-    .page-eyebrow {
-      font-family: var(--f-heading); font-size: 0.68rem; letter-spacing: 0.28em;
-      text-transform: uppercase; color: var(--c-gold-dim); margin-bottom: 0.5rem;
-    }
-    .page-title {
-      font-family: var(--f-display); font-size: clamp(1.8rem, 5vw, 2.8rem);
-      color: var(--c-gold-light); text-shadow: var(--glow-gold); margin-bottom: 0.4rem;
-    }
-    .page-subtitle { font-family: var(--f-body); font-size: 1rem; color: var(--c-text-dim); font-style: italic; }
+    .page-hero-content { position:relative; z-index:2; width:100%; text-align:center; padding:2rem 1rem 2.5rem; }
+    .page-eyebrow { font-family:var(--f-heading); font-size:.68rem; letter-spacing:.28em; text-transform:uppercase; color:var(--c-gold-dim); margin-bottom:.5rem; }
+    .page-title { font-family:var(--f-display); font-size:clamp(1.8rem,5vw,2.8rem); color:var(--c-gold-light); text-shadow:var(--glow-gold); margin-bottom:.4rem; }
+    .page-subtitle { font-family:var(--f-body); font-size:1rem; color:var(--c-text-dim); font-style:italic; }
 
-    /* ── Container ── */
-    .mods-container { max-width: 960px; margin: 0 auto; padding: 2rem 1.2rem 4rem; }
+    /* ── layout ── */
+    .page-wrap { max-width:860px; margin:0 auto; padding:2rem 1.2rem 5rem; }
 
-    /* ── Section title ── */
-    .section-title {
-      font-family: var(--f-heading); font-size: 1.1rem; letter-spacing: 0.2em;
-      text-transform: uppercase; color: var(--c-gold); margin-bottom: 1.5rem;
-      display: flex; align-items: center; gap: 0.7rem;
+    .section-label {
+      font-family:var(--f-heading); font-size:.72rem; letter-spacing:.22em; text-transform:uppercase;
+      color:var(--c-gold); margin-bottom:1.2rem;
+      display:flex; align-items:center; gap:.6rem;
     }
-    .section-title::after {
-      content: ''; flex: 1; height: 1px;
-      background: linear-gradient(to right, var(--c-gold-dim), transparent);
-    }
+    .section-label::after { content:''; flex:1; height:1px; background:linear-gradient(to right, var(--c-gold-dim), transparent); }
 
-    /* ── Mods grid ── */
-    .mods-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1.2rem;
-      margin-bottom: 3rem;
-    }
-    .mod-card {
-      background: rgba(15, 9, 4, 0.92);
-      border: 1px solid var(--c-border);
-      border-radius: 12px;
-      padding: 1.3rem 1.4rem;
-      transition: border-color .2s, box-shadow .2s;
-      position: relative; overflow: hidden;
-    }
-    .mod-card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(to right, transparent, var(--c-gold-dim), transparent);
-    }
-    .mod-card:hover {
-      border-color: var(--c-border-h);
-      box-shadow: 0 0 20px rgba(200,134,28,0.12);
-    }
-    .mod-card.featured {
-      border-color: rgba(200,134,28,0.45);
-      box-shadow: 0 0 30px rgba(200,134,28,0.15);
-    }
-    .mod-card.featured::before {
-      background: linear-gradient(to right, transparent, var(--c-gold), transparent);
-    }
-    .mod-icon { font-size: 2rem; margin-bottom: 0.6rem; display: block; }
-    .mod-name {
-      font-family: var(--f-heading); font-size: 1rem; font-weight: 700;
-      color: var(--c-gold-light); margin-bottom: 0.3rem;
-    }
-    .mod-badge {
-      display: inline-block; font-family: var(--f-heading); font-size: 0.6rem;
-      letter-spacing: 0.15em; text-transform: uppercase;
-      background: rgba(200,134,28,0.18); color: var(--c-gold);
-      border: 1px solid rgba(200,134,28,0.35); border-radius: 4px;
-      padding: 0.15rem 0.5rem; margin-bottom: 0.6rem;
-    }
-    .mod-desc { font-size: 0.95rem; color: var(--c-text-dim); line-height: 1.55; }
-
-    /* ── Guía de comandos ── */
-    .guide-section { margin-bottom: 3rem; }
-
-    .guide-block {
-      background: rgba(12, 7, 3, 0.95);
-      border: 1px solid var(--c-border);
-      border-radius: 14px;
-      overflow: hidden;
-      margin-bottom: 1.2rem;
-    }
-    .guide-block-header {
-      display: flex; align-items: center; gap: 0.8rem;
-      padding: 1rem 1.4rem;
-      border-bottom: 1px solid var(--c-border);
-      background: rgba(200,134,28,0.05);
-    }
-    .guide-block-icon { font-size: 1.5rem; }
-    .guide-block-title {
-      font-family: var(--f-heading); font-size: 1rem; font-weight: 700;
-      color: var(--c-gold-light);
-    }
-    .guide-block-sub { font-size: 0.85rem; color: var(--c-text-dim); margin-top: 0.15rem; font-style: italic; }
-    .guide-block-body { padding: 1.2rem 1.4rem; }
-
-    /* ── Comando individual ── */
-    .cmd-row {
-      display: flex; align-items: flex-start; gap: 1rem;
-      padding: 0.9rem 0;
-      border-bottom: 1px solid rgba(150,90,15,0.15);
-    }
-    .cmd-row:last-child { border-bottom: none; padding-bottom: 0; }
-    .cmd-label {
-      flex-shrink: 0;
-      font-family: 'Courier New', monospace; font-size: 0.92rem;
-      background: rgba(200,134,28,0.12); color: var(--c-gold);
-      border: 1px solid rgba(200,134,28,0.3); border-radius: 6px;
-      padding: 0.3rem 0.7rem; white-space: nowrap;
-    }
-    .cmd-info { flex: 1; }
-    .cmd-title {
-      font-family: var(--f-heading); font-size: 0.9rem; font-weight: 700;
-      color: var(--c-text); margin-bottom: 0.25rem;
-    }
-    .cmd-detail { font-size: 0.88rem; color: var(--c-text-dim); line-height: 1.5; }
-    .cmd-example {
-      margin-top: 0.4rem;
-      font-family: 'Courier New', monospace; font-size: 0.82rem;
-      color: #a0c878; background: rgba(50,80,20,0.2);
-      border: 1px solid rgba(80,120,30,0.3); border-radius: 4px;
-      padding: 0.25rem 0.6rem; display: inline-block;
-    }
-
-    /* ── NPC / Warp card ── */
-    .feature-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 1rem; margin-bottom: 1.2rem;
-    }
-    .feature-card {
-      background: rgba(15,9,4,0.95);
-      border: 1px solid var(--c-border);
-      border-radius: 12px;
-      padding: 1.2rem 1.4rem;
-      display: flex; align-items: flex-start; gap: 0.9rem;
-    }
-    .feature-card-icon { font-size: 2rem; flex-shrink: 0; line-height: 1; }
-    .feature-card-title {
-      font-family: var(--f-heading); font-size: 0.95rem; font-weight: 700;
-      color: var(--c-gold-light); margin-bottom: 0.3rem;
-    }
-    .feature-card-desc { font-size: 0.88rem; color: var(--c-text-dim); line-height: 1.5; }
-
-    /* ── Tip box ── */
-    .tip-box {
-      background: rgba(30,60,15,0.25);
-      border: 1px solid rgba(80,140,30,0.35);
-      border-left: 3px solid #6aaa30;
-      border-radius: 8px;
-      padding: 0.9rem 1.2rem;
-      margin-top: 1rem;
-      font-size: 0.9rem; color: #a8c888;
-      line-height: 1.55;
-    }
-    .tip-box strong { color: #b8dc98; }
-
-    /* ── Workshop link ── */
+    /* ── workshop bar ── */
     .workshop-bar {
-      background: rgba(15,9,4,0.95);
-      border: 1px solid var(--c-border);
-      border-radius: 12px;
-      padding: 1.2rem 1.6rem;
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 1rem; flex-wrap: wrap;
-      margin-bottom: 3rem;
+      background:rgba(12,7,3,.95); border:1px solid var(--c-border); border-radius:12px;
+      padding:1rem 1.4rem; display:flex; align-items:center; justify-content:space-between;
+      gap:1rem; flex-wrap:wrap; margin-bottom:2rem;
     }
-    .workshop-bar-text { font-size: 0.95rem; color: var(--c-text-dim); }
-    .workshop-bar-text strong { color: var(--c-text); font-family: var(--f-heading); }
-    .btn-workshop {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      background: linear-gradient(135deg, #1b2838, #2a475e);
-      color: #c7d5e0; border: 1px solid rgba(100,160,200,0.4);
-      border-radius: 8px; padding: 0.55rem 1.2rem;
-      font-family: var(--f-heading); font-size: 0.85rem; font-weight: 600;
-      text-decoration: none; transition: all .2s;
+    .workshop-text { font-size:.9rem; color:var(--c-text-dim); }
+    .workshop-text strong { color:var(--c-text); font-family:var(--f-heading); display:block; margin-bottom:.2rem; }
+    .btn-steam {
+      display:inline-flex; align-items:center; gap:.45rem; flex-shrink:0;
+      background:linear-gradient(135deg,#1b2838,#2a475e); color:#c7d5e0;
+      border:1px solid rgba(100,160,200,.4); border-radius:8px;
+      padding:.5rem 1.1rem; font-family:var(--f-heading); font-size:.82rem; font-weight:600;
+      text-decoration:none; transition:all .2s; white-space:nowrap;
     }
-    .btn-workshop:hover { background: linear-gradient(135deg, #2a475e, #1b6db0); border-color: #4a9fd4; }
+    .btn-steam:hover { background:linear-gradient(135deg,#2a475e,#1b6db0); border-color:#4a9fd4; }
+
+    /* ── mod list ── */
+    .mod-list { display:flex; flex-direction:column; gap:.6rem; margin-bottom:2.5rem; }
+
+    .mod-row {
+      display:flex; align-items:center; gap:1rem;
+      background:rgba(12,7,3,.92); border:1px solid var(--c-border); border-radius:10px;
+      padding:.85rem 1.1rem; transition:border-color .2s, background .2s;
+    }
+    .mod-row:hover { border-color:var(--c-border-h); background:rgba(18,10,4,.97); }
+    .mod-row.featured { border-color:rgba(200,134,28,.38); }
+
+    .mod-num {
+      font-family:var(--f-heading); font-size:.62rem; color:var(--c-text-dim);
+      min-width:1.4rem; text-align:right; flex-shrink:0;
+    }
+    .mod-emoji { font-size:1.4rem; flex-shrink:0; line-height:1; }
+    .mod-body { flex:1; min-width:0; }
+    .mod-name {
+      font-family:var(--f-heading); font-size:.92rem; font-weight:700;
+      color:var(--c-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      margin-bottom:.18rem;
+    }
+    .mod-row.featured .mod-name { color:var(--c-gold-light); }
+    .mod-desc { font-size:.84rem; color:var(--c-text-dim); line-height:1.45; }
+    .mod-badge {
+      flex-shrink:0; font-family:var(--f-heading); font-size:.56rem; letter-spacing:.12em;
+      text-transform:uppercase; background:rgba(200,134,28,.14); color:var(--c-gold);
+      border:1px solid rgba(200,134,28,.3); border-radius:4px; padding:.1rem .45rem;
+      white-space:nowrap;
+    }
+
+    /* ── guide blocks ── */
+    .guide-block {
+      background:rgba(12,7,3,.95); border:1px solid var(--c-border); border-radius:12px;
+      overflow:hidden; margin-bottom:1rem;
+    }
+    .guide-header {
+      display:flex; align-items:center; gap:.7rem; padding:.85rem 1.2rem;
+      border-bottom:1px solid var(--c-border); background:rgba(200,134,28,.04);
+    }
+    .guide-header-icon { font-size:1.3rem; }
+    .guide-header-title { font-family:var(--f-heading); font-size:.95rem; font-weight:700; color:var(--c-gold-light); }
+    .guide-header-sub { font-size:.8rem; color:var(--c-text-dim); font-style:italic; margin-top:.1rem; }
+    .guide-body { padding:0; }
+
+    .cmd-row {
+      display:flex; align-items:flex-start; gap:.9rem;
+      padding:.85rem 1.2rem; border-bottom:1px solid rgba(150,90,15,.12);
+    }
+    .cmd-row:last-child { border-bottom:none; }
+    .cmd-tag {
+      flex-shrink:0; font-family:'Courier New',monospace; font-size:.85rem;
+      background:rgba(200,134,28,.11); color:var(--c-gold);
+      border:1px solid rgba(200,134,28,.28); border-radius:5px;
+      padding:.22rem .6rem; white-space:nowrap; margin-top:.05rem;
+    }
+    .cmd-info { flex:1; }
+    .cmd-title { font-family:var(--f-heading); font-size:.85rem; font-weight:700; color:var(--c-text); margin-bottom:.2rem; }
+    .cmd-detail { font-size:.84rem; color:var(--c-text-dim); line-height:1.5; }
+    .cmd-example {
+      display:inline-block; margin-top:.35rem;
+      font-family:'Courier New',monospace; font-size:.78rem; color:#9ecf70;
+      background:rgba(50,80,20,.18); border:1px solid rgba(80,120,30,.28);
+      border-radius:4px; padding:.18rem .5rem;
+    }
+
+    .tip-box {
+      margin:.1rem 1.2rem .85rem; padding:.75rem 1rem;
+      background:rgba(30,60,15,.22); border:1px solid rgba(80,140,30,.3);
+      border-left:3px solid #6aaa30; border-radius:6px;
+      font-size:.84rem; color:#a8c888; line-height:1.5;
+    }
+    .tip-box strong { color:#b8dc98; }
+
+    /* ── features row ── */
+    .features-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:.8rem; margin-bottom:2.5rem; }
+    .feature-card {
+      background:rgba(12,7,3,.92); border:1px solid var(--c-border); border-radius:10px;
+      padding:1rem 1.1rem; display:flex; align-items:flex-start; gap:.8rem;
+    }
+    .feature-icon { font-size:1.6rem; flex-shrink:0; line-height:1; }
+    .feature-title { font-family:var(--f-heading); font-size:.85rem; font-weight:700; color:var(--c-gold-light); margin-bottom:.25rem; }
+    .feature-desc { font-size:.82rem; color:var(--c-text-dim); line-height:1.45; }
+
+    /* ── quick table ── */
+    .quick-table { width:100%; border-collapse:collapse; }
+    .quick-table tr { border-bottom:1px solid rgba(150,90,15,.14); }
+    .quick-table tr:last-child { border-bottom:none; }
+    .quick-table td { padding:.7rem 1.1rem; font-size:.86rem; }
+    .quick-table td:first-child { font-family:'Courier New',monospace; color:var(--c-gold); background:rgba(200,134,28,.07); width:160px; }
+    .quick-table td:last-child { color:var(--c-text-dim); }
   </style>
 </head>
 <body>
 
-<!-- ══ FONDO ══════════════════════════════════════════ -->
-<div class="bg-wrap">
-  <div class="bg-img"></div>
-  <div class="bg-overlay"></div>
-</div>
+<div class="bg-wrap"><div class="bg-img"></div><div class="bg-overlay"></div></div>
 <div id="particles" aria-hidden="true"></div>
 
-<!-- ══ HEADER ═════════════════════════════════════════ -->
+<!-- HEADER -->
 <header class="site-header">
   <div class="header-inner container">
     <a class="header-brand" href="/">
@@ -226,262 +163,275 @@
       <a href="ranking.html" class="nav-link">🏆 Ranking</a>
       <a href="clanes.html" class="nav-link">🏰 Clanes</a>
       <a href="tienda.html" class="nav-link">🛒 Tienda</a>
-      <a href="mods.html" class="nav-link active">⚙️ Mods</a>
+      <a href="mods.html" class="nav-link" style="color:var(--c-gold-light)">⚙️ Mods</a>
       <a href="https://discord.gg/7WUNGkyPt3" target="_blank" rel="noopener" class="nav-link" title="Discord">💬</a>
       <div class="auth-nav" id="auth-nav"></div>
     </nav>
   </div>
 </header>
 
-<!-- ══ PAGE HERO ═══════════════════════════════════════ -->
+<!-- HERO -->
 <section class="page-hero">
   <div class="page-hero-bg"></div>
   <div class="page-hero-content">
     <p class="page-eyebrow">⚙️ &nbsp; Servidor Dragones y Demonios &nbsp; ⚙️</p>
     <h1 class="page-title">Mods & Guía</h1>
-    <p class="page-subtitle">Todo lo que necesitás saber para jugar al máximo</p>
+    <p class="page-subtitle">Lista de mods instalados y comandos del servidor</p>
   </div>
 </section>
 
-<!-- ══ CONTENIDO ══════════════════════════════════════ -->
-<main class="mods-container">
+<!-- CONTENIDO -->
+<main class="page-wrap">
 
-  <!-- Workshop link -->
+  <!-- Steam Workshop -->
   <div class="workshop-bar">
-    <div>
-      <strong class="workshop-bar-text">Suscribite a todos los mods en Steam Workshop</strong>
-      <p class="workshop-bar-text" style="margin-top:.2rem;font-size:.85rem;">La colección oficial del servidor — suscribite con un clic y el juego los descarga automáticamente.</p>
+    <div class="workshop-text">
+      <strong>Colección oficial en Steam Workshop</strong>
+      Suscribite con un clic y el juego descarga todo automáticamente.
     </div>
-    <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3382209975" target="_blank" rel="noopener" class="btn-workshop">
-      🎮 Ver Colección en Steam
+    <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3382209975" target="_blank" rel="noopener" class="btn-steam">
+      🎮 Ver en Steam
     </a>
   </div>
 
-  <!-- ── MODS ── -->
-  <h2 class="section-title">⚙️ Mods Instalados</h2>
-  <div class="mods-grid">
+  <!-- Mods -->
+  <h2 class="section-label">⚙️ Mods Instalados (12)</h2>
+  <div class="mod-list">
 
-    <div class="mod-card featured">
-      <span class="mod-icon">🧙</span>
-      <div class="mod-badge">Núcleo del servidor</div>
-      <div class="mod-name">Pippi – User & Server Management</div>
-      <p class="mod-desc">El mod central de administración. Habilita el sistema de comandos de chat (<code style="color:var(--c-gold)">/tpr</code>, <code style="color:var(--c-gold)">/tpa</code>, <code style="color:var(--c-gold)">/sethome</code>), warps, kits, moneda, tienda en juego y mucho más.</p>
-    </div>
-
-    <div class="mod-card featured">
-      <span class="mod-icon">🗺️</span>
-      <div class="mod-badge">Navegación</div>
-      <div class="mod-name">Teleport NPC & Warp System</div>
-      <p class="mod-desc">NPCs repartidos por el mapa que permiten viajar rápidamente entre zonas. También podés crear tu propio punto de hogar con <code style="color:var(--c-gold)">/sethome</code> y regresar a él cuando quieras.</p>
-    </div>
-
-    <div class="mod-card">
-      <span class="mod-icon">⚔️</span>
-      <div class="mod-badge">Combate</div>
-      <div class="mod-name">Hosav's Custom UI Mod</div>
-      <p class="mod-desc">Mejora la interfaz de usuario con barras de vida mejoradas, información de daño, estados de efecto y estadísticas más claras en pantalla.</p>
-    </div>
-
-    <div class="mod-card">
-      <span class="mod-icon">🏗️</span>
-      <div class="mod-badge">Construcción</div>
-      <div class="mod-name">Emberlight</div>
-      <p class="mod-desc">Añade nuevas piezas de construcción, decoraciones, muebles y opciones de personalización para que tu fortaleza sea única.</p>
-    </div>
-
-    <div class="mod-card">
-      <span class="mod-icon">🐉</span>
-      <div class="mod-badge">Contenido</div>
-      <div class="mod-name">Conan Sexiles — Fashionist</div>
-      <p class="mod-desc">Permite cambiar la apariencia de tu armadura sin perder sus estadísticas. Lucí el aspecto que querés con la protección que necesitás.</p>
-    </div>
-
-    <div class="mod-card">
-      <span class="mod-icon">🎒</span>
-      <div class="mod-badge">Utilidad</div>
-      <div class="mod-name">Stacksize Plus</div>
-      <p class="mod-desc">Aumenta el tamaño máximo de los stacks de materiales en el inventario, reduciendo el tiempo de gestión de recursos.</p>
-    </div>
-
-  </div>
-
-  <!-- ── GUÍA DE COMANDOS ── -->
-  <h2 class="section-title">📖 Guía de Comandos</h2>
-  <div class="guide-section">
-
-    <!-- Teleporte entre jugadores -->
-    <div class="guide-block">
-      <div class="guide-block-header">
-        <span class="guide-block-icon">🚀</span>
-        <div>
-          <div class="guide-block-title">Teleporte entre Jugadores</div>
-          <div class="guide-block-sub">Viajá hasta donde está un amigo en segundos — ambos tienen que estar de acuerdo</div>
-        </div>
+    <div class="mod-row featured">
+      <span class="mod-num">1</span>
+      <span class="mod-emoji">🧙</span>
+      <div class="mod-body">
+        <div class="mod-name">Pippi – User &amp; Server Management</div>
+        <div class="mod-desc">El mod central del servidor. Activa los comandos de chat (<code style="color:var(--c-gold);font-size:.82rem">/tpr</code>, <code style="color:var(--c-gold);font-size:.82rem">/tpa</code>, <code style="color:var(--c-gold);font-size:.82rem">/sethome</code>), warps, moneda y tienda en juego.</div>
       </div>
-      <div class="guide-block-body">
+      <span class="mod-badge">Núcleo</span>
+    </div>
 
-        <div class="cmd-row">
-          <span class="cmd-label">/tpr [nombre]</span>
-          <div class="cmd-info">
-            <div class="cmd-title">Solicitar teleporte a un jugador</div>
-            <div class="cmd-detail">
-              Escribí este comando en el chat del juego reemplazando <strong>[nombre]</strong> por el nombre exacto del personaje al que querés ir. Le llegará una solicitud que puede aceptar o ignorar.
-            </div>
-            <span class="cmd-example">Ejemplo: /tpr Korrigan</span>
-          </div>
-        </div>
-
-        <div class="cmd-row">
-          <span class="cmd-label">/tpa</span>
-          <div class="cmd-info">
-            <div class="cmd-title">Aceptar solicitud de teleporte</div>
-            <div class="cmd-detail">
-              Cuando alguien te envía una solicitud con <code>/tpr</code>, en tu pantalla aparece una notificación. Escribí <strong>/tpa</strong> en el chat para aceptarla y que el otro jugador se teletransporte hasta vos.
-            </div>
-            <span class="cmd-example">El otro jugador aparecerá en tu ubicación</span>
-          </div>
-        </div>
-
-        <div class="tip-box">
-          <strong>¿No llega la solicitud?</strong> Asegurate de escribir el nombre del personaje exactamente como aparece en el juego, respetando mayúsculas. Si el nombre tiene espacios, escribilo completo. El jugador debe estar conectado al servidor.
-        </div>
+    <div class="mod-row">
+      <span class="mod-num">2</span>
+      <span class="mod-emoji">🗡️</span>
+      <div class="mod-body">
+        <div class="mod-name">Player Ignores Follower Collision <small style="color:var(--c-text-dim);font-size:.75rem">[Enhanced]</small></div>
+        <div class="mod-desc">Tus seguidores y thralls ya no bloquean tu paso ni te empujan. Moverse con escolta es fluido.</div>
       </div>
     </div>
 
-    <!-- Hogar y Puntos de regreso -->
-    <div class="guide-block">
-      <div class="guide-block-header">
-        <span class="guide-block-icon">🏠</span>
-        <div>
-          <div class="guide-block-title">Punto de Hogar (Home)</div>
-          <div class="guide-block-sub">Guardá tu base y regresá a ella desde cualquier lugar</div>
-        </div>
+    <div class="mod-row">
+      <span class="mod-num">3</span>
+      <span class="mod-emoji">📊</span>
+      <div class="mod-body">
+        <div class="mod-name">Twin-Bar v5.1.0 <small style="color:var(--c-text-dim);font-size:.75rem">by Xevyr</small></div>
+        <div class="mod-desc">Reemplaza la barra de UI con un diseño doble más claro: vida y stamina bien visibles en todo momento.</div>
       </div>
-      <div class="guide-block-body">
+    </div>
 
-        <div class="cmd-row">
-          <span class="cmd-label">/sethome</span>
-          <div class="cmd-info">
-            <div class="cmd-title">Guardar punto de hogar</div>
-            <div class="cmd-detail">
-              Pará en el lugar donde querés fijar tu hogar (por ejemplo, en tu base) y escribí este comando. Queda guardada esa posición. Podés actualizarla cuando quieras repitiendo el comando en otro lugar.
-            </div>
-          </div>
-        </div>
+    <div class="mod-row">
+      <span class="mod-num">4</span>
+      <span class="mod-emoji">💀</span>
+      <div class="mod-body">
+        <div class="mod-name">El mod Purge v5.0.3 <small style="color:var(--c-text-dim);font-size:.75rem">by Xevyr</small></div>
+        <div class="mod-desc">Mejora el sistema de purga: más opciones de configuración, oleadas más desafiantes y predecibles.</div>
+      </div>
+    </div>
 
-        <div class="cmd-row">
-          <span class="cmd-label">/home</span>
-          <div class="cmd-info">
-            <div class="cmd-title">Regresar al hogar</div>
-            <div class="cmd-detail">
-              Te teletransporta al punto que guardaste con <code>/sethome</code>. Útil para volver a tu base después de explorar o morir lejos.
-            </div>
-          </div>
-        </div>
+    <div class="mod-row">
+      <span class="mod-num">5</span>
+      <span class="mod-emoji">🎒</span>
+      <div class="mod-body">
+        <div class="mod-name">Stacksize Plus v2.0.2 <small style="color:var(--c-text-dim);font-size:.75rem">[Enhanced]</small></div>
+        <div class="mod-desc">Aumenta el tamaño máximo de los stacks de materiales. Menos viajes al cofre, más tiempo jugando.</div>
+      </div>
+    </div>
 
-        <div class="tip-box">
-          <strong>Consejo:</strong> Usá <code>/sethome</code> siempre dentro de tu base, en un punto seguro. Si morís y estás lejos de un arca de reaparición, <code>/home</code> te saca del apuro.
-        </div>
+    <div class="mod-row">
+      <span class="mod-num">6</span>
+      <span class="mod-emoji">👁️</span>
+      <div class="mod-body">
+        <div class="mod-name">Thrall Peeper <small style="color:var(--c-text-dim);font-size:.75rem">[Enhanced]</small></div>
+        <div class="mod-desc">Muestra las estadísticas detalladas de tus thralls con solo mirarlos. Ideal para comparar y optimizar tu ejército.</div>
+      </div>
+    </div>
+
+    <div class="mod-row">
+      <span class="mod-num">7</span>
+      <span class="mod-emoji">⛓️</span>
+      <div class="mod-body">
+        <div class="mod-name">Thrallable (Human) Bosses <small style="color:var(--c-text-dim);font-size:.75rem">[Enhanced]</small></div>
+        <div class="mod-desc">Permite capturar jefes humanos con la cuerda de arrastre y convertirlos en thralls de élite.</div>
+      </div>
+    </div>
+
+    <div class="mod-row">
+      <span class="mod-num">8</span>
+      <span class="mod-emoji">🤺</span>
+      <div class="mod-body">
+        <div class="mod-name">Better Thralls v3.0.2 <small style="color:var(--c-text-dim);font-size:.75rem">[Enhanced]</small></div>
+        <div class="mod-desc">Thralls con mejor IA, más opciones de guardia y comportamiento mejorado en combate.</div>
+      </div>
+    </div>
+
+    <div class="mod-row">
+      <span class="mod-num">9</span>
+      <span class="mod-emoji">🛡️</span>
+      <div class="mod-body">
+        <div class="mod-name">Safe-Zones v5.0.3 <small style="color:var(--c-text-dim);font-size:.75rem">by Xevyr</small></div>
+        <div class="mod-desc">Zonas de no-PVP configurables por los admins. Los nuevos jugadores pueden establecerse sin miedo a raids inmediatos.</div>
+      </div>
+    </div>
+
+    <div class="mod-row">
+      <span class="mod-num">10</span>
+      <span class="mod-emoji">💫</span>
+      <div class="mod-body">
+        <div class="mod-name">Player DBNO System v1.0.4 <small style="color:var(--c-text-dim);font-size:.75rem">by Xevyr</small></div>
+        <div class="mod-desc">Sistema "Derribado Pero No Eliminado": cuando te agotan la vida, caés al suelo y tus aliados pueden rescatarte antes de que mueras del todo.</div>
+      </div>
+    </div>
+
+    <div class="mod-row">
+      <span class="mod-num">11</span>
+      <span class="mod-emoji">🗺️</span>
+      <div class="mod-body">
+        <div class="mod-name">Simple Minimap v5.1.6 <small style="color:var(--c-text-dim);font-size:.75rem">by Xevyr</small></div>
+        <div class="mod-desc">Agrega un minimapa funcional a la pantalla. Navegá el mapa sin abrir el mapa grande.</div>
+      </div>
+    </div>
+
+    <div class="mod-row">
+      <span class="mod-num">12</span>
+      <span class="mod-emoji">❄️</span>
+      <div class="mod-body">
+        <div class="mod-name">Ymir's Respite: Enhanced Version 2.1</div>
+        <div class="mod-desc">Contenido adicional temático de Ymir: nuevas piezas de construcción, decoraciones y elementos de rol ambientados en el norte.</div>
       </div>
     </div>
 
   </div>
 
-  <!-- ── FEATURES: NPC y WARP ── -->
-  <h2 class="section-title">🗺️ Funciones del Mapa</h2>
-  <div class="feature-row">
+  <!-- Guía de comandos -->
+  <h2 class="section-label">📖 Guía de Comandos</h2>
 
-    <div class="feature-card">
-      <span class="feature-card-icon">🧳</span>
+  <div class="guide-block">
+    <div class="guide-header">
+      <span class="guide-header-icon">🚀</span>
       <div>
-        <div class="feature-card-title">NPCs de Teleporte</div>
-        <div class="feature-card-desc">
-          Encontrás NPCs repartidos por el mapa que actúan como portales de viaje rápido. Interactuá con ellos para ver las zonas disponibles y viajar al instante. Son la forma más rápida de moverse entre biomas.
+        <div class="guide-header-title">Teleporte entre Jugadores</div>
+        <div class="guide-header-sub">Viajá hasta un amigo — los dos tienen que estar de acuerdo</div>
+      </div>
+    </div>
+    <div class="guide-body">
+      <div class="cmd-row">
+        <span class="cmd-tag">/tpr [nombre]</span>
+        <div class="cmd-info">
+          <div class="cmd-title">Solicitar teleporte</div>
+          <div class="cmd-detail">Reemplazá <strong>[nombre]</strong> por el nombre exacto del personaje al que querés ir. Le llega una solicitud que puede aceptar.</div>
+          <span class="cmd-example">Ejemplo: /tpr Korrigan</span>
+        </div>
+      </div>
+      <div class="cmd-row">
+        <span class="cmd-tag">/tpa</span>
+        <div class="cmd-info">
+          <div class="cmd-title">Aceptar solicitud</div>
+          <div class="cmd-detail">Cuando alguien te manda un <code>/tpr</code>, escribí <strong>/tpa</strong> para aceptar y el otro jugador aparece en tu posición.</div>
         </div>
       </div>
     </div>
-
-    <div class="feature-card">
-      <span class="feature-card-icon">⚡</span>
-      <div>
-        <div class="feature-card-title">Sistema de Warp</div>
-        <div class="feature-card-desc">
-          El servidor tiene habilitado el sistema de <strong>warps</strong>: puntos de teletransporte predefinidos por los administradores a ubicaciones clave del mapa. Consultá en Discord la lista de warps disponibles con sus nombres.
-        </div>
-      </div>
+    <div class="tip-box">
+      <strong>¿No llega la solicitud?</strong> El nombre debe ser exacto, respetando mayúsculas. El jugador tiene que estar conectado al servidor.
     </div>
-
-    <div class="feature-card">
-      <span class="feature-card-icon">💬</span>
-      <div>
-        <div class="feature-card-title">Comandos en el Chat</div>
-        <div class="feature-card-desc">
-          Todos los comandos se usan directamente en el <strong>chat global del juego</strong> (tecla <kbd style="background:rgba(200,134,28,0.15);border:1px solid var(--c-border);border-radius:4px;padding:.1rem .4rem;font-size:.8rem">Enter</kbd>). Siempre empiezan con <code style="color:var(--c-gold)">/</code> y no llevan comillas.
-        </div>
-      </div>
-    </div>
-
   </div>
 
-  <!-- Resumen de comandos -->
-  <h2 class="section-title">📋 Tabla Rápida de Comandos</h2>
-  <div class="guide-block" style="margin-bottom:3rem">
-    <div class="guide-block-body" style="padding: 0.5rem 0;">
-
-      <div class="cmd-row" style="padding: 0.8rem 1.4rem;">
-        <span class="cmd-label">/tpr [nombre]</span>
-        <div class="cmd-info">
-          <div class="cmd-detail">Solicitar teletransportarse hasta otro jugador</div>
-        </div>
+  <div class="guide-block">
+    <div class="guide-header">
+      <span class="guide-header-icon">🏠</span>
+      <div>
+        <div class="guide-header-title">Punto de Hogar</div>
+        <div class="guide-header-sub">Guardá tu base y volvé a ella desde cualquier lugar</div>
       </div>
-      <div class="cmd-row" style="padding: 0.8rem 1.4rem;">
-        <span class="cmd-label">/tpa</span>
-        <div class="cmd-info">
-          <div class="cmd-detail">Aceptar una solicitud de teleporte recibida</div>
-        </div>
-      </div>
-      <div class="cmd-row" style="padding: 0.8rem 1.4rem;">
-        <span class="cmd-label">/sethome</span>
-        <div class="cmd-info">
-          <div class="cmd-detail">Guardar la posición actual como punto de hogar</div>
-        </div>
-      </div>
-      <div class="cmd-row" style="padding: 0.8rem 1.4rem;">
-        <span class="cmd-label">/home</span>
-        <div class="cmd-info">
-          <div class="cmd-detail">Teletransportarse al punto de hogar guardado</div>
-        </div>
-      </div>
-      <div class="cmd-row" style="padding: 0.8rem 1.4rem; border-bottom:none;">
-        <span class="cmd-label">/warp [nombre]</span>
-        <div class="cmd-info">
-          <div class="cmd-detail">Ir a un warp predefinido del servidor (pedí la lista en Discord)</div>
-        </div>
-      </div>
-
     </div>
+    <div class="guide-body">
+      <div class="cmd-row">
+        <span class="cmd-tag">/sethome</span>
+        <div class="cmd-info">
+          <div class="cmd-title">Guardar hogar</div>
+          <div class="cmd-detail">Pará en el lugar que querés guardar (dentro de tu base) y escribí este comando. Podés actualizarlo cuando quieras.</div>
+        </div>
+      </div>
+      <div class="cmd-row">
+        <span class="cmd-tag">/home</span>
+        <div class="cmd-info">
+          <div class="cmd-title">Volver al hogar</div>
+          <div class="cmd-detail">Te teletransporta al punto guardado con <code>/sethome</code>. Útil para volver rápido después de explorar o morir lejos.</div>
+        </div>
+      </div>
+    </div>
+    <div class="tip-box">
+      <strong>Consejo:</strong> Usá <code>/sethome</code> en un punto seguro dentro de tu base. Si morís lejos de un arca de reaparición, <code>/home</code> te salva.
+    </div>
+  </div>
+
+  <!-- Funciones del mapa -->
+  <h2 class="section-label" style="margin-top:2rem">🗺️ Funciones del Servidor</h2>
+  <div class="features-row" style="margin-bottom:2rem">
+    <div class="feature-card">
+      <span class="feature-icon">🧳</span>
+      <div>
+        <div class="feature-title">NPCs de Teleporte</div>
+        <div class="feature-desc">NPCs repartidos por el mapa que actúan como portales. Interactuá con ellos para viajar rápido entre biomas.</div>
+      </div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">⚡</span>
+      <div>
+        <div class="feature-title">Sistema Warp</div>
+        <div class="feature-desc">Puntos de teletransporte predefinidos. Usá <code style="color:var(--c-gold);font-size:.8rem">/warp [nombre]</code> para ir a una ubicación clave del mapa.</div>
+      </div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🛡️</span>
+      <div>
+        <div class="feature-title">Safe Zones</div>
+        <div class="feature-desc">Zonas seguras donde el PVP está desactivado. Perfectas para los recién llegados que se están estableciendo.</div>
+      </div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">💫</span>
+      <div>
+        <div class="feature-title">Sistema DBNO</div>
+        <div class="feature-desc">En vez de morir directamente, caés derribado. Tus compañeros tienen tiempo para rescatarte antes de que todo termine.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla rápida -->
+  <h2 class="section-label">📋 Tabla de Comandos</h2>
+  <div class="guide-block">
+    <table class="quick-table">
+      <tr><td>/tpr [nombre]</td><td>Solicitar teletransportarse a otro jugador</td></tr>
+      <tr><td>/tpa</td><td>Aceptar una solicitud de teleporte recibida</td></tr>
+      <tr><td>/sethome</td><td>Guardar la posición actual como hogar</td></tr>
+      <tr><td>/home</td><td>Teletransportarse al hogar guardado</td></tr>
+      <tr><td>/warp [nombre]</td><td>Ir a un punto predefinido del servidor</td></tr>
+    </table>
   </div>
 
 </main>
 
-<!-- ══ FOOTER ═════════════════════════════════════════ -->
+<!-- FOOTER -->
 <footer class="site-footer">
   <div class="container">
     <p class="footer-title">Dragones y Demonios</p>
     <p class="footer-sub">Servidor PVP / PVE en Español · Conan Exiles Enhanced</p>
     <div class="footer-social">
-      <a href="https://discord.gg/7WUNGkyPt3" target="_blank" rel="noopener" class="footer-social-link">
-        <span class="sicon">💬</span> Discord
-      </a>
-      <a href="https://www.facebook.com/DatawebGames/" target="_blank" rel="noopener" class="footer-social-link">
-        <span class="sicon">📘</span> Facebook
-      </a>
+      <a href="https://discord.gg/7WUNGkyPt3" target="_blank" rel="noopener" class="footer-social-link"><span class="sicon">💬</span> Discord</a>
+      <a href="https://www.facebook.com/DatawebGames/" target="_blank" rel="noopener" class="footer-social-link"><span class="sicon">📘</span> Facebook</a>
     </div>
     <p class="footer-copy">¡Nos vemos en el exilio!</p>
   </div>
 </footer>
 
-<!-- ══ AUTH MODAL ══════════════════════════════════════ -->
+<!-- AUTH MODAL -->
 <div class="shop-modal" id="auth-modal" onclick="if(event.target===this)closeAuthModal()">
   <div class="shop-modal-card auth-modal-card">
     <button class="shop-modal-close" onclick="closeAuthModal()">✕</button>
@@ -511,7 +461,7 @@
 (function () {
   function initParticles() {
     const c = document.getElementById('particles'); if (!c) return;
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 22; i++) {
       const e = document.createElement('div');
       const sz = 1.5 + Math.random() * 2.5, l = Math.random() * 100, b = Math.random() * 35;
       const dur = 5 + Math.random() * 7, del = Math.random() * 8, dx = (Math.random() - .5) * 110;
