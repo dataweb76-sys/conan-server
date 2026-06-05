@@ -11,7 +11,7 @@
   <style>
     /* ── Page hero ── */
     .page-hero {
-      position: relative; min-height: 200px;
+      position: relative; min-height: 220px;
       display: flex; align-items: flex-end; overflow: hidden;
     }
     .page-hero-bg {
@@ -23,132 +23,183 @@
     }
     .page-hero-content {
       position: relative; z-index: 2; width: 100%;
-      text-align: center; padding: 2rem 1rem 2.5rem;
+      text-align: center; padding: 2.5rem 1rem 3rem;
     }
     .page-eyebrow {
       font-family: var(--f-heading); font-size: 0.68rem; letter-spacing: 0.28em;
-      text-transform: uppercase; color: var(--c-gold-dim); margin-bottom: 0.5rem;
+      text-transform: uppercase; color: var(--c-gold-dim); margin-bottom: 0.6rem;
     }
     .page-title {
-      font-family: var(--f-display); font-size: clamp(1.8rem, 5vw, 2.8rem);
-      color: var(--c-gold-light); text-shadow: var(--glow-gold); margin-bottom: 0.4rem;
+      font-family: var(--f-display); font-size: clamp(1.8rem, 5vw, 3rem);
+      color: var(--c-gold-light); text-shadow: var(--glow-gold); margin-bottom: 0.5rem;
     }
-    .page-subtitle { font-family: var(--f-body); font-size: 1rem; color: var(--c-text-dim); font-style: italic; }
-
-    /* ── Clans section ── */
-    .clans-section { padding: 1.5rem 0 4rem; }
-    .clans-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 1.8rem; flex-wrap: wrap; gap: 0.5rem;
-    }
-    .clans-title {
-      font-family: var(--f-heading); font-size: 0.78rem; font-weight: 700;
-      letter-spacing: 0.22em; text-transform: uppercase; color: var(--c-gold);
-      display: flex; align-items: center; gap: 0.6rem;
-    }
-    .clans-count { font-family: var(--f-heading); font-size: 0.65rem; color: var(--c-text-dim); }
-
-    /* ── Clan cards ── */
-    .clan-grid-v2 {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1.1rem;
-    }
-    .clan-card-v2 {
-      background: linear-gradient(145deg, rgba(15,8,4,0.97), rgba(22,11,4,0.93));
-      border: 1px solid rgba(150,90,15,0.35);
-      border-radius: 14px;
-      padding: 1.5rem 1.4rem 1.3rem;
-      display: flex; flex-direction: column; gap: 0.9rem;
-      position: relative; overflow: hidden;
-      transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
-      cursor: default;
-    }
-    .clan-card-v2::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, transparent, var(--clan-color, var(--c-gold-dim)), transparent);
-      opacity: 0; transition: opacity 0.3s;
-    }
-    .clan-card-v2:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 14px 40px rgba(200,134,28,0.18);
-      border-color: rgba(220,155,30,0.55);
-    }
-    .clan-card-v2:hover::before { opacity: 1; }
-
-    .clan-card-top {
-      display: flex; align-items: center; gap: 0.9rem;
-    }
-    .clan-icon-v2 {
-      width: 52px; height: 52px; border-radius: 12px;
-      background: linear-gradient(135deg, rgba(180,80,0,0.3), rgba(200,134,28,0.2));
-      border: 1px solid rgba(200,134,28,0.3);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.7rem; flex-shrink: 0;
-      box-shadow: 0 0 12px rgba(200,134,28,0.15);
-    }
-    .clan-info-v2 { flex: 1; min-width: 0; }
-    .clan-name-v2 {
-      font-family: var(--f-heading); font-size: 1.05rem; font-weight: 700;
-      color: var(--c-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      margin-bottom: 0.15rem;
-    }
-    .clan-leader-v2 {
-      font-size: 0.82rem; color: var(--c-text-dim);
-      display: flex; align-items: center; gap: 0.3rem;
-    }
-    .clan-divider {
-      height: 1px; background: var(--c-border); margin: 0 -0.2rem;
-    }
-    .clan-stats-v2 {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 0.8rem;
-    }
-    .clan-stat {
-      display: flex; flex-direction: column; align-items: center;
-      flex: 1;
-    }
-    .clan-stat-val {
-      font-family: var(--f-display); font-size: 1.4rem; color: var(--c-gold-light);
-      line-height: 1; margin-bottom: 0.1rem;
-    }
-    .clan-stat-lbl {
-      font-family: var(--f-heading); font-size: 0.55rem; letter-spacing: 0.14em;
-      text-transform: uppercase; color: var(--c-text-dim);
-    }
-    .clan-online-badge {
-      display: inline-flex; align-items: center; gap: 0.3rem;
-      font-family: var(--f-heading); font-size: 0.6rem; letter-spacing: 0.08em;
-      padding: 0.12rem 0.5rem; border-radius: 10px;
-      background: rgba(68,240,112,0.1); border: 1px solid rgba(68,240,112,0.3);
-      color: #44f070;
-    }
-    .clan-online-badge::before { content: '●'; font-size: 0.45rem; }
-
-    /* Empty/loading */
-    .clans-empty {
-      grid-column: 1/-1;
-      text-align: center; padding: 4rem 1rem;
+    .page-subtitle {
+      font-family: var(--f-body); font-size: 1rem;
       color: var(--c-text-dim); font-style: italic;
     }
 
-    /* ── Únete section ── */
-    .join-section {
-      margin-top: 3rem;
-      padding: 2rem;
-      background: rgba(10,6,4,0.85);
+    /* ── Section header ── */
+    .clans-section { padding: 2rem 0 5rem; }
+    .section-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.5rem; padding-bottom: 0.9rem;
+      border-bottom: 1px solid var(--c-border);
+    }
+    .section-bar-left {
+      font-family: var(--f-heading); font-size: 0.8rem; font-weight: 700;
+      letter-spacing: 0.2em; text-transform: uppercase; color: var(--c-gold);
+      display: flex; align-items: center; gap: 0.55rem;
+    }
+    .section-bar-right {
+      font-family: var(--f-heading); font-size: 0.65rem;
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--c-text-dim);
+    }
+
+    /* ── Clan cards (horizontal layout) ── */
+    .clans-list { display: flex; flex-direction: column; gap: 1.1rem; }
+
+    .clan-card {
+      display: flex; align-items: flex-start; gap: 1.5rem;
+      background: linear-gradient(135deg, rgba(12,7,3,0.97), rgba(18,10,4,0.94));
+      border: 1px solid rgba(150,90,15,0.32);
+      border-radius: 12px; padding: 1.5rem 1.6rem;
+      transition: border-color 0.25s, box-shadow 0.25s;
+      position: relative; overflow: hidden;
+    }
+    .clan-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--clan-accent, var(--c-gold-dim)), transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .clan-card:hover {
+      border-color: rgba(220,155,30,0.5);
+      box-shadow: 0 8px 40px rgba(200,100,0,0.15);
+    }
+    .clan-card:hover::before { opacity: 1; }
+
+    /* Emblem */
+    .clan-emblem {
+      width: 100px; height: 100px; border-radius: 10px; flex-shrink: 0;
+      background: linear-gradient(135deg, rgba(20,10,3,0.95), rgba(40,20,6,0.9));
+      border: 1px solid rgba(200,134,28,0.25);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    .clan-emblem img {
+      width: 100%; height: 100%; object-fit: cover; border-radius: 9px;
+    }
+    .clan-emblem-placeholder {
+      font-size: 2.8rem; line-height: 1;
+      filter: drop-shadow(0 0 8px rgba(200,134,28,0.3));
+    }
+
+    /* Content */
+    .clan-content {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column; gap: 0.5rem;
+    }
+    .clan-name {
+      font-family: var(--f-display); font-size: 1.35rem;
+      color: var(--c-gold-light); text-shadow: var(--glow-gold);
+      line-height: 1.1; letter-spacing: 0.03em;
+    }
+    .clan-leader-row {
+      display: flex; align-items: center; gap: 0.4rem;
+      font-family: var(--f-heading); font-size: 0.72rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .clan-leader-label { color: var(--c-gold-dim); }
+    .clan-leader-name  { color: var(--c-gold-light); }
+    .clan-desc {
+      font-family: var(--f-body); font-size: 0.9rem;
+      color: var(--c-text-dim); font-style: italic;
+      margin-top: 0.2rem;
+    }
+
+    /* Stats row */
+    .clan-footer {
+      display: flex; align-items: center; gap: 1rem;
+      margin-top: 0.8rem; flex-wrap: wrap;
+    }
+    .clan-stats { display: flex; gap: 0.7rem; flex-wrap: wrap; }
+    .clan-stat-box {
+      background: rgba(200,134,28,0.06);
+      border: 1px solid rgba(200,134,28,0.18);
+      border-radius: 8px; padding: 0.5rem 1rem;
+      text-align: center; min-width: 72px;
+    }
+    .csb-val {
+      font-family: var(--f-display); font-size: 1.35rem;
+      color: var(--c-gold-light); line-height: 1;
+      display: block;
+    }
+    .csb-lbl {
+      font-family: var(--f-heading); font-size: 0.5rem;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--c-text-dim); display: block; margin-top: 0.15rem;
+    }
+    .csb-online {
+      background: rgba(68,240,112,0.07);
+      border-color: rgba(68,240,112,0.22);
+    }
+    .csb-online .csb-val { color: #44f070; font-size: 1rem; margin-top: 0.25rem; }
+    .csb-online-dot {
+      display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+      background: #44f070; box-shadow: 0 0 7px #44f070;
+      margin-right: 0.35rem;
+      animation: pulse-g 2s ease-in-out infinite;
+    }
+    .csb-online .csb-lbl { color: #3dc060; }
+
+    /* Join button inside card */
+    .btn-clan-join {
+      margin-left: auto; flex-shrink: 0;
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.6rem 1.2rem; border-radius: 7px;
+      background: linear-gradient(135deg, rgba(180,90,0,0.22), rgba(200,134,28,0.15));
+      border: 1px solid rgba(200,134,28,0.45); color: var(--c-gold-light);
+      font-family: var(--f-heading); font-size: 0.68rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      cursor: pointer; transition: all 0.22s; white-space: nowrap;
+    }
+    .btn-clan-join:hover {
+      background: linear-gradient(135deg, rgba(200,100,0,0.35), rgba(220,150,20,0.25));
+      box-shadow: 0 0 20px rgba(200,134,28,0.3); color: #fff;
+    }
+    .btn-clan-join svg { width: 0.85rem; height: 0.85rem; }
+
+    /* Empty / loading */
+    .clans-empty {
+      text-align: center; padding: 4rem 1rem;
+      color: var(--c-text-dim); font-style: italic; font-size: 1rem;
+    }
+
+    /* ── How to join section ── */
+    .join-info {
+      margin-top: 2.5rem;
+      padding: 2rem 2.5rem;
+      background: rgba(10,6,4,0.82);
       border: 1px solid var(--c-border);
-      border-radius: 14px;
-      text-align: center;
+      border-radius: 12px; text-align: center;
     }
-    .join-section-title {
-      font-family: var(--f-heading); font-size: 0.75rem; letter-spacing: 0.2em;
-      text-transform: uppercase; color: var(--c-gold); margin-bottom: 0.6rem;
+    .join-info-title {
+      font-family: var(--f-heading); font-size: 0.78rem;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--c-gold); margin-bottom: 0.7rem;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
     }
-    .join-section-text {
-      font-size: 0.98rem; color: var(--c-text-dim); margin-bottom: 1.2rem;
-      max-width: 480px; margin-left: auto; margin-right: auto;
+    .join-info-text {
+      font-size: 0.95rem; color: var(--c-text-dim);
+      max-width: 540px; margin: 0 auto 1.3rem;
+      line-height: 1.65;
+    }
+
+    @media (max-width: 680px) {
+      .clan-card { flex-direction: column; }
+      .clan-emblem { width: 70px; height: 70px; }
+      .btn-clan-join { margin-left: 0; width: 100%; justify-content: center; }
+      .clan-footer { flex-direction: column; align-items: flex-start; }
     }
   </style>
 </head>
@@ -193,26 +244,28 @@
 <div class="clans-section">
   <div class="container">
 
-    <div class="clans-header">
-      <div class="clans-title">🏰 Facciones activas</div>
-      <div class="clans-count" id="clan-total"></div>
+    <div class="section-bar">
+      <div class="section-bar-left">🛡️ Clanes activos</div>
+      <div class="section-bar-right" id="clan-count"></div>
     </div>
 
-    <div class="clan-grid-v2" id="clan-grid">
-      <div class="pg-loading" style="grid-column:1/-1">
-        <div class="spinner"></div><span>Cargando clanes...</span>
+    <div class="clans-list" id="clan-list">
+      <div class="clans-empty">
+        <div class="spinner" style="margin:0 auto 1rem"></div>
+        Cargando clanes...
       </div>
     </div>
 
-    <!-- Únete -->
-    <div class="join-section">
-      <div class="join-section-title">⚔️ ¿Sin clan?</div>
-      <p class="join-section-text">
-        Enviá tu solicitud para unirte y Carlota te contactará en el juego para darte la bienvenida.
+    <!-- Cómo unirse -->
+    <div class="join-info">
+      <div class="join-info-title">❓ ¿Cómo unirse a un clan?</div>
+      <p class="join-info-text">
+        Hacé clic en "Solicitar unirse" en el clan que te interese. El líder o los oficiales
+        revisarán tu solicitud y se pondrán en contacto con vos dentro del juego.
       </p>
-      <button class="btn-join" onclick="openJoinModal()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:1rem;height:1rem"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>
-        Solicitar Unirse al Clan
+      <button class="btn-join" onclick="openJoinModal(null)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:1rem;height:1rem"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Ver guía de clanes
       </button>
     </div>
 
@@ -236,8 +289,8 @@
 <div class="shop-modal" id="join-modal" onclick="if(event.target===this)closeJoinModal()">
   <div class="shop-modal-card">
     <button class="shop-modal-close" onclick="closeJoinModal()">✕</button>
-    <h3 class="shop-modal-title">⚔️ Unirse al Clan</h3>
-    <p class="shop-modal-sub">Enviá tu solicitud y te contactamos en el juego</p>
+    <h3 class="shop-modal-title">⚔️ Solicitar unirse al clan</h3>
+    <p class="shop-modal-sub" id="join-modal-sub">Enviá tu solicitud y te contactamos en el juego</p>
     <div class="form-group">
       <label class="form-label" for="join-charname">Nombre de tu personaje</label>
       <input class="form-input" type="text" id="join-charname" placeholder="Tal como aparece en el juego" maxlength="40" autocomplete="off">
@@ -248,7 +301,7 @@
     </div>
     <div class="shop-modal-btns">
       <button class="btn-secondary" onclick="closeJoinModal()">Cancelar</button>
-      <button class="btn-join" onclick="sendJoinRequest()">
+      <button class="btn-join" id="join-send-btn" onclick="sendJoinRequest()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:1rem;height:1rem"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>
         Enviar Solicitud
       </button>
@@ -287,134 +340,162 @@
 (function () {
   'use strict';
 
-  function nameToColor(name) {
-    let h = 5381;
-    for (let i = 0; i < name.length; i++) h = ((h << 5) + h) + name.charCodeAt(i);
-    return 'hsl(' + (5 + ((h >>> 0) % 50)) + ', 70%, 50%)';
+  // Emoji por defecto según inicial del clan
+  var CLAN_EMOJI = { A:'🐉', B:'🔥', C:'⚔️', D:'🗡️', E:'🏹', L:'🏰', M:'💀', R:'🛡️', S:'⭐', T:'🪓', V:'🌀' };
+
+  function clanEmoji(name) {
+    var c = (name || '').trim().toUpperCase()[0] || '🏰';
+    return CLAN_EMOJI[c] || '🏰';
   }
 
+  // Genera un acento de color determinista por nombre de clan
+  function clanAccent(name) {
+    var h = 5381;
+    for (var i = 0; i < name.length; i++) h = ((h << 5) + h) + name.charCodeAt(i);
+    return 'hsl(' + (15 + ((h >>> 0) % 45)) + ',65%,48%)';
+  }
+
+  /* ── Render ─────────────────────────────────────────── */
   function renderClans(clans, onlineNames) {
-    const grid  = document.getElementById('clan-grid');
-    const total = document.getElementById('clan-total');
-    if (total) total.textContent = clans.length + ' clan' + (clans.length !== 1 ? 'es' : '');
+    var list  = document.getElementById('clan-list');
+    var count = document.getElementById('clan-count');
+
+    if (count) count.textContent = clans.length + ' clan' + (clans.length !== 1 ? 'es' : '') + ' encontrado' + (clans.length !== 1 ? 's' : '');
+
     if (!clans.length) {
-      grid.innerHTML = '<div class="clans-empty">No hay clanes registrados aún. ¡Sé el primero en fundar uno!</div>';
+      list.innerHTML = '<div class="clans-empty">No hay clanes registrados todavía.</div>';
       return;
     }
-    grid.innerHTML = clans.map(function (c) {
-      const color = nameToColor(c.name);
-      const onlineMembers = c.memberNames
-        ? c.memberNames.filter(function (n) { return onlineNames.includes(n); }).length
-        : 0;
-      const onlineBadge = onlineMembers > 0
-        ? `<span class="clan-online-badge">${onlineMembers} online</span>` : '';
-      return `
-        <div class="clan-card-v2" style="--clan-color:${color}">
-          <div class="clan-card-top">
-            <div class="clan-icon-v2">🏰</div>
-            <div class="clan-info-v2">
-              <div class="clan-name-v2">${window.esc(c.name)}</div>
-              <div class="clan-leader-v2">👑 ${window.esc(c.leader || 'Desconocido')}</div>
-            </div>
-          </div>
-          <div class="clan-divider"></div>
-          <div class="clan-stats-v2">
-            <div class="clan-stat">
-              <div class="clan-stat-val">${c.members}</div>
-              <div class="clan-stat-lbl">Miembros</div>
-            </div>
-            <div class="clan-stat">
-              <div class="clan-stat-val">${c.maxLevel}</div>
-              <div class="clan-stat-lbl">Nivel máx</div>
-            </div>
-            <div style="display:flex;align-items:center">${onlineBadge}</div>
-          </div>
-        </div>`;
+
+    list.innerHTML = clans.map(function (c) {
+      var accent     = clanAccent(c.name);
+      var onlineCount = c.onlineCount || 0;
+      var emblemHtml;
+      if (c.emblem) {
+        emblemHtml = '<img src="' + window.esc(c.emblem) + '" alt="' + window.esc(c.name) + '">';
+      } else {
+        emblemHtml = '<span class="clan-emblem-placeholder">' + clanEmoji(c.name) + '</span>';
+      }
+
+      var descHtml = c.description
+        ? '<p class="clan-desc">' + window.esc(c.description) + '</p>' : '';
+
+      return '<div class="clan-card" style="--clan-accent:' + accent + '">'
+        + '<div class="clan-emblem">' + emblemHtml + '</div>'
+        + '<div class="clan-content">'
+        +   '<div class="clan-name">' + window.esc(c.name) + '</div>'
+        +   '<div class="clan-leader-row">'
+        +     '<span style="font-size:0.9rem">👑</span>'
+        +     '<span class="clan-leader-label">LÍDER:</span>'
+        +     '<span class="clan-leader-name">' + window.esc(c.leader || 'Desconocido') + '</span>'
+        +   '</div>'
+        +   descHtml
+        +   '<div class="clan-footer">'
+        +     '<div class="clan-stats">'
+        +       '<div class="clan-stat-box">'
+        +         '<span class="csb-val">' + (c.members || 0) + '</span>'
+        +         '<span class="csb-lbl">Miembros</span>'
+        +       '</div>'
+        +       '<div class="clan-stat-box">'
+        +         '<span class="csb-val">' + (c.maxLevel || '–') + '</span>'
+        +         '<span class="csb-lbl">Nivel Máx.</span>'
+        +       '</div>'
+        +       '<div class="clan-stat-box csb-online">'
+        +         '<span class="csb-val"><span class="csb-online-dot"></span>' + onlineCount + ' online</span>'
+        +         '<span class="csb-lbl">Estado</span>'
+        +       '</div>'
+        +     '</div>'
+        +     '<button class="btn-clan-join" onclick="openJoinModal(\'' + window.esc(c.name) + '\')">'
+        +       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>'
+        +       'Solicitar unirse'
+        +     '</button>'
+        +   '</div>'
+        + '</div>'
+        + '</div>';
     }).join('');
   }
 
+  /* ── Fetch ──────────────────────────────────────────── */
   async function fetchClans() {
-    const sb = window.getSbAnon();
+    var sb = window.getSbAnon();
     if (!sb) return;
+
     try {
-      // characters_ranking: nombre, nivel, clan (y is_leader si ya existe la columna)
-      // online_players: siempre tiene is_leader porque el bridge lo escribe en tiempo real
-      const [charsRes, onlineRes] = await Promise.all([
-        sb.from('characters_ranking').select('name, clan, level'),
-        sb.from('online_players').select('name, clan, is_leader')
+      // clans: datos del bridge (nombre real, lider, miembros) — sin JOINs en RCON
+      // online_players: quiénes están conectados ahora
+      var results = await Promise.all([
+        sb.from('clans').select('clan_name, leader_name, members_count, description, logo').order('members_count', { ascending: false }),
+        sb.from('online_players').select('name, clan')
       ]);
-      if (charsRes.error) throw charsRes.error;
-      const chars  = charsRes.data  || [];
-      const online = onlineRes.data || [];
-      const onlineNames = online.map(function (p) { return p.name; });
 
-      // 1) Líderes online ahora — is_leader viene directo del servidor
-      const leaderMap = {};
-      online.filter(function (p) { return p.is_leader && p.clan; })
-            .forEach(function (p) { leaderMap[p.clan] = p.name; });
+      var clans  = results[0].data || [];
+      var online = results[1].data || [];
+      var onlineNames = online.map(function (p) { return p.name; });
 
-      // 2) Armar mapa de clanes desde characters_ranking
-      const clanMap = {};
-      chars.filter(function (p) { return p.clan && p.clan.trim(); }).forEach(function (p) {
-        const clanName = p.clan.trim();
-        if (!clanMap[clanName]) {
-          clanMap[clanName] = { name: clanName, members: 0, maxLevel: 0, memberNames: [], topPlayer: null };
-        }
-        clanMap[clanName].members++;
-        if ((p.level || 0) > clanMap[clanName].maxLevel) {
-          clanMap[clanName].maxLevel = p.level || 0;
-          clanMap[clanName].topPlayer = p.name; // miembro de mayor nivel como fallback
-        }
-        clanMap[clanName].memberNames.push(p.name);
-      });
-
-      // 3) Completar con miembros online que no estén en el ranking todavía
-      online.filter(function (p) { return p.clan && p.clan.trim(); }).forEach(function (p) {
-        const clanName = p.clan.trim();
-        if (!clanMap[clanName]) {
-          clanMap[clanName] = { name: clanName, members: 1, maxLevel: p.level || 0, memberNames: [p.name], topPlayer: p.name };
-        } else if (!clanMap[clanName].memberNames.includes(p.name)) {
-          clanMap[clanName].members++;
-          clanMap[clanName].memberNames.push(p.name);
-        }
-      });
-
-      // 4) Asignar líder: primero online con is_leader, sino miembro de mayor nivel
-      const clanList = Object.values(clanMap).sort(function (a, b) { return b.members - a.members; });
-      clanList.forEach(function (c) {
-        c.leader = leaderMap[c.name] || c.topPlayer || '?';
+      var clanList = clans.map(function (c) {
+        var onlineCount = online.filter(function (o) { return o.clan === c.clan_name; }).length;
+        return {
+          name:        c.clan_name    || '?',
+          leader:      c.leader_name  || '?',
+          description: c.description  || '',
+          emblem:      c.logo         || null,
+          members:     c.members_count || 0,
+          maxLevel:    0,
+          onlineCount: onlineCount
+        };
       });
 
       renderClans(clanList, onlineNames);
+
     } catch (err) {
       console.error('fetchClans error:', err);
-      document.getElementById('clan-grid').innerHTML =
-        '<div class="pg-error" style="grid-column:1/-1">⚠️ No se pudo cargar los clanes.</div>';
+      document.getElementById('clan-list').innerHTML =
+        '<div class="clans-empty">⚠️ No se pudo cargar los clanes.</div>';
     }
   }
 
-  /* ── Join modal ── */
-  window.openJoinModal  = function () { document.getElementById('join-modal').classList.add('open'); };
-  window.closeJoinModal = function () { document.getElementById('join-modal').classList.remove('open'); };
+  /* ── Join modal ─────────────────────────────────────── */
+  var targetClan = null;
+
+  window.openJoinModal = function (clanName) {
+    targetClan = clanName;
+    var sub = document.getElementById('join-modal-sub');
+    if (sub) sub.textContent = clanName
+      ? 'Solicitud para unirte a: ' + clanName
+      : 'Enviá tu solicitud y te contactamos en el juego';
+    var fb = document.getElementById('join-feedback');
+    if (fb) { fb.className = 'form-feedback'; fb.textContent = ''; }
+    document.getElementById('join-charname').value = '';
+    document.getElementById('join-message').value  = '';
+    document.getElementById('join-modal').classList.add('open');
+  };
+
+  window.closeJoinModal = function () {
+    document.getElementById('join-modal').classList.remove('open');
+    targetClan = null;
+  };
 
   window.sendJoinRequest = async function () {
-    const sb   = window.getSb();
-    const name = document.getElementById('join-charname').value.trim();
-    const msg  = document.getElementById('join-message').value.trim();
-    const fb   = document.getElementById('join-feedback');
-    const btn  = document.querySelector('#join-modal .btn-join');
-    if (!name) { fb.className = 'form-feedback err'; fb.textContent = 'Ingresá el nombre de tu personaje.'; return; }
+    var client = window.getSb() || window.getSbAnon();
+    var name   = document.getElementById('join-charname').value.trim();
+    var msg    = document.getElementById('join-message').value.trim();
+    var fb     = document.getElementById('join-feedback');
+    var btn    = document.getElementById('join-send-btn');
+    if (!name) {
+      fb.className = 'form-feedback err';
+      fb.textContent = 'Ingresá el nombre de tu personaje.';
+      return;
+    }
     if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
     try {
-      const client = sb || window.getSbAnon();
-      const { error } = await client.from('requests').insert({
-        type: 'clan', character_name: name, message: msg || '', status: 'pending'
+      var { error } = await client.from('requests').insert({
+        type: 'clan', character_name: name,
+        message: (targetClan ? 'Clan: ' + targetClan + (msg ? ' — ' + msg : '') : msg) || '',
+        status: 'pending'
       });
       if (error) throw error;
       fb.className = 'form-feedback ok';
       fb.textContent = '¡Solicitud enviada! Te contactaremos en el juego pronto.';
-      document.getElementById('join-charname').value = '';
-      document.getElementById('join-message').value  = '';
       setTimeout(window.closeJoinModal, 2800);
     } catch (e) {
       fb.className = 'form-feedback err';
@@ -423,14 +504,19 @@
     if (btn) { btn.disabled = false; btn.textContent = 'Enviar Solicitud'; }
   };
 
+  /* ── Particles ─────────────────────────────────────── */
   function initParticles() {
-    const c = document.getElementById('particles'); if (!c) return;
-    for (let i = 0; i < 20; i++) {
-      const e = document.createElement('div');
-      const sz = 1.5 + Math.random() * 2, l = Math.random() * 100, b = Math.random() * 30;
-      const dur = 5 + Math.random() * 7, del = Math.random() * 8, dx = (Math.random() - .5) * 100;
+    var c = document.getElementById('particles'); if (!c) return;
+    for (var i = 0; i < 20; i++) {
+      var e  = document.createElement('div');
+      var sz = 1.5 + Math.random() * 2;
+      var l  = Math.random() * 100;
+      var b  = Math.random() * 30;
+      var dur = 5 + Math.random() * 7;
+      var del = Math.random() * 8;
+      var dx  = (Math.random() - 0.5) * 100;
       e.className = 'ember';
-      e.style.cssText = `width:${sz}px;height:${sz}px;left:${l}%;bottom:${b}%;--dur:${dur}s;--delay:${del}s;--dx:${dx}px;animation-delay:${del}s`;
+      e.style.cssText = 'width:' + sz + 'px;height:' + sz + 'px;left:' + l + '%;bottom:' + b + '%;--dur:' + dur + 's;--delay:' + del + 's;--dx:' + dx + 'px;animation-delay:' + del + 's';
       c.appendChild(e);
     }
   }

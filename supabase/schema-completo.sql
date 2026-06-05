@@ -77,6 +77,17 @@ ALTER TABLE requests           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE donations          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles           ENABLE ROW LEVEL SECURITY;
 
+-- Borrar policies existentes para poder recrearlas sin error
+DROP POLICY IF EXISTS "read online_players" ON online_players;
+DROP POLICY IF EXISTS "read ranking"        ON characters_ranking;
+DROP POLICY IF EXISTS "read active market"  ON market_items;
+DROP POLICY IF EXISTS "read donations"      ON donations;
+DROP POLICY IF EXISTS "read profiles"       ON profiles;
+DROP POLICY IF EXISTS "insert requests"     ON requests;
+DROP POLICY IF EXISTS "insert donations"    ON donations;
+DROP POLICY IF EXISTS "insert own profile"  ON profiles;
+DROP POLICY IF EXISTS "update own profile"  ON profiles;
+
 -- Lectura pública
 CREATE POLICY "read online_players" ON online_players     FOR SELECT USING (true);
 CREATE POLICY "read ranking"        ON characters_ranking FOR SELECT USING (true);

@@ -6,6 +6,12 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["server.js"],
       "port": 8100
+    },
+    {
+      "name": "dragones-static",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "public", "-l", "4000", "--no-clipboard"],
+      "port": 4000
     }
   ]
 }

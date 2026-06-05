@@ -6,7 +6,7 @@
 (function () {
 
   let sbClient = null;
-  let sbAnon   = null;
+  let sbAnon   = null; // apunta al mismo cliente — evita Multiple GoTrueClient
   window.currentUser    = null;
   window.currentProfile = null;
 
@@ -35,9 +35,16 @@
     if (!userId || !sbClient) { window.currentProfile = null; return; }
     try {
       const { data } = await sbClient.from('profiles')
-        .select('id, char_name, verified').eq('id', userId).maybeSingle();
+        .select('id, char_name, verified, verification_code').eq('id', userId).maybeSingle();
       window.currentProfile = data;
-    } catch { window.currentProfile = null; }
+    } catch {
+      // Fallback: intentar sin columnas opcionales
+      try {
+        const { data } = await sbClient.from('profiles')
+          .select('id, char_name').eq('id', userId).maybeSingle();
+        window.currentProfile = data;
+      } catch { window.currentProfile = null; }
+    }
   };
 
   /* ── updateAuthNav ───────────────────────────────────── */
@@ -64,13 +71,10 @@
   window.initShared = function () {
     if (!window.SUPABASE_URL || !window.SUPABASE_ANON || !window.supabase) return;
 
-    // Cliente anónimo — lecturas públicas, NUNCA usa JWT del usuario logueado
-    sbAnon = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
-    });
-
-    // Cliente autenticado — auth + mutaciones
+    // UN SOLO cliente para todo — evita el conflicto "Multiple GoTrueClient"
+    // Funciona tanto para anon como para auth (usa la misma clave anon)
     sbClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON);
+    sbAnon   = sbClient; // alias — getSbAnon() y getSb() usan el mismo cliente
     sbClient.auth.onAuthStateChange(async function (_e, session) {
       const user = session?.user ?? null;
       updateAuthNav(user);
@@ -182,7 +186,7 @@
 
   /* ── Copy IP ─────────────────────────────────────────── */
   window.copyIP = function () {
-    const ip = '190.174.183.144:7777';
+    const ip = '190.174.179.250:7777';
     (navigator.clipboard ? navigator.clipboard.writeText(ip) : Promise.reject())
       .catch(function () {
         const el = Object.assign(document.createElement('input'), { value: ip });

@@ -471,82 +471,96 @@
     pendingItem = allItems.find(function (i) { return i.id === itemId; });
     if (!pendingItem) return;
 
+    // Cancelar cierre automático del modal anterior
+    clearTimeout(_closeTimer); _closeTimer = null;
+
     document.getElementById('buy-emoji').textContent = pendingItem.emoji || '📦';
     document.getElementById('buy-item-name').textContent = pendingItem.name;
     document.getElementById('buy-price').innerHTML =
-      '<span>🪙</span><span>' + (pendingItem.pippi_cost ?? 0) + ' monedas Pippi</span>';
+      '<span>🪙</span><span>' + (pendingItem.pippi_cost || 0) + ' monedas Pippi</span>';
 
-    // Reset
+    // Reset completo
     document.getElementById('buy-no-auth').style.display   = 'none';
     document.getElementById('buy-no-verify').style.display = 'none';
-    document.getElementById('buy-form').style.display      = 'none';
-    var fb = document.getElementById('buy-feedback');
+    document.getElementById('buy-form').style.display      = '';
+    var fb  = document.getElementById('buy-feedback');
     fb.className = 'form-feedback'; fb.textContent = '';
+    var btn = document.getElementById('btn-confirm-buy');
+    if (btn) { btn.disabled = false; btn.textContent = 'Confirmar Pedido'; }
     document.getElementById('buy-modal').classList.add('open');
 
-    // Obtener sesión — usar caché o consultar directo
+    // Pre-llenar charname si el usuario está logueado
+    var charName = '';
     var user = window.currentUser;
-    if (!user) {
-      var sbDirect = window.getSb();
-      if (sbDirect) {
-        try {
-          var res = await sbDirect.auth.getSession();
-          user = (res.data && res.data.session && res.data.session.user) || null;
-          if (user) window.currentUser = user;
-        } catch (e) {}
-      }
+    if (user) {
+      try { await window.refreshProfile(user.id); } catch (e) { /* ignorar */ }
+      var profile = window.currentProfile;
+      charName = (profile && profile.char_name)
+              || (user.user_metadata && user.user_metadata.char_name)
+              || '';
     }
 
-    if (!user) {
-      document.getElementById('buy-no-auth').style.display = '';
-      return;
-    }
-
-    // Cargar perfil (char_name)
-    await window.refreshProfile(user.id);
-    var profile = window.currentProfile;
-    var charName = (profile && profile.char_name)
-      || (user.user_metadata && user.user_metadata.char_name)
-      || '';
-
-    if (!charName) {
-      document.getElementById('buy-no-verify').style.display = '';
-      return;
-    }
-
-    document.getElementById('buy-form').style.display = '';
-    document.getElementById('buy-charname').value = charName;
+    var input = document.getElementById('buy-charname');
+    input.value    = charName;
+    input.readOnly = !!charName;
+    input.style.opacity = charName ? '0.75' : '1';
+    input.style.cursor  = charName ? 'default' : 'text';
+    if (!charName) input.placeholder = 'Escribí tu nombre en el juego';
   };
 
+  var _closeTimer = null;
   window.closeBuyModal = function () {
+    clearTimeout(_closeTimer);
+    _closeTimer = null;
     document.getElementById('buy-modal').classList.remove('open');
     pendingItem = null;
   };
 
   window.confirmBuy = async function () {
-    const sb      = window.getSb();
     const charName = document.getElementById('buy-charname').value.trim();
-    const fb      = document.getElementById('buy-feedback');
-    const btn     = document.getElementById('btn-confirm-buy');
-    if (!charName || !pendingItem) return;
+    const fb       = document.getElementById('buy-feedback');
+    const btn      = document.getElementById('btn-confirm-buy');
+    if (!pendingItem) return;
+    if (!charName) {
+      fb.className = 'form-feedback err';
+      fb.textContent = 'Ingresá tu nombre de personaje en el juego.';
+      return;
+    }
     if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+    fb.className = 'form-feedback'; fb.textContent = '';
     try {
-      if (!sb) throw new Error('Sin conexión');
-      const { error } = await sb.from('requests').insert({
+      // Usar fetch directo a Supabase REST API — sin depender de ningun cliente JS
+      const url  = window.SUPABASE_URL + '/rest/v1/requests';
+      const body = JSON.stringify({
         type:           'market',
         character_name: charName,
         item_id:        pendingItem.id,
         item_name:      pendingItem.name,
-        pippi_cost:     pendingItem.pippi_cost,
+        pippi_cost:     pendingItem.pippi_cost || 0,
         status:         'pending'
       });
-      if (error) throw error;
+      const resp = await fetch(url, {
+        method:  'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'apikey':        window.SUPABASE_ANON,
+          'Authorization': 'Bearer ' + window.SUPABASE_ANON,
+          'Prefer':        'return=minimal'
+        },
+        body: body
+      });
+      if (!resp.ok) {
+        const errText = await resp.text().catch(() => resp.statusText);
+        throw new Error(errText + ' [HTTP ' + resp.status + ']');
+      }
       fb.className = 'form-feedback ok';
-      fb.textContent = '¡Pedido enviado! El admin lo revisará y el bridge lo entregará a tu inventario cuando estés online.';
-      setTimeout(window.closeBuyModal, 3500);
+      fb.textContent = '✅ ¡Pedido enviado! Cuando estés online en el servidor el bridge te entrega el ítem automáticamente.';
+      clearTimeout(_closeTimer);
+      _closeTimer = setTimeout(window.closeBuyModal, 4000);
     } catch (e) {
       fb.className = 'form-feedback err';
-      fb.textContent = e.message || 'No se pudo enviar el pedido.';
+      fb.textContent = '❌ ' + (e.message || 'No se pudo enviar el pedido.');
+      console.error('confirmBuy error:', e);
     }
     if (btn) { btn.disabled = false; btn.textContent = 'Confirmar Pedido'; }
   };

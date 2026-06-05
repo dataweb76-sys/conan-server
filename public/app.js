@@ -13,26 +13,34 @@
       if (!sbAnon) return;
 
       // Jugadores online → hero-count + status dot
-      const { data: online } = await sbAnon.from('online_players').select('name');
-      const onlineCount = (online || []).length;
-      const heroCount = document.getElementById('hero-count');
-      const statusDot = document.getElementById('status-dot');
-      const statusTxt = document.getElementById('status-text');
-      const heroDot   = document.getElementById('hero-status-dot');
-      if (heroCount) heroCount.textContent = onlineCount >= 0 ? onlineCount : '–';
-      if (statusDot) statusDot.className   = 'online-dot';
-      if (statusTxt) statusTxt.textContent = 'En línea';
-      if (heroDot)   heroDot.style.display = '';
+      const { data: online, error: e1 } = await sbAnon.from('online_players').select('name');
+      if (!e1) {
+        const count = (online || []).length;
+        const heroCount = document.getElementById('hero-count');
+        const statusDot = document.getElementById('status-dot');
+        const statusTxt = document.getElementById('status-text');
+        const heroDot   = document.getElementById('hero-status-dot');
+        if (heroCount) heroCount.textContent = count;
+        if (statusDot) statusDot.className   = 'online-dot';
+        if (statusTxt) statusTxt.textContent = count > 0 ? 'En línea' : 'Sin jugadores';
+        if (heroDot)   heroDot.style.display = '';
+      }
 
       // Personajes registrados + clanes → hero-total, hero-clans
-      const { data: chars } = await sbAnon.from('characters_ranking').select('name, clan');
-      const total = (chars || []).length;
-      const clans = new Set((chars || []).filter(p => p.clan).map(p => p.clan)).size;
-      const totalEl = document.getElementById('hero-total');
-      const clansEl = document.getElementById('hero-clans');
-      if (totalEl) totalEl.textContent = total || '–';
-      if (clansEl) clansEl.textContent = clans || '–';
-    } catch { /* non-critical */ }
+      const { data: chars, error: e2 } = await sbAnon.from('characters_ranking').select('name, clan');
+      if (!e2) {
+        const total = (chars || []).length;
+        const clans = new Set((chars || []).filter(p => p.clan).map(p => p.clan)).size;
+        const totalEl = document.getElementById('hero-total');
+        const clansEl = document.getElementById('hero-clans');
+        if (totalEl) totalEl.textContent = total > 0 ? total : '–';
+        if (clansEl) clansEl.textContent = clans > 0 ? clans : '–';
+      } else {
+        console.warn('fetchStats: characters_ranking error:', e2.message);
+      }
+    } catch (err) {
+      console.warn('fetchStats error:', err.message);
+    }
   }
 
   // ── Donaciones ─────────────────────────────────────────
@@ -111,12 +119,9 @@
 
   function initSupabase() {
     if (!window.SUPABASE_URL || !window.SUPABASE_ANON || !window.supabase) return;
-    // Cliente anónimo fijo — nunca lleva JWT del usuario
-    sbAnon = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
-    });
-    // Cliente autenticado — login/register/mutaciones
+    // Un solo cliente — evita conflicto Multiple GoTrueClient
     sbClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON);
+    sbAnon   = sbClient;
     sbClient.auth.onAuthStateChange(async (_e, session) => {
       const user = session?.user ?? null;
       updateAuthNav(user);
@@ -244,7 +249,7 @@
 
   // ── Copy IP ────────────────────────────────────────────
   window.copyIP = function () {
-    const ip = '190.174.183.144:7777';
+    const ip = '190.174.179.250:7777';
     (navigator.clipboard
       ? navigator.clipboard.writeText(ip)
       : Promise.reject()
