@@ -32,7 +32,35 @@ function buildPacket(id, type, body) {
   b.copy(pkt, 12); return pkt;
 }
 
+// Queue para serializar todas las conexiones RCON — el servidor solo acepta una a la vez
+const _rconQueue = [];
+let   _rconBusy  = false;
+
 function rcon(command) {
+  return new Promise((resolve, reject) => {
+    _rconQueue.push({ command, resolve, reject });
+    _drainRcon();
+  });
+}
+
+async function _drainRcon() {
+  if (_rconBusy || !_rconQueue.length) return;
+  _rconBusy = true;
+  const { command, resolve, reject } = _rconQueue.shift();
+  try {
+    const result = await _rconRaw(command);
+    resolve(result);
+  } catch (e) {
+    reject(e);
+  } finally {
+    // 400ms entre conexiones para no saturar el RCON del servidor
+    await new Promise(r => setTimeout(r, 400));
+    _rconBusy = false;
+    _drainRcon();
+  }
+}
+
+function _rconRaw(command) {
   return new Promise((resolve, reject) => {
     const sock = new net.Socket();
     let buf = Buffer.alloc(0), authed = false, done = false;
@@ -355,9 +383,9 @@ async function checkThrallBossKills() {
   try {
     // Inicializar el puntero al rowid más alto actual (para no anunciar historial viejo)
     if (lastKillRowid === 0) {
-      const raw = await rcon('sql SELECT MAX(rowid) AS maxid FROM game_events WHERE eventType IN (86, 115, 106) AND causerName != ""');
+      const raw = await rcon('sql SELECT rowid FROM game_events ORDER BY rowid DESC LIMIT 1');
       const rows = parseSqlRows(raw);
-      lastKillRowid = parseInt(rows[0]?.maxid || '0') || 0;
+      lastKillRowid = parseInt(rows[0]?.rowid || '0') || 0;
       console.log(`[thrall-kill] Inicializado en rowid ${lastKillRowid}`);
       return; // primera corrida solo inicializa
     }
@@ -474,40 +502,57 @@ async function checkScheduledBroadcasts() {
 }
 
 // ── NPC Kill Milestones ───────────────────────────────
-// Avisa al jugador cuando llega a 100, 200, 300... kills de bichos.
-// Se guarda en memoria — si el bridge se reinicia vuelve a avisar desde 0, lo cual está bien.
+// Cuenta kills de forma INCREMENTAL (no COUNT(*) sobre toda la tabla).
+// Solo cuenta kills desde que arrancó el bridge en esta sesión.
 
+let lastNpcKillRowid    = 0;
+const npcKillCount      = new Map(); // charName → kills acumulados esta sesión
 const npcMilestoneTracker = new Map(); // charName → último hito avisado
 
 async function checkNpcKillMilestones() {
   try {
+    // Inicializar puntero (reutiliza la misma query liviana)
+    if (lastNpcKillRowid === 0) {
+      const raw  = await rcon('sql SELECT rowid FROM game_events ORDER BY rowid DESC LIMIT 1');
+      const rows = parseSqlRows(raw);
+      lastNpcKillRowid = parseInt(rows[0]?.rowid || '0') || 0;
+      return;
+    }
+
     if (!currentOnline.size) return;
 
     const list = [...currentOnline.keys()]
       .map(n => `'${n.replace(/'/g, "''")}'`).join(',');
 
+    // Solo eventos NUEVOS — sin COUNT(*), sin GROUP BY
     const raw = await rcon(
-      `sql SELECT causerName, COUNT(*) AS kills FROM game_events ` +
-      `WHERE eventType IN (86, 115) AND causerName IN (${list}) ` +
-      `GROUP BY causerName`
+      `sql SELECT rowid, causerName FROM game_events ` +
+      `WHERE rowid > ${lastNpcKillRowid} AND eventType IN (86, 115) ` +
+      `AND causerName IN (${list}) ORDER BY rowid ASC LIMIT 200`
     );
     const rows = parseSqlRows(raw);
+    if (!rows.length) return;
 
     for (const row of rows) {
-      const name  = (row.causerName || '').trim();
-      const kills = parseInt(row.kills) || 0;
-      if (!name || kills < 100) continue;
+      const rowid = parseInt(row.rowid);
+      if (rowid > lastNpcKillRowid) lastNpcKillRowid = rowid;
+      const name = (row.causerName || '').trim();
+      if (name) npcKillCount.set(name, (npcKillCount.get(name) || 0) + 1);
+    }
 
+    // Revisar hitos para jugadores online
+    for (const [name, kills] of npcKillCount) {
+      if (!currentOnline.has(name)) continue;
       const milestone     = Math.floor(kills / 100) * 100;
       const lastMilestone = npcMilestoneTracker.get(name) || 0;
-      if (milestone <= lastMilestone) continue;
+      if (milestone < 100 || milestone <= lastMilestone) continue;
 
       npcMilestoneTracker.set(name, milestone);
       try {
         await rcon(
           `directmessage "Dragones y Demonios" "${name}" ` +
-          `"⚔️ ${name}, llevas ${kills} criaturas eliminadas! ` +
-          `Entrá al sitio y fijate como vas en el ranking. Seguí asi y habrá premios! ` +
+          `"Waos ${name}! Llevas ${kills} criaturas cazadas esta sesion! ` +
+          `Chequeá el ranking en el sitio. Segui asi y habra premios! ` +
           `dragonesydemonios.vercel.app"`
         );
         console.log(`[npc-milestone] 🎯 ${name}: ${kills} kills → hito ${milestone}`);
@@ -529,11 +574,9 @@ async function checkPvpKills() {
   try {
     // Primera corrida: inicializar puntero sin anunciar historial
     if (lastPvpRowid === 0) {
-      const raw = await rcon(
-        `sql SELECT MAX(rowid) AS maxid FROM game_events WHERE eventType = 114 AND causerName != ''`
-      );
+      const raw = await rcon('sql SELECT rowid FROM game_events ORDER BY rowid DESC LIMIT 1');
       const rows = parseSqlRows(raw);
-      lastPvpRowid = parseInt(rows[0]?.maxid || '0') || 0;
+      lastPvpRowid = parseInt(rows[0]?.rowid || '0') || 0;
       console.log(`[pvp] Inicializado en rowid ${lastPvpRowid}`);
       return;
     }
@@ -619,11 +662,14 @@ async function run() {
   await checkThrallBossKills(); await sleep(800);
   await checkPvpKills();
 
-  // Online + entregas + verificaciones: cada 30s
+  // Tick cada 30s — todas las funciones frecuentes en secuencia, no en paralelo
   setInterval(async () => {
     await syncOnlinePlayers();
     await deliverPendingItems();
     await sendVerificationCodes();
+    await checkThrallBossKills();
+    await checkPvpKills();
+    await checkNpcKillMilestones();
   }, 30_000);
 
   // Ranking + clanes: cada 5 min
@@ -634,15 +680,6 @@ async function run() {
 
   // Notificaciones PVP / Asedio: cada 1 minuto
   setInterval(checkScheduledBroadcasts, 60_000);
-
-  // Thrall mata jefe / 3 calaveras: cada 30s
-  setInterval(checkThrallBossKills, 30_000);
-
-  // NPC kill milestones: cada 5 min
-  setInterval(checkNpcKillMilestones, 300_000);
-
-  // PVP kills: cada 30s
-  setInterval(checkPvpKills, 30_000);
 }
 
 run();
