@@ -590,6 +590,8 @@ async function checkPvpKills() {
 
 // ── Loop principal ────────────────────────────────────
 
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
 async function run() {
   console.log('\n🐉  Bridge Dragones y Demonios → Supabase\n');
 
@@ -598,10 +600,24 @@ async function run() {
     process.exit(1);
   }
 
-  await syncOnlinePlayers();
-  await deliverPendingItems();
-  await syncRanking();
-  await syncClans();
+  // Test de Supabase al arranque
+  try {
+    const { error } = await supabase.from('online_players').select('name').limit(1);
+    if (error) throw error;
+    console.log('[supabase] ✓ Conexión OK');
+  } catch (e) {
+    console.error('[supabase] ✗ Error de conexión:', e.message);
+    console.error('  → Verificá SUPABASE_URL y SUPABASE_SERVICE_KEY en .env');
+    process.exit(1);
+  }
+
+  // Arranque escalonado — 800ms entre cada llamada RCON para no saturar el servidor
+  await syncOnlinePlayers();   await sleep(800);
+  await deliverPendingItems(); await sleep(800);
+  await syncRanking();         await sleep(800);
+  await syncClans();           await sleep(800);
+  await checkThrallBossKills(); await sleep(800);
+  await checkPvpKills();
 
   // Online + entregas + verificaciones: cada 30s
   setInterval(async () => {
@@ -620,14 +636,12 @@ async function run() {
   setInterval(checkScheduledBroadcasts, 60_000);
 
   // Thrall mata jefe / 3 calaveras: cada 30s
-  await checkThrallBossKills();
   setInterval(checkThrallBossKills, 30_000);
 
-  // NPC kill milestones: cada 5 min (junto con ranking)
+  // NPC kill milestones: cada 5 min
   setInterval(checkNpcKillMilestones, 300_000);
 
   // PVP kills: cada 30s
-  await checkPvpKills();
   setInterval(checkPvpKills, 30_000);
 }
 
