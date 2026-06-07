@@ -32,35 +32,7 @@ function buildPacket(id, type, body) {
   b.copy(pkt, 12); return pkt;
 }
 
-// Queue para serializar todas las conexiones RCON — el servidor solo acepta una a la vez
-const _rconQueue = [];
-let   _rconBusy  = false;
-
 function rcon(command) {
-  return new Promise((resolve, reject) => {
-    _rconQueue.push({ command, resolve, reject });
-    _drainRcon();
-  });
-}
-
-async function _drainRcon() {
-  if (_rconBusy || !_rconQueue.length) return;
-  _rconBusy = true;
-  const { command, resolve, reject } = _rconQueue.shift();
-  try {
-    const result = await _rconRaw(command);
-    resolve(result);
-  } catch (e) {
-    reject(e);
-  } finally {
-    // 400ms entre conexiones para no saturar el RCON del servidor
-    await new Promise(r => setTimeout(r, 400));
-    _rconBusy = false;
-    _drainRcon();
-  }
-}
-
-function _rconRaw(command) {
   return new Promise((resolve, reject) => {
     const sock = new net.Socket();
     let buf = Buffer.alloc(0), authed = false, done = false;
@@ -342,7 +314,6 @@ async function syncClans() {
   }
 }
 
-
 // ── Notificaciones programadas ────────────────────────
 // Lun–Vie: PVP activo 20:00–23:00 | Sáb–Dom: Asedio de Bases 20:00–23:00
 // Zona horaria Argentina (UTC-3)
@@ -408,139 +379,7 @@ async function checkScheduledBroadcasts() {
   }
 }
 
-// ── NPC Kill Milestones ───────────────────────────────
-// Cuenta kills de forma INCREMENTAL (no COUNT(*) sobre toda la tabla).
-// Solo cuenta kills desde que arrancó el bridge en esta sesión.
-
-let lastNpcKillRowid    = 0;
-const npcKillCount      = new Map(); // charName → kills acumulados esta sesión
-const npcMilestoneTracker = new Map(); // charName → último hito avisado
-
-async function checkNpcKillMilestones() {
-  try {
-    // Inicializar puntero (reutiliza la misma query liviana)
-    if (lastNpcKillRowid === 0) {
-      const raw  = await rcon('sql SELECT rowid FROM game_events ORDER BY rowid DESC LIMIT 1');
-      const rows = parseSqlRows(raw);
-      lastNpcKillRowid = parseInt(rows[0]?.rowid || '0') || 0;
-      return;
-    }
-
-    if (!currentOnline.size) return;
-
-    const list = [...currentOnline.keys()]
-      .map(n => `'${n.replace(/'/g, "''")}'`).join(',');
-
-    // Solo eventos NUEVOS — sin COUNT(*), sin GROUP BY
-    const raw = await rcon(
-      `sql SELECT rowid, causerName FROM game_events ` +
-      `WHERE rowid > ${lastNpcKillRowid} AND eventType IN (86, 115) ` +
-      `AND causerName IN (${list}) ORDER BY rowid ASC LIMIT 200`
-    );
-    const rows = parseSqlRows(raw);
-    if (!rows.length) return;
-
-    for (const row of rows) {
-      const rowid = parseInt(row.rowid);
-      if (rowid > lastNpcKillRowid) lastNpcKillRowid = rowid;
-      const name = (row.causerName || '').trim();
-      if (name) npcKillCount.set(name, (npcKillCount.get(name) || 0) + 1);
-    }
-
-    // Revisar hitos para jugadores online
-    for (const [name, kills] of npcKillCount) {
-      if (!currentOnline.has(name)) continue;
-      const milestone     = Math.floor(kills / 100) * 100;
-      const lastMilestone = npcMilestoneTracker.get(name) || 0;
-      if (milestone < 100 || milestone <= lastMilestone) continue;
-
-      npcMilestoneTracker.set(name, milestone);
-      try {
-        await rcon(
-          `directmessage "Dragones y Demonios" "${name}" ` +
-          `"Waos ${name}! Llevas ${kills} criaturas cazadas esta sesion! ` +
-          `Chequeá el ranking en el sitio. Segui asi y habra premios! ` +
-          `dragonesydemonios.vercel.app"`
-        );
-        console.log(`[npc-milestone] 🎯 ${name}: ${kills} kills → hito ${milestone}`);
-      } catch (e) {
-        console.error(`[npc-milestone] Error mensaje a ${name}:`, e.message);
-      }
-    }
-  } catch (e) {
-    console.error('[npc-milestone] Error:', e.message);
-  }
-}
-
-// ── PVP Kill Ranking ──────────────────────────────────
-// Detecta kills jugador-vs-jugador (eventType 114) y suma en Supabase.
-
-let lastPvpRowid = 0;
-
-async function checkPvpKills() {
-  try {
-    // Primera corrida: inicializar puntero sin anunciar historial
-    if (lastPvpRowid === 0) {
-      const raw = await rcon('sql SELECT rowid FROM game_events ORDER BY rowid DESC LIMIT 1');
-      const rows = parseSqlRows(raw);
-      lastPvpRowid = parseInt(rows[0]?.rowid || '0') || 0;
-      console.log(`[pvp] Inicializado en rowid ${lastPvpRowid}`);
-      return;
-    }
-
-    // Solo eventos nuevos
-    const raw = await rcon(
-      `sql SELECT rowid, objectName, causerName FROM game_events ` +
-      `WHERE rowid > ${lastPvpRowid} AND eventType = 114 ` +
-      `AND causerName != '' AND objectName != '' ` +
-      `ORDER BY rowid ASC LIMIT 50`
-    );
-    const rows = parseSqlRows(raw);
-    if (!rows.length) return;
-
-    // Verificar qué nombres son personajes jugadores (no thralls ni NPCs)
-    const allNames = [...new Set(
-      rows.flatMap(r => [r.causerName?.trim(), r.objectName?.trim()].filter(Boolean))
-    )];
-    const nameList = allNames.map(n => `'${n.replace(/'/g, "''")}'`).join(',');
-    const charRaw  = await rcon(`sql SELECT char_name FROM characters WHERE char_name IN (${nameList})`);
-    const charRows = parseSqlRows(charRaw);
-    const playerSet = new Set(charRows.map(r => r.char_name?.trim()).filter(Boolean));
-
-    for (const row of rows) {
-      const rowid  = parseInt(row.rowid);
-      if (rowid > lastPvpRowid) lastPvpRowid = rowid;
-
-      const killer = row.causerName?.trim();
-      const victim = row.objectName?.trim();
-
-      // Ambos deben ser personajes jugadores para que sea PVP real
-      if (!playerSet.has(killer) || !playerSet.has(victim)) continue;
-
-      // Upsert en Supabase — incrementar kills
-      const { data: existing } = await supabase
-        .from('pvp_ranking')
-        .select('kills')
-        .eq('char_name', killer)
-        .maybeSingle();
-
-      const newKills = (existing?.kills || 0) + 1;
-      await supabase.from('pvp_ranking').upsert({
-        char_name:    killer,
-        kills:        newKills,
-        last_kill_at: new Date().toISOString(),
-      }, { onConflict: 'char_name' });
-
-      console.log(`[pvp] ⚔️ ${killer} → ${victim} (total bajas: ${newKills})`);
-    }
-  } catch (e) {
-    console.error('[pvp] Error:', e.message);
-  }
-}
-
 // ── Loop principal ────────────────────────────────────
-
-const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 async function run() {
   console.log('\n🐉  Bridge Dragones y Demonios → Supabase\n');
@@ -550,31 +389,16 @@ async function run() {
     process.exit(1);
   }
 
-  // Test de Supabase al arranque
-  try {
-    const { error } = await supabase.from('online_players').select('name').limit(1);
-    if (error) throw error;
-    console.log('[supabase] ✓ Conexión OK');
-  } catch (e) {
-    console.error('[supabase] ✗ Error de conexión:', e.message);
-    console.error('  → Verificá SUPABASE_URL y SUPABASE_SERVICE_KEY en .env');
-    process.exit(1);
-  }
+  await syncOnlinePlayers();
+  await deliverPendingItems();
+  await syncRanking();
+  await syncClans();
 
-  // Arranque escalonado — 800ms entre cada llamada RCON para no saturar el servidor
-  await syncOnlinePlayers();   await sleep(800);
-  await deliverPendingItems(); await sleep(800);
-  await syncRanking();         await sleep(800);
-  await syncClans();           await sleep(800);
-  await checkPvpKills();
-
-  // Tick cada 30s — todas las funciones frecuentes en secuencia, no en paralelo
+  // Online + entregas + verificaciones: cada 30s
   setInterval(async () => {
     await syncOnlinePlayers();
     await deliverPendingItems();
     await sendVerificationCodes();
-    await checkPvpKills();
-    await checkNpcKillMilestones();
   }, 30_000);
 
   // Ranking + clanes: cada 5 min
