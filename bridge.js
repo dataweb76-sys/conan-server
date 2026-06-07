@@ -314,6 +314,100 @@ async function syncClans() {
   }
 }
 
+// ── Thrall mata jefe / 3 calaveras / KO ──────────────
+// game_events confirmados:
+//   eventType 86  → NPC killed   (objectName = víctima, causerName = thrall/jugador)
+//   eventType 115 → NPC kill alt (ídem)
+//   eventType 106 → probable KO/dormido
+//
+// Patrones de boss/3-calaveras en objectName:
+//   Boss_*         → jefes grandes
+//   *Champion*     → campeones
+//   *Warchief*     → jefes de guerra
+//   *_Unique*      → únicos nombrados
+//   *Sorcerer*     → hechiceros nombrados
+//   (ajustá la lista según los NPCs de tu servidor)
+
+const announcedThrallKills = new Set();
+let   lastKillRowid        = 0; // arranca en 0, se inicializa al primer poll
+
+// Patrones que indican boss o NPC de 3 calaveras
+const BOSS_PATTERNS = [
+  /^Boss_/i,
+  /Champion/i,
+  /Warchief/i,
+  /Warlord/i,
+  /_Unique/i,
+  /Sorcerer/i,
+  /Serpentman.*Leader/i,
+  /King.*Cobra/i,
+  /Undead.*Dragon/i,
+  /Warmaker/i,
+  /Demogorgon/i,
+  /Arena.*Champion/i,
+];
+
+function isBossOrThreeSkull(name) {
+  return BOSS_PATTERNS.some(re => re.test(name));
+}
+
+async function checkThrallBossKills() {
+  try {
+    // Inicializar el puntero al rowid más alto actual (para no anunciar historial viejo)
+    if (lastKillRowid === 0) {
+      const raw = await rcon('sql SELECT MAX(rowid) AS maxid FROM game_events WHERE eventType IN (86, 115, 106) AND causerName != ""');
+      const rows = parseSqlRows(raw);
+      lastKillRowid = parseInt(rows[0]?.maxid || '0') || 0;
+      console.log(`[thrall-kill] Inicializado en rowid ${lastKillRowid}`);
+      return; // primera corrida solo inicializa
+    }
+
+    // Solo eventos NUEVOS (más altos que el último procesado)
+    const raw = await rcon(
+      `sql SELECT rowid, eventType, objectName, causerName FROM game_events ` +
+      `WHERE rowid > ${lastKillRowid} AND eventType IN (86, 115, 106) ` +
+      `AND causerName != '' AND causerName IS NOT NULL ` +
+      `ORDER BY rowid ASC LIMIT 50`
+    );
+    const rows = parseSqlRows(raw);
+    if (!rows.length) return;
+
+    // Obtener nombres de jugadores humanos para distinguir thralls
+    const playerNames = new Set([...currentOnline.keys()]);
+
+    for (const row of rows) {
+      const rowid     = parseInt(row.rowid);
+      if (rowid > lastKillRowid) lastKillRowid = rowid;
+
+      const key = String(rowid);
+      if (announcedThrallKills.has(key)) continue;
+      announcedThrallKills.add(key);
+
+      const causer    = (row.causerName  || '').trim();
+      const victim    = (row.objectName  || '').trim();
+      const evType    = parseInt(row.eventType);
+
+      // Solo anunciar si el causer NO es un jugador humano online (= es thrall)
+      if (playerNames.has(causer)) continue;
+
+      const isKO   = evType === 106;
+      const isBoss = isBossOrThreeSkull(victim);
+
+      if (!isBoss) continue; // solo bosses / 3 calaveras
+
+      const msg = isKO
+        ? `💀 Laaaa que habil con el maso... ${causer}! dejo KO a ${victim}. Harto esclavo va a tener.`
+        : `💀 Laaaa que fuerte que es... ${causer}! mato a ${victim}, si lo veo, le tiro un beso!!`;
+      await rcon(`broadcast ${msg}`);
+      console.log(`[thrall-kill] ${msg}`);
+    }
+
+    if (announcedThrallKills.size > 2000) announcedThrallKills.clear();
+  } catch (e) {
+    console.error('[thrall-kill] Error:', e.message);
+  }
+}
+
 // ── Notificaciones programadas ────────────────────────
 // Lun–Vie: PVP activo 20:00–23:00 | Sáb–Dom: Asedio de Bases 20:00–23:00
 // Zona horaria Argentina (UTC-3)
@@ -379,6 +473,121 @@ async function checkScheduledBroadcasts() {
   }
 }
 
+// ── NPC Kill Milestones ───────────────────────────────
+// Avisa al jugador cuando llega a 100, 200, 300... kills de bichos.
+// Se guarda en memoria — si el bridge se reinicia vuelve a avisar desde 0, lo cual está bien.
+
+const npcMilestoneTracker = new Map(); // charName → último hito avisado
+
+async function checkNpcKillMilestones() {
+  try {
+    if (!currentOnline.size) return;
+
+    const list = [...currentOnline.keys()]
+      .map(n => `'${n.replace(/'/g, "''")}'`).join(',');
+
+    const raw = await rcon(
+      `sql SELECT causerName, COUNT(*) AS kills FROM game_events ` +
+      `WHERE eventType IN (86, 115) AND causerName IN (${list}) ` +
+      `GROUP BY causerName`
+    );
+    const rows = parseSqlRows(raw);
+
+    for (const row of rows) {
+      const name  = (row.causerName || '').trim();
+      const kills = parseInt(row.kills) || 0;
+      if (!name || kills < 100) continue;
+
+      const milestone     = Math.floor(kills / 100) * 100;
+      const lastMilestone = npcMilestoneTracker.get(name) || 0;
+      if (milestone <= lastMilestone) continue;
+
+      npcMilestoneTracker.set(name, milestone);
+      try {
+        await rcon(
+          `directmessage "Dragones y Demonios" "${name}" ` +
+          `"⚔️ ${name}, llevas ${kills} criaturas eliminadas! ` +
+          `Entrá al sitio y fijate como vas en el ranking. Seguí asi y habrá premios! ` +
+          `dragonesydemonios.vercel.app"`
+        );
+        console.log(`[npc-milestone] 🎯 ${name}: ${kills} kills → hito ${milestone}`);
+      } catch (e) {
+        console.error(`[npc-milestone] Error mensaje a ${name}:`, e.message);
+      }
+    }
+  } catch (e) {
+    console.error('[npc-milestone] Error:', e.message);
+  }
+}
+
+// ── PVP Kill Ranking ──────────────────────────────────
+// Detecta kills jugador-vs-jugador (eventType 114) y suma en Supabase.
+
+let lastPvpRowid = 0;
+
+async function checkPvpKills() {
+  try {
+    // Primera corrida: inicializar puntero sin anunciar historial
+    if (lastPvpRowid === 0) {
+      const raw = await rcon(
+        `sql SELECT MAX(rowid) AS maxid FROM game_events WHERE eventType = 114 AND causerName != ''`
+      );
+      const rows = parseSqlRows(raw);
+      lastPvpRowid = parseInt(rows[0]?.maxid || '0') || 0;
+      console.log(`[pvp] Inicializado en rowid ${lastPvpRowid}`);
+      return;
+    }
+
+    // Solo eventos nuevos
+    const raw = await rcon(
+      `sql SELECT rowid, objectName, causerName FROM game_events ` +
+      `WHERE rowid > ${lastPvpRowid} AND eventType = 114 ` +
+      `AND causerName != '' AND objectName != '' ` +
+      `ORDER BY rowid ASC LIMIT 50`
+    );
+    const rows = parseSqlRows(raw);
+    if (!rows.length) return;
+
+    // Verificar qué nombres son personajes jugadores (no thralls ni NPCs)
+    const allNames = [...new Set(
+      rows.flatMap(r => [r.causerName?.trim(), r.objectName?.trim()].filter(Boolean))
+    )];
+    const nameList = allNames.map(n => `'${n.replace(/'/g, "''")}'`).join(',');
+    const charRaw  = await rcon(`sql SELECT char_name FROM characters WHERE char_name IN (${nameList})`);
+    const charRows = parseSqlRows(charRaw);
+    const playerSet = new Set(charRows.map(r => r.char_name?.trim()).filter(Boolean));
+
+    for (const row of rows) {
+      const rowid  = parseInt(row.rowid);
+      if (rowid > lastPvpRowid) lastPvpRowid = rowid;
+
+      const killer = row.causerName?.trim();
+      const victim = row.objectName?.trim();
+
+      // Ambos deben ser personajes jugadores para que sea PVP real
+      if (!playerSet.has(killer) || !playerSet.has(victim)) continue;
+
+      // Upsert en Supabase — incrementar kills
+      const { data: existing } = await supabase
+        .from('pvp_ranking')
+        .select('kills')
+        .eq('char_name', killer)
+        .maybeSingle();
+
+      const newKills = (existing?.kills || 0) + 1;
+      await supabase.from('pvp_ranking').upsert({
+        char_name:    killer,
+        kills:        newKills,
+        last_kill_at: new Date().toISOString(),
+      }, { onConflict: 'char_name' });
+
+      console.log(`[pvp] ⚔️ ${killer} → ${victim} (total bajas: ${newKills})`);
+    }
+  } catch (e) {
+    console.error('[pvp] Error:', e.message);
+  }
+}
+
 // ── Loop principal ────────────────────────────────────
 
 async function run() {
@@ -409,6 +618,17 @@ async function run() {
 
   // Notificaciones PVP / Asedio: cada 1 minuto
   setInterval(checkScheduledBroadcasts, 60_000);
+
+  // Thrall mata jefe / 3 calaveras: cada 30s
+  await checkThrallBossKills();
+  setInterval(checkThrallBossKills, 30_000);
+
+  // NPC kill milestones: cada 5 min (junto con ranking)
+  setInterval(checkNpcKillMilestones, 300_000);
+
+  // PVP kills: cada 30s
+  await checkPvpKills();
+  setInterval(checkPvpKills, 30_000);
 }
 
 run();
