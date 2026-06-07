@@ -342,99 +342,6 @@ async function syncClans() {
   }
 }
 
-// ── Thrall mata jefe / 3 calaveras / KO ──────────────
-// game_events confirmados:
-//   eventType 86  → NPC killed   (objectName = víctima, causerName = thrall/jugador)
-//   eventType 115 → NPC kill alt (ídem)
-//   eventType 106 → probable KO/dormido
-//
-// Patrones de boss/3-calaveras en objectName:
-//   Boss_*         → jefes grandes
-//   *Champion*     → campeones
-//   *Warchief*     → jefes de guerra
-//   *_Unique*      → únicos nombrados
-//   *Sorcerer*     → hechiceros nombrados
-//   (ajustá la lista según los NPCs de tu servidor)
-
-const announcedThrallKills = new Set();
-let   lastKillRowid        = 0; // arranca en 0, se inicializa al primer poll
-
-// Patrones que indican boss o NPC de 3 calaveras
-const BOSS_PATTERNS = [
-  /^Boss_/i,
-  /Champion/i,
-  /Warchief/i,
-  /Warlord/i,
-  /_Unique/i,
-  /Sorcerer/i,
-  /Serpentman.*Leader/i,
-  /King.*Cobra/i,
-  /Undead.*Dragon/i,
-  /Warmaker/i,
-  /Demogorgon/i,
-  /Arena.*Champion/i,
-];
-
-function isBossOrThreeSkull(name) {
-  return BOSS_PATTERNS.some(re => re.test(name));
-}
-
-async function checkThrallBossKills() {
-  try {
-    // Inicializar el puntero al rowid más alto actual (para no anunciar historial viejo)
-    if (lastKillRowid === 0) {
-      const raw = await rcon('sql SELECT rowid FROM game_events ORDER BY rowid DESC LIMIT 1');
-      const rows = parseSqlRows(raw);
-      lastKillRowid = parseInt(rows[0]?.rowid || '0') || 0;
-      console.log(`[thrall-kill] Inicializado en rowid ${lastKillRowid}`);
-      return; // primera corrida solo inicializa
-    }
-
-    // Solo eventos NUEVOS (más altos que el último procesado)
-    const raw = await rcon(
-      `sql SELECT rowid, eventType, objectName, causerName FROM game_events ` +
-      `WHERE rowid > ${lastKillRowid} AND eventType IN (86, 115, 106) ` +
-      `AND causerName != '' AND causerName IS NOT NULL ` +
-      `ORDER BY rowid ASC LIMIT 50`
-    );
-    const rows = parseSqlRows(raw);
-    if (!rows.length) return;
-
-    // Obtener nombres de jugadores humanos para distinguir thralls
-    const playerNames = new Set([...currentOnline.keys()]);
-
-    for (const row of rows) {
-      const rowid     = parseInt(row.rowid);
-      if (rowid > lastKillRowid) lastKillRowid = rowid;
-
-      const key = String(rowid);
-      if (announcedThrallKills.has(key)) continue;
-      announcedThrallKills.add(key);
-
-      const causer    = (row.causerName  || '').trim();
-      const victim    = (row.objectName  || '').trim();
-      const evType    = parseInt(row.eventType);
-
-      // Solo anunciar si el causer NO es un jugador humano online (= es thrall)
-      if (playerNames.has(causer)) continue;
-
-      const isKO   = evType === 106;
-      const isBoss = isBossOrThreeSkull(victim);
-
-      if (!isBoss) continue; // solo bosses / 3 calaveras
-
-      const msg = isKO
-        ? `💀 Laaaa que habil con el maso... ${causer}! dejo KO a ${victim}. Harto esclavo va a tener.`
-        : `💀 Laaaa que fuerte que es... ${causer}! mato a ${victim}, si lo veo, le tiro un beso!!`;
-      await rcon(`broadcast ${msg}`);
-      console.log(`[thrall-kill] ${msg}`);
-    }
-
-    if (announcedThrallKills.size > 2000) announcedThrallKills.clear();
-  } catch (e) {
-    console.error('[thrall-kill] Error:', e.message);
-  }
-}
 
 // ── Notificaciones programadas ────────────────────────
 // Lun–Vie: PVP activo 20:00–23:00 | Sáb–Dom: Asedio de Bases 20:00–23:00
@@ -659,7 +566,6 @@ async function run() {
   await deliverPendingItems(); await sleep(800);
   await syncRanking();         await sleep(800);
   await syncClans();           await sleep(800);
-  await checkThrallBossKills(); await sleep(800);
   await checkPvpKills();
 
   // Tick cada 30s — todas las funciones frecuentes en secuencia, no en paralelo
@@ -667,7 +573,6 @@ async function run() {
     await syncOnlinePlayers();
     await deliverPendingItems();
     await sendVerificationCodes();
-    await checkThrallBossKills();
     await checkPvpKills();
     await checkNpcKillMilestones();
   }, 30_000);
